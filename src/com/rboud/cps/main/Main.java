@@ -10,8 +10,8 @@ public class Main {
 
   public static void main(String[] args) {
     List<DHTNode> nodes = new ArrayList<>();
-    DHTNode node1 = new DHTNode();
-    DHTNode node2 = new DHTNode();
+    DHTNode node2 = new DHTNode(null);
+    DHTNode node1 = new DHTNode(node2);
 
     try {
       node1.putSync(null, null, null);
@@ -31,6 +31,8 @@ public class Main {
       e.printStackTrace();
       System.exit(1);
     }
-
+    
+    Id id = new Id(0);
+    System.out.println(id.hashCode());
   }
 }

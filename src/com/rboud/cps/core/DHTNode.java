@@ -12,8 +12,8 @@ public class DHTNode implements ContentAccessSyncI {
   private DHTNode next;
   private final Map<ContentKeyI, ContentDataI> localStorage = new HashMap<>();
   
-  public DHTNode() {
-
+  public DHTNode(DHTNode next) {
+    this.next = next;
   }
   
   @Override
