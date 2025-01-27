@@ -12,7 +12,7 @@ public class DHTNode implements ContentAccessSyncI {
   private DHTNode next;
   private final Map<ContentKeyI, ContentDataI> localStorage = new HashMap<>();
   
-  protected DHTNode() {
+  public DHTNode() {
 
   }
   
@@ -27,17 +27,23 @@ public class DHTNode implements ContentAccessSyncI {
   
   @Override
   public ContentDataI putSync(String URI, ContentKeyI key, ContentDataI value) throws Exception {
-    return null;
+    ContentDataI old = localStorage.get(key);
+    localStorage.put(key, value);
+    return old;
   }
   
   @Override
   public ContentDataI removeSync(String URI, ContentKeyI key) throws Exception {
-    return null;
+    ContentDataI data = localStorage.remove(key);
+
+    if (data == null && next != null) 
+      return next.removeSync(URI, key);
+    
+    return data;
   }
   
   @Override
   public void clearComputation(String URI) throws Exception {
     
   }
-  
 }

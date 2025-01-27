@@ -13,20 +13,31 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.SelectorI;
 
 public class DHTFacade implements DHTServicesI {
   private List<DHTNode> nodes;
+  
+  public DHTFacade(List<DHTNode> nodes) {
+    this.nodes = nodes;
+  }
 
   @Override
   public ContentDataI get(ContentKeyI key) throws Exception {
-    return null;
+    if(nodes.isEmpty()) 
+      return null;
+    
+    return nodes.get(0).getSync(null, key);
   }
 
   @Override
   public ContentDataI put(ContentKeyI key, ContentDataI value) throws Exception {
-    return null;
+    if (nodes.isEmpty()) 
+      return null;
+    return nodes.get(0).getSync(null, key);
   }
 
   @Override
   public ContentDataI remove(ContentKeyI key) throws Exception {
-    return null;
+    if (nodes.isEmpty()) 
+      return null;
+    return nodes.get(0).removeSync(null, key);
   }
 
   @Override
@@ -37,6 +48,7 @@ public class DHTFacade implements DHTServicesI {
       CombinatorI<A> combinator,
       A initialAcc
     ) throws Exception {
+    // TODO
     return null;
   }
 
