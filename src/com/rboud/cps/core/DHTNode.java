@@ -17,23 +17,23 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.ReductorI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.SelectorI;
 
 public class DHTNode implements ContentAccessSyncI, MapReduceSyncI {
-  private Set<String> seenGetURIs = new HashSet<String>();
-  private Set<String> seenPutURIs = new HashSet<String>();
   private Set<String> seenMapURIs = new HashSet<String>();
+  private Set<String> seenReduceURIs = new HashSet<String>();
+  private Set<String> seenPrintURIs = new HashSet<String>();
+
+  public static final int MAX_VALUE = 6; // Must be >= 2
 
   // key: computationURI, value: results extended from Array
   private Map<String, ArrayList<?>> mapResults = new HashMap<>();
 
-
-
   private int minHash;
   private int maxHash;
 
-  private DHTNode next;
+  private DHTNode next; // CANNOT BE NULL
   private final Map<ContentKeyI, ContentDataI> localStorage = new HashMap<>();
 
   public DHTNode(DHTNode next, int minHash, int maxHash) {
-    this.minHash = minHash;
+    this.minHash = minHash; // can be negative, included
     this.maxHash = maxHash;
     this.next = next;
   }
@@ -44,104 +44,172 @@ public class DHTNode implements ContentAccessSyncI, MapReduceSyncI {
 
   public DHTNode() {
     this(null);
+    this.next = this;
+  }
+
+  public static boolean isBetween(int value, int min, int max) {
+    return value >= min && value < max;
+  }
+
+  private boolean isBetween(int value) {
+    return isBetween(value, minHash, maxHash);
+  }
+
+  private void checkMerge() {
+    if (localStorage.size() < MAX_VALUE / 3 && next.localStorage.size() < MAX_VALUE / 3) {
+      merge();
+    }
+  }
+
+  private void merge() {
+    if (next == this) {
+      return;
+    }
+
+    // merge data
+    localStorage.putAll(next.localStorage);
+    next.localStorage.clear();
+
+    // merge hash
+    this.maxHash = next.maxHash;
+    this.next = next.next;
+  }
+
+  private void checkSplit() {
+    if (localStorage.size() > MAX_VALUE) {
+      splitNode();
+    }
+  }
+
+  private void splitNode() {
+    int minHashValue = this.maxHash, maxHashValue = this.minHash;
+
+    // find min and max hash
+    for (ContentKeyI key : localStorage.keySet()) {
+      int hash = key.hashCode();
+      minHashValue = Math.min(minHashValue, hash);
+      maxHashValue = Math.max(maxHashValue, hash);
+    }
+
+    // spliting on the middle of the range of hash values
+    // When working with integer keys, hash values tends to be close to each other,
+    // that's why we can use this method instead of juste cutting in half the range
+    int newMinHash = Math.floorDiv(maxHashValue + maxHashValue, 2);
+    int newMaxHash = maxHash;
+
+    this.maxHash = newMinHash - 1;
+    this.next = new DHTNode(next, newMinHash, newMaxHash);
+
+    // Move data
+    Map<ContentKeyI, ContentDataI> newLocalStorage = new HashMap<>();
+    localStorage.entrySet().removeIf(entry -> {
+      if (entry.getKey().hashCode() > maxHash) {
+        newLocalStorage.put(entry.getKey(), entry.getValue());
+        return true;
+      }
+      return false;
+    });
+
+    next.localStorage.putAll(newLocalStorage);
+  }
+
+  public String toString() {
+    return "DHTNode [minHash=" + minHash + ", maxHash=" + maxHash + ", nbElements=" + localStorage.size() + "]";
+  }
+
+  public void printChain(String URI) {
+    if (seenPrintURIs.contains(URI)) {
+      System.out.println("INFO PRINTCHAIN loop detected (or called before previous computation ends)");
+      return;
+    }
+    seenPrintURIs.add(URI);
+    System.out.println("Node: " + this);
+    System.out.println("Data: " + localStorage);
+    next.printChain(URI);
+    seenPrintURIs.remove(URI);
   }
 
   @Override
   public ContentDataI getSync(String URI, ContentKeyI key) throws Exception {
-    if (seenGetURIs.contains(URI)) {
-      System.err.println("WARNING GETSYNC loop detected (or called before previous computation ends) with URI" + URI + ", and hashcode :" + key.hashCode());
-    }
-    seenGetURIs.add(URI);
+    if (!this.isBetween(key.hashCode()))
+      return next.getSync(URI, key);
 
-    ContentDataI out = null;
-
-    if ((key.hashCode() < minHash || key.hashCode() > maxHash)) {
-      if (next != null)
-        out = next.getSync(URI, key);
-    } else {
-      out = localStorage.get(key);
-    }
-
-    seenGetURIs.remove(URI);
-    return out;
+    return localStorage.get(key);
   }
 
   @Override
   public ContentDataI putSync(String URI, ContentKeyI key, ContentDataI value) throws Exception {
-    if (seenPutURIs.contains(URI)) {
-      System.err.println("WARNING PUTSYNC loop detected (or called before previous computation ends) with URI" + URI + ", and hashcode :" + key.hashCode());
-    }
-    seenPutURIs.add(URI);
+    if (!this.isBetween(key.hashCode()))
+      return next.putSync(URI, key, value);
 
-    ContentDataI out = null;
-
-    if ((key.hashCode() < minHash || key.hashCode() > maxHash)) {
-      if (next != null)
-        out = next.putSync(URI, key, value);
-    } else {
-      out = localStorage.put(key, value);
-      localStorage.put(key, value);
-    }
-
-    seenPutURIs.remove(URI);
+    ContentDataI out = localStorage.put(key, value);
+    checkSplit();
     return out;
   }
 
   @Override
   public ContentDataI removeSync(String URI, ContentKeyI key) throws Exception {
-    ContentDataI out = null;
+    if (!this.isBetween(key.hashCode()))
+      return next.removeSync(URI, key);
 
-    if ((key.hashCode() < minHash || key.hashCode() > maxHash)) {
-      if (next != null)
-        out = next.removeSync(URI, key);
-    } else {
-      out = localStorage.remove(key);
-    }
-
+    ContentDataI out = localStorage.remove(key);
+    checkMerge();
     return out;
   }
 
   @Override
-  public void clearComputation(String URI) throws Exception {
-    seenGetURIs.remove(URI);
-    seenPutURIs.remove(URI);
-  }
+  public void clearComputation(String URI) throws Exception {}
 
   @Override
   public void clearMapReduceComputation(String URI) throws Exception {
-    throw new UnsupportedOperationException("Unimplemented method 'clearMapReduceComputation'");
+    seenMapURIs.remove(URI);
+    seenReduceURIs.remove(URI);
+    mapResults.remove(URI);
   }
 
   @Override
-  public <R extends Serializable> void mapSync(String URI, SelectorI selector, ProcessorI<R> processor) throws Exception {
+  public <R extends Serializable> void mapSync(String URI, SelectorI selector, ProcessorI<R> processor)
+      throws Exception {
     if (seenMapURIs.contains(URI)) {
-      System.err.println("?? MAPSYNC This souldn't happen, loop detected (or called again) with URI" + URI);
-      throw new Exception("MAPSYNC Loop detected");
+      System.out.println("INFO MAPSYNC loop detected (or called before previous computation ends) with URI" + URI);
+      return;
     }
     seenMapURIs.add(URI);
 
-    // HACK used Serializable instead of R, idk mapResults.put don't like with R
-    ArrayList<Serializable> results = localStorage.values().stream()
+    ArrayList<R> results = localStorage.values().stream()
         .filter(selector::test)
         .map(processor::apply)
         .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
-    
 
     mapResults.put(URI, results);
+    this.next.mapSync(URI, selector, processor);
     seenMapURIs.remove(URI);
   }
 
   @Override
-  public <A extends Serializable, R> A reduceSync(String URI, ReductorI<A, R> reductor, CombinatorI<A> combinator, A acc)
+  public <A extends Serializable, R> A reduceSync(String URI, ReductorI<A, R> reductor, CombinatorI<A> combinator,
+      A acc)
       throws Exception {
+    if (seenReduceURIs.contains(URI)) {
+      System.out
+          .println("INFO REDUCESYNC loop detected (or called before previous computation ends) with URI" + URI);
+      return acc;
+    }
+    seenReduceURIs.add(URI);
 
-        // HACK Il faut vérifier si le cast est possible
-        // @SuppressWarnings("unchecked")
-        ArrayList<R> data = (ArrayList<R>) mapResults.get(URI);
-        if (data == null) {
-          throw new Exception("No data found for URI " + URI);
-        }
+    // HACK Il faut vérifier si le cast est possible
+    // @SuppressWarnings("unchecked")
+    ArrayList<R> data = (ArrayList<R>) mapResults.get(URI);
+    if (data == null) {
+      throw new Exception("No data found for URI " + URI);
+    }
 
-        return data.stream().reduce(acc, reductor::apply, combinator::apply);
+    A currentResult = data.stream().reduce(acc, reductor::apply, combinator::apply);
+
+    A nextResult = next.reduceSync(URI, reductor, combinator, acc);
+    currentResult = combinator.apply(currentResult, nextResult);
+
+    seenReduceURIs.remove(URI);
+    return currentResult;
   }
 }
