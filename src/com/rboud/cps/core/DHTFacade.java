@@ -1,6 +1,7 @@
 package com.rboud.cps.core;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentDataI;
@@ -13,9 +14,15 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.SelectorI;
 
 public class DHTFacade implements DHTServicesI {
   private List<DHTNode> nodes;
+
+  final String URI = "DHTFacade";
   
   public DHTFacade(List<DHTNode> nodes) {
     this.nodes = nodes;
+  }
+
+  public DHTFacade() {
+    this(new ArrayList<>());
   }
 
   @Override
@@ -30,7 +37,7 @@ public class DHTFacade implements DHTServicesI {
   public ContentDataI put(ContentKeyI key, ContentDataI value) throws Exception {
     if (nodes.isEmpty()) 
       return null;
-    return nodes.get(0).getSync(null, key);
+    return nodes.get(0).putSync(URI, key, value);
   }
 
   @Override
