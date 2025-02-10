@@ -16,7 +16,7 @@ public class DHTFacade implements DHTServicesI {
   private List<DHTNode> nodes;
 
   final String URI = "DHTFacade";
-  
+
   public DHTFacade(List<DHTNode> nodes) {
     this.nodes = nodes;
   }
@@ -27,22 +27,22 @@ public class DHTFacade implements DHTServicesI {
 
   @Override
   public ContentDataI get(ContentKeyI key) throws Exception {
-    if(nodes.isEmpty()) 
+    if (nodes.isEmpty())
       return null;
-    
+
     return nodes.get(0).getSync(null, key);
   }
 
   @Override
   public ContentDataI put(ContentKeyI key, ContentDataI value) throws Exception {
-    if (nodes.isEmpty()) 
+    if (nodes.isEmpty())
       return null;
     return nodes.get(0).putSync(URI, key, value);
   }
 
   @Override
   public ContentDataI remove(ContentKeyI key) throws Exception {
-    if (nodes.isEmpty()) 
+    if (nodes.isEmpty())
       return null;
     return nodes.get(0).removeSync(null, key);
   }
@@ -53,10 +53,19 @@ public class DHTFacade implements DHTServicesI {
       ProcessorI<R> processor,
       ReductorI<A, R> reductor,
       CombinatorI<A> combinator,
-      A initialAcc
-    ) throws Exception {
-    // TODO
-    return null;
+      A initialAcc) throws Exception {
+    if (nodes.isEmpty())
+      return null;
+
+    return nodes.stream().map((node) -> {
+      try {
+        node.mapSync(URI, selector, processor);
+        return node.reduceSync(URI, reductor, combinator, initialAcc);
+      } catch (Exception e) {
+        e.printStackTrace();
+        return null;
+      }
+    }).reduce(initialAcc, combinator::apply);
   }
 
 }

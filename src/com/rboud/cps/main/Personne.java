@@ -1,6 +1,5 @@
 package com.rboud.cps.main;
 
-import fr.sorbonne_u.components.annotations.OfferedInterfaces;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentDataI;
 
 // ContentKey is interger
