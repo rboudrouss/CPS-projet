@@ -21,7 +21,7 @@ public class DHTNode implements ContentAccessSyncI, MapReduceSyncI {
   private Set<String> seenReduceURIs = new HashSet<String>();
   private Set<String> seenPrintURIs = new HashSet<String>();
 
-  public static final int MAX_VALUE = 6; // Must be >= 2
+  public static final int MAX_VALUE = 2; // Must be >= 2
 
   // key: computationURI, value: results extended from Array
   private Map<String, ArrayList<?>> mapResults = new HashMap<>();
@@ -56,33 +56,34 @@ public class DHTNode implements ContentAccessSyncI, MapReduceSyncI {
   }
 
   private void checkMerge() {
-    if (localStorage.size() < MAX_VALUE / 3 && next.localStorage.size() < MAX_VALUE / 3) {
-      merge();
+    if (this.localStorage.size() < MAX_VALUE / 3 && this.next.localStorage.size() < MAX_VALUE / 3) {
+      this.merge();
     }
   }
 
   private void merge() {
-    if (next == this) {
+    if (this.next == this) {
       return;
     }
 
     // merge data
-    localStorage.putAll(next.localStorage);
-    next.localStorage.clear();
+    this.localStorage.putAll(this.next.localStorage);
+    this.next.localStorage.clear();
 
     // merge hash
-    this.maxHash = next.maxHash;
-    this.next = next.next;
+    this.maxHash = this.next.maxHash;
+    this.next = this.next.next;
   }
 
   private void checkSplit() {
-    if (localStorage.size() > MAX_VALUE) {
-      splitNode();
+    if (this.localStorage.size() > MAX_VALUE) {
+      this.splitNode();
     }
   }
 
   private void splitNode() {
-    int minHashValue = this.maxHash, maxHashValue = this.minHash;
+    int minHashValue = this.maxHash;
+    int maxHashValue = this.minHash;
 
     // find min and max hash
     for (ContentKeyI key : localStorage.keySet()) {
@@ -93,67 +94,67 @@ public class DHTNode implements ContentAccessSyncI, MapReduceSyncI {
 
     // spliting on the middle of the range of hash values
     // When working with integer keys, hash values tends to be close to each other,
-    // that's why we can use this method instead of juste cutting in half the range
+    // that's why we use this method instead of just cutting in half the range
     int newMinHash = Math.floorDiv(maxHashValue + maxHashValue, 2);
-    int newMaxHash = maxHash;
+    int newMaxHash = this.maxHash;
 
     this.maxHash = newMinHash - 1;
     this.next = new DHTNode(next, newMinHash, newMaxHash);
 
     // Move data
     Map<ContentKeyI, ContentDataI> newLocalStorage = new HashMap<>();
-    localStorage.entrySet().removeIf(entry -> {
-      if (entry.getKey().hashCode() > maxHash) {
+    this.localStorage.entrySet().removeIf(entry -> {
+      if (entry.getKey().hashCode() > this.maxHash) {
         newLocalStorage.put(entry.getKey(), entry.getValue());
         return true;
       }
       return false;
     });
 
-    next.localStorage.putAll(newLocalStorage);
+    this.next.localStorage.putAll(newLocalStorage);
   }
 
   public String toString() {
-    return "DHTNode [minHash=" + minHash + ", maxHash=" + maxHash + ", nbElements=" + localStorage.size() + "]";
+    return "DHTNode [minHash=" + this.minHash + ", maxHash=" + this.maxHash + ", nbElements=" + this.localStorage.size() + "]";
   }
 
   public void printChain(String URI) {
-    if (seenPrintURIs.contains(URI)) {
+    if (this.seenPrintURIs.contains(URI)) {
       System.out.println("INFO PRINTCHAIN loop detected (or called before previous computation ends)");
       return;
     }
-    seenPrintURIs.add(URI);
+    this.seenPrintURIs.add(URI);
     System.out.println("Node: " + this);
     System.out.println("Data: " + localStorage);
-    next.printChain(URI);
-    seenPrintURIs.remove(URI);
+    this.next.printChain(URI);
+    this.seenPrintURIs.remove(URI);
   }
 
   @Override
   public ContentDataI getSync(String URI, ContentKeyI key) throws Exception {
     if (!this.isBetween(key.hashCode()))
-      return next.getSync(URI, key);
+      return this.next.getSync(URI, key);
 
-    return localStorage.get(key);
+    return this.localStorage.get(key);
   }
 
   @Override
   public ContentDataI putSync(String URI, ContentKeyI key, ContentDataI value) throws Exception {
     if (!this.isBetween(key.hashCode()))
-      return next.putSync(URI, key, value);
+      return this.next.putSync(URI, key, value);
 
-    ContentDataI out = localStorage.put(key, value);
-    checkSplit();
+    ContentDataI out = this.localStorage.put(key, value);
+    this.checkSplit();
     return out;
   }
 
   @Override
   public ContentDataI removeSync(String URI, ContentKeyI key) throws Exception {
     if (!this.isBetween(key.hashCode()))
-      return next.removeSync(URI, key);
+      return this.next.removeSync(URI, key);
 
-    ContentDataI out = localStorage.remove(key);
-    checkMerge();
+    ContentDataI out = this.localStorage.remove(key);
+    this.checkMerge();
     return out;
   }
 
@@ -162,44 +163,44 @@ public class DHTNode implements ContentAccessSyncI, MapReduceSyncI {
 
   @Override
   public void clearMapReduceComputation(String URI) throws Exception {
-    seenMapURIs.remove(URI);
-    seenReduceURIs.remove(URI);
-    mapResults.remove(URI);
+    this.seenMapURIs.remove(URI);
+    this.seenReduceURIs.remove(URI);
+    this.mapResults.remove(URI);
   }
 
   @Override
   public <R extends Serializable> void mapSync(String URI, SelectorI selector, ProcessorI<R> processor)
       throws Exception {
-    if (seenMapURIs.contains(URI)) {
+    if (this.seenMapURIs.contains(URI)) {
       System.out.println("INFO MAPSYNC loop detected (or called before previous computation ends) with URI" + URI);
       return;
     }
-    seenMapURIs.add(URI);
+    this.seenMapURIs.add(URI);
 
-    ArrayList<R> results = localStorage.values().stream()
+    ArrayList<R> results = this.localStorage.values().stream()
         .filter(selector::test)
         .map(processor::apply)
         .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
 
-    mapResults.put(URI, results);
+    this.mapResults.put(URI, results);
     this.next.mapSync(URI, selector, processor);
-    seenMapURIs.remove(URI);
+    this.seenMapURIs.remove(URI);
   }
 
   @Override
   public <A extends Serializable, R> A reduceSync(String URI, ReductorI<A, R> reductor, CombinatorI<A> combinator,
       A acc)
       throws Exception {
-    if (seenReduceURIs.contains(URI)) {
+    if (this.seenReduceURIs.contains(URI)) {
       System.out
           .println("INFO REDUCESYNC loop detected (or called before previous computation ends) with URI" + URI);
       return acc;
     }
-    seenReduceURIs.add(URI);
+    this.seenReduceURIs.add(URI);
 
     // HACK Il faut vérifier si le cast est possible
     // @SuppressWarnings("unchecked")
-    ArrayList<R> data = (ArrayList<R>) mapResults.get(URI);
+    ArrayList<R> data = (ArrayList<R>) this.mapResults.get(URI);
     if (data == null) {
       throw new Exception("No data found for URI " + URI);
     }
@@ -209,7 +210,7 @@ public class DHTNode implements ContentAccessSyncI, MapReduceSyncI {
     A nextResult = next.reduceSync(URI, reductor, combinator, acc);
     currentResult = combinator.apply(currentResult, nextResult);
 
-    seenReduceURIs.remove(URI);
+    this.seenReduceURIs.remove(URI);
     return currentResult;
   }
 }
