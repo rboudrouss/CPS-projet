@@ -55,12 +55,14 @@ public class DHTEndpoint implements ContentNodeBaseCompositeEndPointI<ContentAcc
 
   @Override
   public boolean serverSideInitialised() {
-    return complete() && this.contentAccessEndPoint.serverSideInitialised() && this.mapReduceEndPoint.serverSideInitialised();
+    return complete() && this.contentAccessEndPoint.serverSideInitialised()
+        && this.mapReduceEndPoint.serverSideInitialised();
   }
 
   @Override
   public boolean clientSideInitialised() {
-    return complete() && this.contentAccessEndPoint.clientSideInitialised() && this.mapReduceEndPoint.clientSideInitialised() && this.serverSideInitialised();
+    return complete() && this.contentAccessEndPoint.clientSideInitialised()
+        && this.mapReduceEndPoint.clientSideInitialised() && this.serverSideInitialised();
   }
 
   @Override
