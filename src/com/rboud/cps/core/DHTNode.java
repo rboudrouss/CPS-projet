@@ -7,20 +7,33 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import com.rboud.cps.connections.DHTContentAccessInboundPort;
+import com.rboud.cps.connections.DHTMapReduceInboundPort;
+
+import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentAccessSyncCI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentAccessSyncI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentDataI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentKeyI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.CombinatorI;
+import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.MapReduceSyncCI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.MapReduceSyncI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.ProcessorI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.ReductorI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.SelectorI;
 
-public class DHTNode implements ContentAccessSyncI, MapReduceSyncI {
+import fr.sorbonne_u.components.AbstractComponent;
+import fr.sorbonne_u.components.annotations.OfferedInterfaces;
+import fr.sorbonne_u.components.annotations.RequiredInterfaces;
+import fr.sorbonne_u.components.exceptions.ComponentShutdownException;
+
+@OfferedInterfaces(offered = { ContentAccessSyncCI.class, MapReduceSyncCI.class })
+@RequiredInterfaces(required = { ContentAccessSyncCI.class, MapReduceSyncCI.class })
+public class DHTNode extends AbstractComponent implements ContentAccessSyncI, MapReduceSyncI {
   private Set<String> seenURIs = new HashSet<String>();
   private Set<String> seenPrintURIs = new HashSet<String>();
 
-  public static final int MAX_VALUE = 3; // Must be >= 2
+  // max element in node, Must be >= 2
+  public static final int MAX_VALUE = Integer.MAX_VALUE;
 
   // key: computationURI, value: results extended from Array.
   // Used to store the results of a map computation for a given URI
@@ -32,21 +45,37 @@ public class DHTNode implements ContentAccessSyncI, MapReduceSyncI {
   private DHTNode next; // CANNOT BE NULL
   private final Map<ContentKeyI, ContentDataI> localStorage = new HashMap<>();
 
-  public DHTNode(DHTNode next, int minHash, int maxHash) {
-    this.minHash = minHash; // can be negative, included
-    this.maxHash = maxHash;
-    this.next = next;
-    if (next == null) {
-      this.next = this;
+  protected DHTContentAccessInboundPort contentAccessInboudPort;
+  public static final String CONTENT_ACCESS_INBOUND_PORT_URI = "content-access-inbound-port-uri";
+
+  protected DHTMapReduceInboundPort mapReduceInboundPort;
+  public static final String MAP_REDUCE_INBOUND_PORT_URI = "map-reduce-inbound-port-uri";
+
+  protected DHTNode() {
+    super(1, 0);
+    this.minHash = Integer.MIN_VALUE;
+    this.maxHash = Integer.MAX_VALUE;
+    this.next = this;
+    try {
+      this.contentAccessInboudPort = new DHTContentAccessInboundPort(CONTENT_ACCESS_INBOUND_PORT_URI, this);
+      this.contentAccessInboudPort.publishPort();
+
+      this.mapReduceInboundPort = new DHTMapReduceInboundPort(MAP_REDUCE_INBOUND_PORT_URI, this);
+      this.mapReduceInboundPort.publishPort();
+    } catch (Exception e) {
+      e.printStackTrace();
+      return;
     }
   }
 
-  public DHTNode(DHTNode next) {
-    this(next, Integer.MIN_VALUE, Integer.MAX_VALUE);
-  }
-
-  public DHTNode() {
-    this(null);
+  @Override
+  public synchronized void shutdown() throws ComponentShutdownException {
+    try {
+      this.contentAccessInboudPort.unpublishPort();
+    } catch (Exception e) {
+      throw new ComponentShutdownException(e);
+    }
+    super.shutdown();
   }
 
   public static boolean isBetween(int value, int min, int max) {
@@ -79,43 +108,47 @@ public class DHTNode implements ContentAccessSyncI, MapReduceSyncI {
 
   private void checkSplit() {
     if (this.localStorage.size() > MAX_VALUE) {
-      this.splitNode();
+      // this.splitNode();
     }
   }
 
-  private void splitNode() {
-    int minHashValue = this.maxHash;
-    int maxHashValue = this.minHash;
-
-    // find min and max hash
-    for (ContentKeyI key : localStorage.keySet()) {
-      int hash = key.hashCode();
-      minHashValue = Math.min(minHashValue, hash);
-      maxHashValue = Math.max(maxHashValue, hash);
-    }
-
-    // spliting on the middle of the range of hash values
-    // When working with integer keys, hash values tends to be close to each other,
-    // that's why we use this method instead of just cutting in half the range
-    // Note: Using long to avoid overflow
-    int newMinHash = (int) Math.floorDiv((long) maxHashValue + (long) maxHashValue, (long) 2);
-    int newMaxHash = this.maxHash;
-
-    this.maxHash = newMinHash - 1;
-    this.next = new DHTNode(next, newMinHash, newMaxHash);
-
-    // Move data
-    Map<ContentKeyI, ContentDataI> newLocalStorage = new HashMap<>();
-    this.localStorage.entrySet().removeIf(entry -> {
-      if (entry.getKey().hashCode() > this.maxHash) {
-        newLocalStorage.put(entry.getKey(), entry.getValue());
-        return true;
-      }
-      return false;
-    });
-
-    this.next.localStorage.putAll(newLocalStorage);
-  }
+  /*
+   * private void splitNode() {
+   * int minHashValue = this.maxHash;
+   * int maxHashValue = this.minHash;
+   * 
+   * // find min and max hash
+   * for (ContentKeyI key : localStorage.keySet()) {
+   * int hash = key.hashCode();
+   * minHashValue = Math.min(minHashValue, hash);
+   * maxHashValue = Math.max(maxHashValue, hash);
+   * }
+   * 
+   * // spliting on the middle of the range of hash values
+   * // When working with integer keys, hash values tends to be close to each
+   * other,
+   * // that's why we use this method instead of just cutting in half the range
+   * // Note: Using long to avoid overflow
+   * int newMinHash = (int) Math.floorDiv((long) maxHashValue + (long)
+   * maxHashValue, (long) 2);
+   * int newMaxHash = this.maxHash;
+   * 
+   * this.maxHash = newMinHash - 1;
+   * this.next = new DHTNode(next, newMinHash, newMaxHash);
+   * 
+   * // Move data
+   * Map<ContentKeyI, ContentDataI> newLocalStorage = new HashMap<>();
+   * this.localStorage.entrySet().removeIf(entry -> {
+   * if (entry.getKey().hashCode() > this.maxHash) {
+   * newLocalStorage.put(entry.getKey(), entry.getValue());
+   * return true;
+   * }
+   * return false;
+   * });
+   * 
+   * this.next.localStorage.putAll(newLocalStorage);
+   * }
+   */
 
   public String toString() {
     return "DHTNode [minHash=" + this.minHash + ", maxHash=" + this.maxHash + ", nbElements=" + this.localStorage.size()

@@ -32,12 +32,6 @@ public class DHTFacade implements DHTServicesI {
     this(compositeEndpoint.getContentAccessEndpoint(), compositeEndpoint.getMapReduceEndpoint());
   }
 
-  /*
-   * public void printChainNode() {
-   * this.node.printChain(URI);
-   * }
-   */
-
   @Override
   public ContentDataI get(ContentKeyI key) throws Exception {
     assert this.contentAccessEndpoint.serverSideInitialised();

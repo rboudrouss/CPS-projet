@@ -1,0 +1,70 @@
+package com.rboud.cps.client;
+
+import com.rboud.cps.connections.LoadTesterContentAccessOutboudPort;
+import com.rboud.cps.connections.LoadTesterMapReduceOutboundPort;
+
+import fr.sorbonne_u.components.AbstractComponent;
+import fr.sorbonne_u.components.annotations.RequiredInterfaces;
+import fr.sorbonne_u.components.exceptions.ComponentShutdownException;
+import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentAccessSyncCI;
+import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.MapReduceSyncCI;
+
+@RequiredInterfaces(required = { ContentAccessSyncCI.class, MapReduceSyncCI.class })
+public class LoadTester extends AbstractComponent {
+
+  protected LoadTesterContentAccessOutboudPort contentAccessOutboundPort;
+  public static final String CONTENT_ACCESS_URI = "content-access-uri";
+
+  protected LoadTesterMapReduceOutboundPort mapReduceOutboundPort;
+  public static final String MAP_REDUCE_URI = "map-reduce-uri";
+
+  protected LoadTester() {
+    super(1, 0);
+    try {
+      this.contentAccessOutboundPort = new LoadTesterContentAccessOutboudPort(CONTENT_ACCESS_URI, this);
+      this.contentAccessOutboundPort.publishPort();
+
+      this.mapReduceOutboundPort = new LoadTesterMapReduceOutboundPort(MAP_REDUCE_URI, this);
+      this.mapReduceOutboundPort.publishPort();
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+
+    this.toggleLogging();
+    this.toggleTracing();
+  }
+
+
+  @Override
+  public synchronized void execute() throws Exception {
+    super.execute();
+
+    for (int i = 0; i<10; i++) {
+      Personne p = Personne.getRandomPersonne();
+      this.contentAccessOutboundPort.putSync(CONTENT_ACCESS_URI, p.getId(), p);
+    }
+
+    Personne p = (Personne) this.contentAccessOutboundPort.getSync(CONTENT_ACCESS_URI, new Id(2));
+    this.logMessage("Personne with id 2: " + p);
+
+  } 
+
+  @Override
+  public synchronized void finalize() throws Exception {
+    this.doPortDisconnection(CONTENT_ACCESS_URI);
+    this.doPortDisconnection(MAP_REDUCE_URI);
+    super.finalise();
+  }
+
+  @Override
+  public synchronized void shutdown() throws ComponentShutdownException {
+    try {
+      this.contentAccessOutboundPort.unpublishPort();
+      this.mapReduceOutboundPort.unpublishPort();
+    } catch (Exception e) {
+      throw new ComponentShutdownException(e);
+    }
+    super.shutdown();
+  }
+
+}
