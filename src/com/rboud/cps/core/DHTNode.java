@@ -28,7 +28,7 @@ import fr.sorbonne_u.components.exceptions.ComponentShutdownException;
 
 @OfferedInterfaces(offered = { ContentAccessSyncCI.class, MapReduceSyncCI.class })
 @RequiredInterfaces(required = { ContentAccessSyncCI.class, MapReduceSyncCI.class })
-public class DHTNode extends AbstractComponent implements ContentAccessSyncI, MapReduceSyncI {
+public class DHTNode extends AbstractComponent implements ContentAccessSyncCI, MapReduceSyncCI {
   private Set<String> seenURIs = new HashSet<String>();
   private Set<String> seenPrintURIs = new HashSet<String>();
 
