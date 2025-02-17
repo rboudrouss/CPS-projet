@@ -22,7 +22,8 @@ public class DHTNode implements ContentAccessSyncI, MapReduceSyncI {
 
   public static final int MAX_VALUE = 3; // Must be >= 2
 
-  // key: computationURI, value: results extended from Array
+  // key: computationURI, value: results extended from Array.
+  // Used to store the results of a map computation for a given URI
   private Map<String, ArrayList<?>> mapResults = new HashMap<>();
 
   private int minHash;
