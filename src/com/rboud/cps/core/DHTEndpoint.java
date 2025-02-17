@@ -1,43 +1,39 @@
 package com.rboud.cps.core;
 
+import fr.sorbonne_u.components.endpoints.EndPoint;
 import fr.sorbonne_u.components.endpoints.EndPointI;
+import fr.sorbonne_u.components.endpoints.POJOEndPoint;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentAccessSyncI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.endpoints.ContentNodeBaseCompositeEndPointI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.MapReduceSyncI;
 
 public class DHTEndpoint implements ContentNodeBaseCompositeEndPointI<ContentAccessSyncI, MapReduceSyncI> {
-  private EndPointI<ContentAccessSyncI> contentAccessEndPoint;
-  private EndPointI<MapReduceSyncI> mapReduceEndPoint;
-
-  private boolean clientSideInitialise = false;
+  private EndPoint<ContentAccessSyncI> contentAccessEndPoint;
+  private EndPoint<MapReduceSyncI> mapReduceEndPoint;
 
   public DHTEndpoint() {
-    this.contentAccessEndPoint = null;
-    this.mapReduceEndPoint = null;
+    this.contentAccessEndPoint = new POJOEndPoint<>(ContentAccessSyncI.class);
+    this.mapReduceEndPoint = new POJOEndPoint<>(MapReduceSyncI.class);
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public void initialiseServerSide(Object serverSideEndPointOwner) {
-    if (serverSideEndPointOwner instanceof ContentAccessSyncI)
-      this.contentAccessEndPoint = (EndPointI<ContentAccessSyncI>) serverSideEndPointOwner;
-    
-    if (serverSideEndPointOwner instanceof MapReduceSyncI)
-      this.mapReduceEndPoint = (EndPointI<MapReduceSyncI>) serverSideEndPointOwner;
-    
+    assert serverSideEndPointOwner != null;
+
+    this.contentAccessEndPoint.initialiseServerSide(serverSideEndPointOwner);
+    this.mapReduceEndPoint.initialiseServerSide(serverSideEndPointOwner);
+
     assert serverSideInitialised();
-    assert clientSideInitialised();
   }
 
-  /*
-   * Note that this is the same as the server side
-   */
   @Override
   public void initialiseClientSide(Object clientSideEndPointOwner) {
     assert clientSideEndPointOwner != null;
     assert serverSideInitialised();
 
-    this.clientSideInitialise = true;
+    this.contentAccessEndPoint.initialiseClientSide(clientSideEndPointOwner);
+    this.mapReduceEndPoint.initialiseClientSide(clientSideEndPointOwner);
+
     assert clientSideInitialised();
   }
 
@@ -49,9 +45,9 @@ public class DHTEndpoint implements ContentNodeBaseCompositeEndPointI<ContentAcc
   @SuppressWarnings("unchecked")
   @Override
   public <I, J extends I> EndPointI<J> getEndPoint(Class<I> inter) {
-    if (inter.equals(ContentAccessSyncI.class)) {
+    if (ContentAccessSyncI.class.isAssignableFrom(inter)) {
       return (EndPointI<J>) contentAccessEndPoint;
-    } else if (inter.equals(MapReduceSyncI.class)) {
+    } else if (MapReduceSyncI.class.isAssignableFrom(inter)) {
       return (EndPointI<J>) mapReduceEndPoint;
     }
     return null;
@@ -59,24 +55,24 @@ public class DHTEndpoint implements ContentNodeBaseCompositeEndPointI<ContentAcc
 
   @Override
   public boolean serverSideInitialised() {
-    return complete();
+    return complete() && this.contentAccessEndPoint.serverSideInitialised() && this.mapReduceEndPoint.serverSideInitialised();
   }
 
   @Override
   public boolean clientSideInitialised() {
-    return this.clientSideInitialise && serverSideInitialised();
+    return complete() && this.contentAccessEndPoint.clientSideInitialised() && this.mapReduceEndPoint.clientSideInitialised() && this.serverSideInitialised();
   }
 
   @Override
   public void cleanUpServerSide() {
-    this.contentAccessEndPoint = null;
-    this.mapReduceEndPoint = null;
+    this.contentAccessEndPoint.cleanUpServerSide();
+    this.mapReduceEndPoint.cleanUpServerSide();
   }
 
   @Override
   public void cleanUpClientSide() {
-    this.contentAccessEndPoint = null;
-    this.mapReduceEndPoint = null;
+    this.contentAccessEndPoint.cleanUpClientSide();
+    this.mapReduceEndPoint.cleanUpClientSide();
   }
 
   @Override
