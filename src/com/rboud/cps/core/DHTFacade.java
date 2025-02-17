@@ -9,14 +9,17 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.CombinatorI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.ProcessorI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.ReductorI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.SelectorI;
+import fr.sorbonne_u.cps.mapreduce.utils.URIGenerator;
 
 public class DHTFacade implements DHTServicesI {
   private DHTPOJOEndpoint endpoint;
 
-  final String URI = "DHTFacade";
+  static final String URIPrefix = "DHTFacade";
+  final String URI;
 
   public DHTFacade(DHTPOJOEndpoint endpoint) {
     this.endpoint = endpoint;
+    this.URI = URIGenerator.generateURI(URIPrefix);
   }
 
   /*
