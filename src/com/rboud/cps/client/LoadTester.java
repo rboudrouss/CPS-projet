@@ -34,20 +34,32 @@ public class LoadTester extends AbstractComponent {
     this.toggleTracing();
   }
 
-
   @Override
   public synchronized void execute() throws Exception {
     super.execute();
 
-    for (int i = 0; i<10; i++) {
-      Personne p = Personne.getRandomPersonne();
-      this.contentAccessOutboundPort.putSync(CONTENT_ACCESS_URI, p.getId(), p);
+    for (int i = 0; i < 10; i++) {
+      Personne temp = Personne.getRandomPersonne();
+      this.contentAccessOutboundPort.putSync(CONTENT_ACCESS_URI, temp.getId(), temp);
     }
 
-    Personne p = (Personne) this.contentAccessOutboundPort.getSync(CONTENT_ACCESS_URI, new Id(2));
-    this.logMessage("Personne with id 2: " + p);
+    Personne temp = (Personne) this.contentAccessOutboundPort.getSync(CONTENT_ACCESS_URI, new Id(2));
+    this.logMessage("Personne with id 2: " + temp);
 
-  } 
+    this.mapReduceOutboundPort.mapSync(
+        MAP_REDUCE_URI,
+        (_) -> true,
+        p -> p.getValue("AGE") // formatting hack
+    );
+    Integer out = this.mapReduceOutboundPort.reduceSync(
+        MAP_REDUCE_URI,
+        (a, b) -> a + (int) b,
+        (a, b) -> a + b,
+        0 // formatting hack
+    );
+
+    this.logMessage("Sum of ages: " + out);
+  }
 
   @Override
   public synchronized void finalize() throws Exception {
