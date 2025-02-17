@@ -7,11 +7,11 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentAccessSyncI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.endpoints.ContentNodeBaseCompositeEndPointI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.MapReduceSyncI;
 
-public class DHTEndpoint implements ContentNodeBaseCompositeEndPointI<ContentAccessSyncI, MapReduceSyncI> {
+public class DHTPOJOEndpoint implements ContentNodeBaseCompositeEndPointI<ContentAccessSyncI, MapReduceSyncI> {
   private EndPoint<ContentAccessSyncI> contentAccessEndPoint;
   private EndPoint<MapReduceSyncI> mapReduceEndPoint;
 
-  public DHTEndpoint() {
+  public DHTPOJOEndpoint() {
     this.contentAccessEndPoint = new POJOEndPoint<>(ContentAccessSyncI.class);
     this.mapReduceEndPoint = new POJOEndPoint<>(MapReduceSyncI.class);
   }
@@ -89,7 +89,7 @@ public class DHTEndpoint implements ContentNodeBaseCompositeEndPointI<ContentAcc
 
   @Override
   public ContentNodeBaseCompositeEndPointI<ContentAccessSyncI, MapReduceSyncI> copyWithSharable() {
-    DHTEndpoint out = new DHTEndpoint();
+    DHTPOJOEndpoint out = new DHTPOJOEndpoint();
     out.contentAccessEndPoint = this.contentAccessEndPoint;
     out.mapReduceEndPoint = this.mapReduceEndPoint;
     return out;

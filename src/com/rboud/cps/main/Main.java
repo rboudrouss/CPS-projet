@@ -1,6 +1,6 @@
 package com.rboud.cps.main;
 
-import com.rboud.cps.core.DHTEndpoint;
+import com.rboud.cps.core.DHTPOJOEndpoint;
 import com.rboud.cps.core.DHTFacade;
 import com.rboud.cps.core.DHTNode;
 
@@ -9,7 +9,7 @@ public class Main {
   public static void main(String[] args) {
     boolean DEBUG_ID_INT = false;
 
-    DHTEndpoint endpoint = new DHTEndpoint();
+    DHTPOJOEndpoint endpoint = new DHTPOJOEndpoint();
 
     DHTNode node = new DHTNode();
     endpoint.initialiseServerSide(node);

@@ -11,11 +11,11 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.ReductorI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.SelectorI;
 
 public class DHTFacade implements DHTServicesI {
-  private DHTEndpoint endpoint;
+  private DHTPOJOEndpoint endpoint;
 
   final String URI = "DHTFacade";
 
-  public DHTFacade(DHTEndpoint endpoint) {
+  public DHTFacade(DHTPOJOEndpoint endpoint) {
     this.endpoint = endpoint;
   }
 
