@@ -5,13 +5,11 @@ import java.util.Random;
 
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentDataI;
 
-// ContentKey is interger
-
 public class Personne implements ContentDataI {
   private String nom;
   private String prenom;
   private int age;
-  private int n = 0;
+  private static int n = 0;
 
   public Personne(String nom, String prenom, int age) {
     this.nom = nom;
