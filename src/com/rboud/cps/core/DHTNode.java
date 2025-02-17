@@ -7,6 +7,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import com.rboud.cps.utils.Utility;
+
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentAccessSyncI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentDataI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentKeyI;
@@ -21,7 +23,7 @@ public class DHTNode implements ContentAccessSyncI, MapReduceSyncI {
   private Set<String> seenReduceURIs = new HashSet<String>();
   private Set<String> seenPrintURIs = new HashSet<String>();
 
-  public static final int MAX_VALUE = 2; // Must be >= 2
+  public static final int MAX_VALUE = 3; // Must be >= 2
 
   // key: computationURI, value: results extended from Array
   private Map<String, ArrayList<?>> mapResults = new HashMap<>();
@@ -36,6 +38,9 @@ public class DHTNode implements ContentAccessSyncI, MapReduceSyncI {
     this.minHash = minHash; // can be negative, included
     this.maxHash = maxHash;
     this.next = next;
+    if (next == null) {
+      this.next = this;
+    }
   }
 
   public DHTNode(DHTNode next) {
@@ -44,7 +49,6 @@ public class DHTNode implements ContentAccessSyncI, MapReduceSyncI {
 
   public DHTNode() {
     this(null);
-    this.next = this;
   }
 
   public static boolean isBetween(int value, int min, int max) {
@@ -95,7 +99,8 @@ public class DHTNode implements ContentAccessSyncI, MapReduceSyncI {
     // spliting on the middle of the range of hash values
     // When working with integer keys, hash values tends to be close to each other,
     // that's why we use this method instead of just cutting in half the range
-    int newMinHash = Math.floorDiv(maxHashValue + maxHashValue, 2);
+    // Note: Using long to avoid overflow
+    int newMinHash = (int) Math.floorDiv((long) maxHashValue + (long) maxHashValue, (long) 2);
     int newMaxHash = this.maxHash;
 
     this.maxHash = newMinHash - 1;
@@ -115,7 +120,8 @@ public class DHTNode implements ContentAccessSyncI, MapReduceSyncI {
   }
 
   public String toString() {
-    return "DHTNode [minHash=" + this.minHash + ", maxHash=" + this.maxHash + ", nbElements=" + this.localStorage.size() + "]";
+    return "DHTNode [minHash=" + this.minHash + ", maxHash=" + this.maxHash + ", nbElements=" + this.localStorage.size()
+        + "]";
   }
 
   public void printChain(String URI) {
@@ -159,7 +165,8 @@ public class DHTNode implements ContentAccessSyncI, MapReduceSyncI {
   }
 
   @Override
-  public void clearComputation(String URI) throws Exception {}
+  public void clearComputation(String URI) throws Exception {
+  }
 
   @Override
   public void clearMapReduceComputation(String URI) throws Exception {
@@ -199,7 +206,7 @@ public class DHTNode implements ContentAccessSyncI, MapReduceSyncI {
     this.seenReduceURIs.add(URI);
 
     // HACK Il faut vérifier si le cast est possible
-    // @SuppressWarnings("unchecked")
+    @SuppressWarnings("unchecked")
     ArrayList<R> data = (ArrayList<R>) this.mapResults.get(URI);
     if (data == null) {
       throw new Exception("No data found for URI " + URI);

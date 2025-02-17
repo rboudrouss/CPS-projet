@@ -3,7 +3,9 @@ package com.rboud.cps.core;
 import fr.sorbonne_u.components.endpoints.EndPointI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.endpoints.ContentNodeBaseCompositeEndPointI;
 
-public class DHTNodeCompositeEndpoint implements ContentNodeBaseCompositeEndPointI<DHTNode, DHTNode> {
+public class DHTEndpoint implements ContentNodeBaseCompositeEndPointI<DHTNode, DHTNode> {
+
+  
 
   @Override
   public void initialiseServerSide(Object serverSideEndPointOwner) {

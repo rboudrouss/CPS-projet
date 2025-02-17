@@ -1,6 +1,7 @@
 package com.rboud.cps.main;
 
 import java.io.Serializable;
+import java.util.Random;
 
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentDataI;
 
@@ -10,11 +11,13 @@ public class Personne implements ContentDataI {
   private String nom;
   private String prenom;
   private int age;
+  private int n = 0;
 
   public Personne(String nom, String prenom, int age) {
     this.nom = nom;
     this.prenom = prenom;
     this.age = age;
+    n += 1;
   }
 
   public String getNom() {
@@ -44,5 +47,28 @@ public class Personne implements ContentDataI {
     }
     System.out.println("WARNING personne#getvalue : " + attributeName + " not found");
     return "Attribute not found";
+  }
+
+  public static Personne getRandomPersonne() {
+    return new Personne(randomString(10), randomString(10), new Random().nextInt(100));
+  }
+
+  public static String randomString(int length) {
+    int leftLimit = 97; // letter 'a'
+    int rightLimit = 122; // letter 'z'
+    Random random = new Random();
+
+    return random.ints(leftLimit, rightLimit + 1)
+        .limit(length)
+        .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
+        .toString();
+  }
+
+  public Id getId() {
+    return new Id(n);
+  }
+
+  public NameId getNameId() {
+    return new NameId(nom);
   }
 }

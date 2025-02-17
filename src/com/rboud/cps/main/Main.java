@@ -5,20 +5,19 @@ import com.rboud.cps.core.DHTFacade;
 public class Main {
 
   public static void main(String[] args) {
-    Personne personne = new Personne("Dupont", "Jean", 25);
-
     DHTFacade facade = new DHTFacade();
 
     try {
-      facade.put(new Id(1), personne);
-      facade.put(new Id(2), personne);
-      facade.put(new Id(3), personne);
-      facade.put(new Id(4), personne);
-      facade.put(new Id(5), personne);
-      facade.put(new Id(6), personne);
-      facade.put(new Id(7), personne);
-      facade.put(new Id(8), personne);
-      facade.put(new Id(9), personne);
+      facade.put(new Id(1), Personne.getRandomPersonne());
+      facade.put(new Id(2), Personne.getRandomPersonne());
+      facade.put(new Id(3), Personne.getRandomPersonne());
+      facade.put(new Id(4), Personne.getRandomPersonne());
+      facade.put(new Id(5), Personne.getRandomPersonne());
+      facade.put(new Id(6), Personne.getRandomPersonne());
+      facade.put(new Id(7), Personne.getRandomPersonne());
+      facade.put(new Id(8), Personne.getRandomPersonne());
+      facade.put(new Id(9), Personne.getRandomPersonne());
+      facade.put(new Id(10), Personne.getRandomPersonne());
 
       Personne p = (Personne) facade.get(new Id(1));
       System.out.println(p);
