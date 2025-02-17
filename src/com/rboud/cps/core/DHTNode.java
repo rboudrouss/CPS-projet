@@ -17,8 +17,7 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.ReductorI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.SelectorI;
 
 public class DHTNode implements ContentAccessSyncI, MapReduceSyncI {
-  private Set<String> seenMapURIs = new HashSet<String>();
-  private Set<String> seenReduceURIs = new HashSet<String>();
+  private Set<String> seenURIs = new HashSet<String>();
   private Set<String> seenPrintURIs = new HashSet<String>();
 
   public static final int MAX_VALUE = 3; // Must be >= 2
@@ -130,6 +129,7 @@ public class DHTNode implements ContentAccessSyncI, MapReduceSyncI {
     this.seenPrintURIs.add(URI);
     System.out.println("Node: " + this);
     System.out.println("Data: " + localStorage);
+    System.out.println();
     this.next.printChain(URI);
     this.seenPrintURIs.remove(URI);
   }
@@ -168,19 +168,18 @@ public class DHTNode implements ContentAccessSyncI, MapReduceSyncI {
 
   @Override
   public void clearMapReduceComputation(String URI) throws Exception {
-    this.seenMapURIs.remove(URI);
-    this.seenReduceURIs.remove(URI);
+    this.seenURIs.remove(URI);
     this.mapResults.remove(URI);
   }
 
   @Override
   public <R extends Serializable> void mapSync(String URI, SelectorI selector, ProcessorI<R> processor)
       throws Exception {
-    if (this.seenMapURIs.contains(URI)) {
+    if (this.seenURIs.contains(URI)) {
       System.out.println("INFO MAPSYNC loop detected (or called before previous computation ends) with URI" + URI);
       return;
     }
-    this.seenMapURIs.add(URI);
+    this.seenURIs.add(URI);
 
     ArrayList<R> results = this.localStorage.values().stream()
         .filter(selector::test)
@@ -189,19 +188,19 @@ public class DHTNode implements ContentAccessSyncI, MapReduceSyncI {
 
     this.mapResults.put(URI, results);
     this.next.mapSync(URI, selector, processor);
-    this.seenMapURIs.remove(URI);
+    this.seenURIs.remove(URI);
   }
 
   @Override
   public <A extends Serializable, R> A reduceSync(String URI, ReductorI<A, R> reductor, CombinatorI<A> combinator,
       A acc)
       throws Exception {
-    if (this.seenReduceURIs.contains(URI)) {
+    if (this.seenURIs.contains(URI)) {
       System.out
           .println("INFO REDUCESYNC loop detected (or called before previous computation ends) with URI" + URI);
       return acc;
     }
-    this.seenReduceURIs.add(URI);
+    this.seenURIs.add(URI);
 
     // HACK Il faut vérifier si le cast est possible
     @SuppressWarnings("unchecked")
@@ -215,7 +214,7 @@ public class DHTNode implements ContentAccessSyncI, MapReduceSyncI {
     A nextResult = next.reduceSync(URI, reductor, combinator, acc);
     currentResult = combinator.apply(currentResult, nextResult);
 
-    this.seenReduceURIs.remove(URI);
+    this.seenURIs.remove(URI);
     return currentResult;
   }
 }

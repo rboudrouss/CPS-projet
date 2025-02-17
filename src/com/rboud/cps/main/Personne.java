@@ -6,15 +6,18 @@ import java.util.Random;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentDataI;
 
 public class Personne implements ContentDataI {
+  private static int n = 0;
+
   private String nom;
   private String prenom;
   private int age;
-  private static int n = 0;
-
+  private int id;
+  
   public Personne(String nom, String prenom, int age) {
     this.nom = nom;
     this.prenom = prenom;
     this.age = age;
+    this.id = n;
     n += 1;
   }
 
@@ -63,7 +66,7 @@ public class Personne implements ContentDataI {
   }
 
   public Id getId() {
-    return new Id(n);
+    return new Id(id);
   }
 
   public NameId getNameId() {
