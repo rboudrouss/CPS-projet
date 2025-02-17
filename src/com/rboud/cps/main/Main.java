@@ -1,11 +1,21 @@
 package com.rboud.cps.main;
 
+import com.rboud.cps.core.DHTEndpoint;
 import com.rboud.cps.core.DHTFacade;
+import com.rboud.cps.core.DHTNode;
 
 public class Main {
 
   public static void main(String[] args) {
-    DHTFacade facade = new DHTFacade();
+    
+    DHTEndpoint endpoint = new DHTEndpoint();
+    
+    DHTNode node = new DHTNode();
+    endpoint.initialiseServerSide(node);
+
+
+    DHTFacade facade = new DHTFacade(endpoint);
+    endpoint.initialiseClientSide(facade);
 
     try {
       facade.put(new Id(1), Personne.getRandomPersonne());
@@ -21,8 +31,6 @@ public class Main {
 
       Personne p = (Personne) facade.get(new Id(1));
       System.out.println(p);
-
-      facade.printChainNode();
 
       Integer out = facade.mapReduce((_) -> true, (e) -> e.getValue("AGE"), (a, n) -> (a + (Integer) n),
           (a, n) -> (a + n), 0);

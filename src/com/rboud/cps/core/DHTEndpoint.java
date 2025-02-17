@@ -6,12 +6,12 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.endpoints.ContentNodeBaseCompo
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.MapReduceSyncI;
 
 public class DHTEndpoint implements ContentNodeBaseCompositeEndPointI<ContentAccessSyncI, MapReduceSyncI> {
-  private boolean initialized;
   private EndPointI<ContentAccessSyncI> contentAccessEndPoint;
   private EndPointI<MapReduceSyncI> mapReduceEndPoint;
 
+  private boolean clientSideInitialise = false;
+
   public DHTEndpoint() {
-    this.initialized = false;
     this.contentAccessEndPoint = null;
     this.mapReduceEndPoint = null;
   }
@@ -21,41 +21,29 @@ public class DHTEndpoint implements ContentNodeBaseCompositeEndPointI<ContentAcc
   public void initialiseServerSide(Object serverSideEndPointOwner) {
     if (serverSideEndPointOwner instanceof ContentAccessSyncI)
       this.contentAccessEndPoint = (EndPointI<ContentAccessSyncI>) serverSideEndPointOwner;
-    else
-      System.out.println(
-          "WARNING DHTEndpoint#initialiseServerSide : serverSideEndPointOwner is not an instance of ContentAccessSyncI");
+    
     if (serverSideEndPointOwner instanceof MapReduceSyncI)
       this.mapReduceEndPoint = (EndPointI<MapReduceSyncI>) serverSideEndPointOwner;
-    else
-      System.out.println(
-          "WARNING DHTEndpoint#initialiseServerSide : serverSideEndPointOwner is not an instance of MapReduceSyncI");
-
-    initialized = true;
+    
+    assert serverSideInitialised();
+    assert clientSideInitialised();
   }
 
   /*
    * Note that this is the same as the server side
    */
-  @SuppressWarnings("unchecked")
   @Override
   public void initialiseClientSide(Object clientSideEndPointOwner) {
-    if (clientSideEndPointOwner instanceof ContentAccessSyncI)
-      this.contentAccessEndPoint = (EndPointI<ContentAccessSyncI>) clientSideEndPointOwner;
-    else
-      System.out.println(
-          "WARNING DHTEndpoint#initialiseClientSide : clientSideEndPointOwner is not an instance of ContentAccessSyncI");
-    if (clientSideEndPointOwner instanceof MapReduceSyncI)
-      this.mapReduceEndPoint = (EndPointI<MapReduceSyncI>) clientSideEndPointOwner;
-    else
-      System.out.println(
-          "WARNING DHTEndpoint#initialiseClientSide : clientSideEndPointOwner is not an instance of MapReduceSyncI");
+    assert clientSideEndPointOwner != null;
+    assert serverSideInitialised();
 
-    initialized = true;
+    this.clientSideInitialise = true;
+    assert clientSideInitialised();
   }
 
   @Override
   public boolean complete() {
-    return initialized;
+    return this.contentAccessEndPoint != null && this.mapReduceEndPoint != null;
   }
 
   @SuppressWarnings("unchecked")
@@ -71,12 +59,12 @@ public class DHTEndpoint implements ContentNodeBaseCompositeEndPointI<ContentAcc
 
   @Override
   public boolean serverSideInitialised() {
-    return initialized;
+    return complete();
   }
 
   @Override
   public boolean clientSideInitialised() {
-    return initialized;
+    return this.clientSideInitialise && serverSideInitialised();
   }
 
   @Override
@@ -104,7 +92,6 @@ public class DHTEndpoint implements ContentNodeBaseCompositeEndPointI<ContentAcc
   @Override
   public ContentNodeBaseCompositeEndPointI<ContentAccessSyncI, MapReduceSyncI> copyWithSharable() {
     DHTEndpoint out = new DHTEndpoint();
-    out.initialized = this.initialized;
     out.contentAccessEndPoint = this.contentAccessEndPoint;
     out.mapReduceEndPoint = this.mapReduceEndPoint;
     return out;
