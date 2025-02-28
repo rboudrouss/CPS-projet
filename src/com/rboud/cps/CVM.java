@@ -1,8 +1,8 @@
 package com.rboud.cps;
 
 import com.rboud.cps.client.LoadTester;
-import com.rboud.cps.connections.DHTContentAccessConnector;
-import com.rboud.cps.connections.DHTMapReduceConnector;
+import com.rboud.cps.connectors.DHTContentAccessConnector;
+import com.rboud.cps.connectors.DHTMapReduceConnector;
 import com.rboud.cps.core.DHTNode;
 
 import fr.sorbonne_u.components.AbstractComponent;

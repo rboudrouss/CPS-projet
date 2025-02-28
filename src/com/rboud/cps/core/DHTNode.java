@@ -7,8 +7,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import com.rboud.cps.connections.DHTContentAccessInboundPort;
-import com.rboud.cps.connections.DHTMapReduceInboundPort;
+import com.rboud.cps.ports.DHTContentAccessInboundPort;
+import com.rboud.cps.ports.DHTMapReduceInboundPort;
 
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentAccessSyncCI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentAccessSyncI;

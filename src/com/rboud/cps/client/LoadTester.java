@@ -1,7 +1,7 @@
 package com.rboud.cps.client;
 
-import com.rboud.cps.connections.LoadTesterContentAccessOutboudPort;
-import com.rboud.cps.connections.LoadTesterMapReduceOutboundPort;
+import com.rboud.cps.ports.LoadTesterContentAccessOutboudPort;
+import com.rboud.cps.ports.LoadTesterMapReduceOutboundPort;
 
 import fr.sorbonne_u.components.AbstractComponent;
 import fr.sorbonne_u.components.annotations.RequiredInterfaces;
