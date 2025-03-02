@@ -1,7 +1,7 @@
 package com.rboud.cps.client;
 
-import com.rboud.cps.ports.LoadTesterContentAccessOutboudPort;
-import com.rboud.cps.ports.LoadTesterMapReduceOutboundPort;
+import com.rboud.cps.ports.ClientContentAccessOutboudPort;
+import com.rboud.cps.ports.ClientMapReduceOutboundPort;
 
 import fr.sorbonne_u.components.AbstractComponent;
 import fr.sorbonne_u.components.annotations.RequiredInterfaces;
@@ -12,19 +12,19 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.MapReduceSyncCI;
 @RequiredInterfaces(required = { ContentAccessSyncCI.class, MapReduceSyncCI.class })
 public class LoadTester extends AbstractComponent {
 
-  protected LoadTesterContentAccessOutboudPort contentAccessOutboundPort;
+  protected ClientContentAccessOutboudPort contentAccessOutboundPort;
   public static final String CONTENT_ACCESS_URI = "content-access-uri";
 
-  protected LoadTesterMapReduceOutboundPort mapReduceOutboundPort;
+  protected ClientMapReduceOutboundPort mapReduceOutboundPort;
   public static final String MAP_REDUCE_URI = "map-reduce-uri";
 
   protected LoadTester() {
     super(1, 0);
     try {
-      this.contentAccessOutboundPort = new LoadTesterContentAccessOutboudPort(CONTENT_ACCESS_URI, this);
+      this.contentAccessOutboundPort = new ClientContentAccessOutboudPort(CONTENT_ACCESS_URI, this);
       this.contentAccessOutboundPort.publishPort();
 
-      this.mapReduceOutboundPort = new LoadTesterMapReduceOutboundPort(MAP_REDUCE_URI, this);
+      this.mapReduceOutboundPort = new ClientMapReduceOutboundPort(MAP_REDUCE_URI, this);
       this.mapReduceOutboundPort.publishPort();
     } catch (Exception e) {
       throw new RuntimeException(e);
