@@ -6,7 +6,7 @@ import fr.sorbonne_u.components.endpoints.EndPointI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentAccessSyncI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentDataI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentKeyI;
-import fr.sorbonne_u.cps.dht_mapreduce.interfaces.frontend.DHTServicesI;
+import fr.sorbonne_u.cps.dht_mapreduce.interfaces.frontend.DHTServicesCI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.CombinatorI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.MapReduceSyncI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.ProcessorI;
@@ -14,7 +14,7 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.ReductorI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.SelectorI;
 import fr.sorbonne_u.cps.mapreduce.utils.URIGenerator;
 
-public class DHTFacade implements DHTServicesI {
+public class DHTFacade implements DHTServicesCI {
   private EndPointI<MapReduceSyncI> mapReduceEndpoint;
   private EndPointI<ContentAccessSyncI> contentAccessEndpoint;
 

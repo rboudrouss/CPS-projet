@@ -22,10 +22,9 @@ public class DHTContentAccessEndpoint extends BCMEndPoint<ContentAccessSyncCI> {
   }
 
   @Override
-  protected ContentAccessSyncCI makeOutboundPort(AbstractComponent c, String outboundPortURI, String inboundPortURI)
-      throws Exception {
-    ClientContentAccessOutboudPort port = new ClientContentAccessOutboudPort(outboundPortURI, c);
-
+  protected ContentAccessSyncCI makeOutboundPort(AbstractComponent c, String inboundPortURI) throws Exception {
+    ClientContentAccessOutboudPort port = new ClientContentAccessOutboudPort(inboundPortURI, c);
+    port.publishPort();
     return port;
   }
   

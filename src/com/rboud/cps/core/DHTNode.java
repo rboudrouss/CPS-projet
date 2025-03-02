@@ -20,14 +20,12 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.ReductorI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.SelectorI;
 
 import fr.sorbonne_u.components.AbstractComponent;
-import fr.sorbonne_u.components.annotations.OfferedInterfaces;
-import fr.sorbonne_u.components.annotations.RequiredInterfaces;
 import fr.sorbonne_u.components.exceptions.ComponentShutdownException;
 
-@OfferedInterfaces(offered = { ContentAccessSyncCI.class, MapReduceSyncCI.class })
-@RequiredInterfaces(required = { ContentAccessSyncCI.class, MapReduceSyncCI.class })
 public class DHTNode extends AbstractComponent implements ContentAccessSyncCI, MapReduceSyncCI {
   private Set<String> seenURIs = new HashSet<String>();
+
+  // used for debugging at first, not really used rn
   private Set<String> seenPrintURIs = new HashSet<String>();
 
   // max element in node, Must be >= 2
@@ -86,10 +84,11 @@ public class DHTNode extends AbstractComponent implements ContentAccessSyncCI, M
 
   private void checkMerge() {
     if (this.localStorage.size() < MAX_VALUE / 3 && this.next.localStorage.size() < MAX_VALUE / 3) {
-      this.merge();
+      // this.merge();
     }
   }
 
+  @SuppressWarnings("unused")
   private void merge() {
     if (this.next == this) {
       return;
@@ -110,43 +109,40 @@ public class DHTNode extends AbstractComponent implements ContentAccessSyncCI, M
     }
   }
 
-  /*
-   * private void splitNode() {
-   * int minHashValue = this.maxHash;
-   * int maxHashValue = this.minHash;
-   * 
-   * // find min and max hash
-   * for (ContentKeyI key : localStorage.keySet()) {
-   * int hash = key.hashCode();
-   * minHashValue = Math.min(minHashValue, hash);
-   * maxHashValue = Math.max(maxHashValue, hash);
-   * }
-   * 
-   * // spliting on the middle of the range of hash values
-   * // When working with integer keys, hash values tends to be close to each
-   * other,
-   * // that's why we use this method instead of just cutting in half the range
-   * // Note: Using long to avoid overflow
-   * int newMinHash = (int) Math.floorDiv((long) maxHashValue + (long)
-   * maxHashValue, (long) 2);
-   * int newMaxHash = this.maxHash;
-   * 
-   * this.maxHash = newMinHash - 1;
-   * this.next = new DHTNode(next, newMinHash, newMaxHash);
-   * 
-   * // Move data
-   * Map<ContentKeyI, ContentDataI> newLocalStorage = new HashMap<>();
-   * this.localStorage.entrySet().removeIf(entry -> {
-   * if (entry.getKey().hashCode() > this.maxHash) {
-   * newLocalStorage.put(entry.getKey(), entry.getValue());
-   * return true;
-   * }
-   * return false;
-   * });
-   * 
-   * this.next.localStorage.putAll(newLocalStorage);
-   * }
-   */
+  /*private void splitNode() {
+    int minHashValue = this.maxHash;
+    int maxHashValue = this.minHash;
+
+    // find min and max hash
+    for (ContentKeyI key : localStorage.keySet()) {
+      int hash = key.hashCode();
+      minHashValue = Math.min(minHashValue, hash);
+      maxHashValue = Math.max(maxHashValue, hash);
+    }
+
+    // spliting on the middle of the range of hash values
+    // When working with integer keys, hash values tends to be close to each
+    // other,
+    // that's why we use this method instead of just cutting in half the range
+    // Note: Using long to avoid overflow
+    int newMinHash = (int) Math.floorDiv((long) maxHashValue + (long) maxHashValue, (long) 2);
+    int newMaxHash = this.maxHash;
+
+    this.maxHash = newMinHash - 1;
+    this.next = new DHTNode(next, newMinHash, newMaxHash);
+
+    // Move data
+    Map<ContentKeyI, ContentDataI> newLocalStorage = new HashMap<>();
+    this.localStorage.entrySet().removeIf(entry -> {
+      if (entry.getKey().hashCode() > this.maxHash) {
+        newLocalStorage.put(entry.getKey(), entry.getValue());
+        return true;
+      }
+      return false;
+    });
+
+    this.next.localStorage.putAll(newLocalStorage);
+  }*/
 
   public String toString() {
     return "DHTNode [minHash=" + this.minHash + ", maxHash=" + this.maxHash + ", nbElements=" + this.localStorage.size()

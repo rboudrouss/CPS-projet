@@ -2,11 +2,10 @@ package com.rboud.cps.endpoint;
 
 import java.util.ArrayList;
 
-import com.rboud.cps.hack.ContentNodeBaseCompositeEndPointI;
-
 import fr.sorbonne_u.components.endpoints.BCMCompositeEndPoint;
 import fr.sorbonne_u.components.endpoints.EndPointI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentAccessSyncCI;
+import fr.sorbonne_u.cps.dht_mapreduce.interfaces.endpoints.ContentNodeBaseCompositeEndPointI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.MapReduceSyncCI;
 
 public class DHTCompositeEndpoint extends BCMCompositeEndPoint

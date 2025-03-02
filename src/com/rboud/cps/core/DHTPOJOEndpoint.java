@@ -3,6 +3,7 @@ package com.rboud.cps.core;
 import fr.sorbonne_u.components.endpoints.EndPoint;
 import fr.sorbonne_u.components.endpoints.EndPointI;
 import fr.sorbonne_u.components.endpoints.POJOEndPoint;
+import fr.sorbonne_u.components.exceptions.ConnectionException;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentAccessSyncI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.endpoints.ContentNodeBaseCompositeEndPointI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.MapReduceSyncI;
@@ -17,17 +18,16 @@ public class DHTPOJOEndpoint implements ContentNodeBaseCompositeEndPointI<Conten
   }
 
   @Override
-  public void initialiseServerSide(Object serverSideEndPointOwner) {
+  public void initialiseServerSide(Object serverSideEndPointOwner) throws ConnectionException {
     assert serverSideEndPointOwner != null;
 
     this.contentAccessEndPoint.initialiseServerSide(serverSideEndPointOwner);
     this.mapReduceEndPoint.initialiseServerSide(serverSideEndPointOwner);
-
     assert serverSideInitialised();
   }
 
   @Override
-  public void initialiseClientSide(Object clientSideEndPointOwner) {
+  public void initialiseClientSide(Object clientSideEndPointOwner) throws ConnectionException {
     assert clientSideEndPointOwner != null;
     assert serverSideInitialised();
 
@@ -93,5 +93,23 @@ public class DHTPOJOEndpoint implements ContentNodeBaseCompositeEndPointI<Conten
     out.contentAccessEndPoint = this.contentAccessEndPoint;
     out.mapReduceEndPoint = this.mapReduceEndPoint;
     return out;
+  }
+
+  @Override
+  public int numberOfComposedEndPoints() {
+    // TODO Auto-generated method stub
+    throw new UnsupportedOperationException("Unimplemented method 'numberOfComposedEndPoints'");
+  }
+
+  @Override
+  public boolean serverSideClean() {
+    // TODO Auto-generated method stub
+    throw new UnsupportedOperationException("Unimplemented method 'serverSideClean'");
+  }
+
+  @Override
+  public boolean clientSideClean() {
+    // TODO Auto-generated method stub
+    throw new UnsupportedOperationException("Unimplemented method 'clientSideClean'");
   }
 }

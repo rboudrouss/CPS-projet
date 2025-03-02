@@ -48,7 +48,7 @@ public class LoadTester extends AbstractComponent {
 
     this.mapReduceOutboundPort.mapSync(
         MAP_REDUCE_URI,
-        (_) -> true,
+        (_a) -> true,
         p -> p.getValue("AGE") // formatting hack
     );
     Integer out = this.mapReduceOutboundPort.reduceSync(
