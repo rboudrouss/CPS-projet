@@ -1,9 +1,10 @@
 package com.rboud.cps;
 
-import com.rboud.cps.connections.connectors.DHTContentAccessConnector;
-import com.rboud.cps.connections.connectors.DHTMapReduceConnector;
-import com.rboud.cps.core.DHTNode;
+import com.rboud.cps.connections.endpoints.FacadeClient.FacadeClientDHTServicesEndpoint;
+import com.rboud.cps.connections.endpoints.NodeFacade.NodeFacadeCompositeEndpoint;
 import com.rboud.cps.core.Client;
+import com.rboud.cps.core.DHTFacade;
+import com.rboud.cps.core.DHTNode;
 
 import fr.sorbonne_u.components.AbstractComponent;
 import fr.sorbonne_u.components.cvm.AbstractCVM;
@@ -16,21 +17,23 @@ public class CVM extends AbstractCVM {
 
   @Override
   public void deploy() throws Exception {
-    String DHTNodeURI = AbstractComponent.createComponent(DHTNode.class.getCanonicalName(), new Object[] {});
-    String clientURI = AbstractComponent.createComponent(Client.class.getCanonicalName(), new Object[] {});
 
-    this.doPortConnection(
-        clientURI,
-        Client.CONTENT_ACCESS_URI,
-        DHTNode.CONTENT_ACCESS_INBOUND_PORT_URI,
-        DHTContentAccessConnector.class.getCanonicalName() // formatting hack
+    FacadeClientDHTServicesEndpoint dhtServicesEndpoint = new FacadeClientDHTServicesEndpoint();
+    NodeFacadeCompositeEndpoint nodeFacadeCompositeEndpoint = new NodeFacadeCompositeEndpoint();
+
+    String nodeURI = AbstractComponent.createComponent(
+      DHTNode.class.getCanonicalName(),
+      new Object[] {nodeFacadeCompositeEndpoint.copyWithSharable()}
     );
 
-    this.doPortConnection(
-        clientURI,
-        Client.MAP_REDUCE_URI,
-        DHTNode.MAP_REDUCE_INBOUND_PORT_URI,
-        DHTMapReduceConnector.class.getCanonicalName() // formatting hack
+    String facadeURI = AbstractComponent.createComponent(
+      DHTFacade.class.getCanonicalName(),
+      new Object[] {nodeFacadeCompositeEndpoint.copyWithSharable(),dhtServicesEndpoint.copyWithSharable()}
+    );
+
+    String clientURI = AbstractComponent.createComponent(
+      Client.class.getCanonicalName(),
+      new Object[] {dhtServicesEndpoint.copyWithSharable()}
     );
 
     super.deploy();

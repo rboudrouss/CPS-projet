@@ -1,39 +1,40 @@
 package com.rboud.cps.core;
 
-import com.rboud.cps.connections.ports.Client.ClientContentAccessOutboudPort;
-import com.rboud.cps.connections.ports.Client.ClientMapReduceOutboundPort;
+import com.rboud.cps.connections.endpoints.FacadeClient.FacadeClientDHTServicesEndpoint;
 import com.rboud.cps.utils.Id;
 import com.rboud.cps.utils.Personne;
 
 import fr.sorbonne_u.components.AbstractComponent;
 import fr.sorbonne_u.components.annotations.RequiredInterfaces;
-import fr.sorbonne_u.components.exceptions.ComponentShutdownException;
-import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentAccessSyncCI;
-import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.MapReduceSyncCI;
+import fr.sorbonne_u.components.exceptions.ComponentStartException;
+import fr.sorbonne_u.cps.dht_mapreduce.interfaces.frontend.DHTServicesCI;
 
-@RequiredInterfaces(required = { ContentAccessSyncCI.class, MapReduceSyncCI.class })
+@RequiredInterfaces(required = { DHTServicesCI.class })
 public class Client extends AbstractComponent {
 
-  protected ClientContentAccessOutboudPort contentAccessOutboundPort;
-  public static final String CONTENT_ACCESS_URI = "content-access-uri";
+  FacadeClientDHTServicesEndpoint dhtServicesEndpoint;
 
-  protected ClientMapReduceOutboundPort mapReduceOutboundPort;
-  public static final String MAP_REDUCE_URI = "map-reduce-uri";
-
-  protected Client() {
+  protected Client(FacadeClientDHTServicesEndpoint dhtServicesEndpoint) {
     super(1, 0);
-    try {
-      this.contentAccessOutboundPort = new ClientContentAccessOutboudPort(CONTENT_ACCESS_URI, this);
-      this.contentAccessOutboundPort.publishPort();
 
-      this.mapReduceOutboundPort = new ClientMapReduceOutboundPort(MAP_REDUCE_URI, this);
-      this.mapReduceOutboundPort.publishPort();
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
+    this.dhtServicesEndpoint = dhtServicesEndpoint;
 
     this.toggleLogging();
     this.toggleTracing();
+  }
+
+  private DHTServicesCI getDHTServices() {
+    return this.dhtServicesEndpoint.getClientSideReference();
+  }
+
+  @Override
+  public synchronized void start() throws ComponentStartException {
+    super.start();
+    try {
+      this.dhtServicesEndpoint.initialiseClientSide(this);
+    } catch (Exception e) {
+      throw new ComponentStartException(e);
+    }
   }
 
   @Override
@@ -42,43 +43,19 @@ public class Client extends AbstractComponent {
 
     for (int i = 0; i < 10; i++) {
       Personne temp = Personne.getRandomPersonne();
-      this.contentAccessOutboundPort.putSync(CONTENT_ACCESS_URI, temp.getId(), temp);
+      this.dhtServicesEndpoint.getClientSideReference().put(temp.getId(), temp);
     }
 
-    Personne temp = (Personne) this.contentAccessOutboundPort.getSync(CONTENT_ACCESS_URI, new Id(2));
+    Personne temp = (Personne) this.getDHTServices().get(new Id(2));
     this.logMessage("Personne with id 2: " + temp);
 
-    this.mapReduceOutboundPort.mapSync(
-        MAP_REDUCE_URI,
-        (_a) -> true,
-        p -> p.getValue("AGE") // formatting hack
-    );
-    Integer out = this.mapReduceOutboundPort.reduceSync(
-        MAP_REDUCE_URI,
+    int out = this.getDHTServices().mapReduce(
+        (a) -> true,
+        (a) -> a.getValue("AGE"),
         (a, b) -> a + (int) b,
         (a, b) -> a + b,
-        0 // formatting hack
-    );
+        0);
 
     this.logMessage("Sum of ages: " + out);
   }
-
-  @Override
-  public synchronized void finalize() throws Exception {
-    this.doPortDisconnection(CONTENT_ACCESS_URI);
-    this.doPortDisconnection(MAP_REDUCE_URI);
-    super.finalise();
-  }
-
-  @Override
-  public synchronized void shutdown() throws ComponentShutdownException {
-    try {
-      this.contentAccessOutboundPort.unpublishPort();
-      this.mapReduceOutboundPort.unpublishPort();
-    } catch (Exception e) {
-      throw new ComponentShutdownException(e);
-    }
-    super.shutdown();
-  }
-
 }

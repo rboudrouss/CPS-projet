@@ -12,10 +12,14 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.ProcessorI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.ReductorI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.SelectorI;
 
-public class FacadeServicesInboundPort extends AbstractInboundPort implements DHTServicesCI {
+public class FacadeDHTServicesInboundPort extends AbstractInboundPort implements DHTServicesCI {
 
-  public FacadeServicesInboundPort(ComponentI owner) throws Exception {
+  public FacadeDHTServicesInboundPort(ComponentI owner) throws Exception {
     super(DHTServicesCI.class, owner);
+  }
+
+  public FacadeDHTServicesInboundPort(String URI, ComponentI owner) throws Exception {
+    super(URI, DHTServicesCI.class, owner);
   }
 
   @Override

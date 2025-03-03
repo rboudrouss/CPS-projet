@@ -1,12 +1,12 @@
 package com.rboud.cps.connections.endpoints.NodeFacade;
 
-import fr.sorbonne_u.components.endpoints.CompositeEndPoint;
+import fr.sorbonne_u.components.endpoints.BCMCompositeEndPoint;
 import fr.sorbonne_u.components.endpoints.EndPointI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentAccessSyncCI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.endpoints.ContentNodeBaseCompositeEndPointI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.MapReduceSyncCI;
 
-public class NodeFacadeCompositeEndpoint extends CompositeEndPoint
+public class NodeFacadeCompositeEndpoint extends BCMCompositeEndPoint
     implements ContentNodeBaseCompositeEndPointI<ContentAccessSyncCI, MapReduceSyncCI> {
   private final static int N_ENDPOINTS = 2;
 

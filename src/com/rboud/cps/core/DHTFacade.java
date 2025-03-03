@@ -2,6 +2,7 @@ package com.rboud.cps.core;
 
 import java.io.Serializable;
 
+import com.rboud.cps.connections.endpoints.FacadeClient.FacadeClientDHTServicesEndpoint;
 import com.rboud.cps.connections.endpoints.NodeFacade.NodeFacadeCompositeEndpoint;
 
 import fr.sorbonne_u.components.AbstractComponent;
@@ -24,20 +25,25 @@ import fr.sorbonne_u.cps.mapreduce.utils.URIGenerator;
 @OfferedInterfaces(offered = { DHTServicesCI.class })
 public class DHTFacade extends AbstractComponent implements DHTServicesCI {
   private NodeFacadeCompositeEndpoint nodeFacadeCompositeEndpoint;
+  private FacadeClientDHTServicesEndpoint facadeClientDHTServicesEndpoint;
 
   private final static String URI_PREFIX = "dht-facade-";
   private final String outboundPortURI;
 
-  protected DHTFacade(NodeFacadeCompositeEndpoint nodeFacadeCompositeEndpoint) {
+  protected DHTFacade(NodeFacadeCompositeEndpoint nodeFacadeCompositeEndpoint,
+      FacadeClientDHTServicesEndpoint facadeClientDHTServicesEndpoint)
+      throws Exception {
     super(1, 0);
-    this.nodeFacadeCompositeEndpoint = nodeFacadeCompositeEndpoint;
     this.outboundPortURI = URIGenerator.generateURI(URI_PREFIX);
+    this.nodeFacadeCompositeEndpoint = nodeFacadeCompositeEndpoint;
+    this.facadeClientDHTServicesEndpoint = facadeClientDHTServicesEndpoint;
   }
 
   @Override
   public synchronized void start() throws ComponentStartException {
     super.start();
     try {
+      this.facadeClientDHTServicesEndpoint.initialiseServerSide(this);
       this.nodeFacadeCompositeEndpoint.initialiseClientSide(this);
     } catch (Exception e) {
       throw new ComponentStartException(e);
