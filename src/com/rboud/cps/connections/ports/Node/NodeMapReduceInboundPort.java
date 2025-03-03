@@ -6,6 +6,7 @@ import fr.sorbonne_u.components.ComponentI;
 import fr.sorbonne_u.components.ports.AbstractInboundPort;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.CombinatorI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.MapReduceSyncCI;
+import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.MapReduceSyncI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.ProcessorI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.ReductorI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.SelectorI;
@@ -24,7 +25,7 @@ public class NodeMapReduceInboundPort extends AbstractInboundPort implements Map
   public <R extends Serializable> void mapSync(String computationURI, SelectorI selector, ProcessorI<R> processor) {
     try {
       this.getOwner().handleRequest(c -> {
-        ((MapReduceSyncCI) c).mapSync(computationURI, selector, processor);
+        ((MapReduceSyncI) c).mapSync(computationURI, selector, processor);
         return null;
       });
     } catch (Exception e) {
@@ -37,7 +38,7 @@ public class NodeMapReduceInboundPort extends AbstractInboundPort implements Map
       CombinatorI<A> combinator, A currentAcc) throws Exception {
     try {
       return this.getOwner()
-          .handleRequest(c -> ((MapReduceSyncCI) c).reduceSync(computationURI, reductor, combinator, currentAcc));
+          .handleRequest(c -> ((MapReduceSyncI) c).reduceSync(computationURI, reductor, combinator, currentAcc));
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
@@ -47,7 +48,7 @@ public class NodeMapReduceInboundPort extends AbstractInboundPort implements Map
   public void clearMapReduceComputation(String computationURI) throws Exception {
     try {
       this.getOwner().handleRequest(c -> {
-        ((MapReduceSyncCI) c).clearMapReduceComputation(computationURI);
+        ((MapReduceSyncI) c).clearMapReduceComputation(computationURI);
         return null;
       });
     } catch (Exception e) {

@@ -54,12 +54,18 @@ public class DHTNode extends AbstractComponent implements ContentAccessSyncI, Ma
 
   NodeFacadeCompositeEndpoint nodeFacadeCompositeEndpoint;
 
-  protected DHTNode(NodeFacadeCompositeEndpoint nodeFacadeCompositeEndpoint) {
+  protected DHTNode(NodeFacadeCompositeEndpoint nodeFacadeCompositeEndpoint) throws Exception {
     super(1, 0);
     this.minHash = Integer.MIN_VALUE;
     this.maxHash = Integer.MAX_VALUE;
     this.next = this;
     this.nodeFacadeCompositeEndpoint = nodeFacadeCompositeEndpoint;
+
+    try {
+      this.nodeFacadeCompositeEndpoint.initialiseServerSide(this);
+    } catch (Exception e) {
+      throw new Exception(e);
+    }
 
     this.toggleLogging();
     this.toggleTracing();
@@ -68,12 +74,6 @@ public class DHTNode extends AbstractComponent implements ContentAccessSyncI, Ma
   @Override
   public synchronized void start() throws ComponentStartException {
     this.logMessage("[NODE] Starting DHT Node component : " + this);
-    try {
-      this.nodeFacadeCompositeEndpoint.initialiseServerSide(this);
-    } catch (Exception e) {
-      throw new ComponentStartException(e);
-    }
-    this.logMessage("[NODE] DHT Node component started.");
     super.start();
   }
 

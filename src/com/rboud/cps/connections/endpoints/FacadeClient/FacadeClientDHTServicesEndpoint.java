@@ -28,7 +28,7 @@ public class FacadeClientDHTServicesEndpoint extends BCMEndPoint<DHTServicesCI> 
 
   @Override
   protected DHTServicesCI makeOutboundPort(AbstractComponent c, String inboundPortURI) throws Exception {
-    ClientDHTServicesOutboundPort port = new ClientDHTServicesOutboundPort(inboundPortURI, c);
+    ClientDHTServicesOutboundPort port = new ClientDHTServicesOutboundPort(c);
     port.publishPort();
     c.doPortConnection(
       port.getPortURI(),

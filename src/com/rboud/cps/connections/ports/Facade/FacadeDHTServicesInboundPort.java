@@ -7,6 +7,7 @@ import fr.sorbonne_u.components.ports.AbstractInboundPort;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentDataI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentKeyI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.frontend.DHTServicesCI;
+import fr.sorbonne_u.cps.dht_mapreduce.interfaces.frontend.DHTServicesI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.CombinatorI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.ProcessorI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.ReductorI;
@@ -24,17 +25,17 @@ public class FacadeDHTServicesInboundPort extends AbstractInboundPort implements
 
   @Override
   public ContentDataI get(ContentKeyI key) throws Exception {
-    return this.getOwner().handleRequest((c) -> ((DHTServicesCI) c).get(key));
+    return this.getOwner().handleRequest((c) -> ((DHTServicesI) c).get(key));
   }
 
   @Override
   public ContentDataI put(ContentKeyI key, ContentDataI value) throws Exception {
-    return this.getOwner().handleRequest((c) -> ((DHTServicesCI) c).put(key, value));
+    return this.getOwner().handleRequest((c) -> ((DHTServicesI) c).put(key, value));
   }
 
   @Override
   public ContentDataI remove(ContentKeyI key) throws Exception {
-    return this.getOwner().handleRequest((c) -> ((DHTServicesCI) c).remove(key));
+    return this.getOwner().handleRequest((c) -> ((DHTServicesI) c).remove(key));
   }
 
   @Override
@@ -44,7 +45,7 @@ public class FacadeDHTServicesInboundPort extends AbstractInboundPort implements
       ReductorI<A, R> reductor,
       CombinatorI<A> combinator,
       A initialAcc) throws Exception {
-    return this.getOwner().handleRequest((c) -> ((DHTServicesCI) c).mapReduce(selector, processor, reductor, combinator,
+    return this.getOwner().handleRequest((c) -> ((DHTServicesI) c).mapReduce(selector, processor, reductor, combinator,
         initialAcc));
   }
 

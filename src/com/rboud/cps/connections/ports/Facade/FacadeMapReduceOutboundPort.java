@@ -5,7 +5,6 @@ import java.io.Serializable;
 import fr.sorbonne_u.components.ComponentI;
 import fr.sorbonne_u.components.ports.AbstractOutboundPort;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.CombinatorI;
-import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.MapReduceCI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.MapReduceSyncCI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.ProcessorI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.ReductorI;
@@ -14,11 +13,11 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.SelectorI;
 public class FacadeMapReduceOutboundPort extends AbstractOutboundPort implements MapReduceSyncCI {
 
   public FacadeMapReduceOutboundPort(ComponentI owner) throws Exception {
-    super(MapReduceCI.class, owner);
+    super(MapReduceSyncCI.class, owner);
   }
 
   public FacadeMapReduceOutboundPort(String URI, ComponentI owner) throws Exception {
-    super(URI, MapReduceCI.class, owner);
+    super(URI, MapReduceSyncCI.class, owner);
   }
 
   @Override

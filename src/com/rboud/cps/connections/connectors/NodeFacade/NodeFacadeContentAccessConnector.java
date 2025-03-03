@@ -2,27 +2,28 @@ package com.rboud.cps.connections.connectors.NodeFacade;
 
 import fr.sorbonne_u.components.connectors.AbstractConnector;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentAccessSyncCI;
+import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentAccessSyncI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentDataI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentKeyI;
 
 public class NodeFacadeContentAccessConnector extends AbstractConnector implements ContentAccessSyncCI {
   @Override
   public ContentDataI getSync(String computationURI, ContentKeyI key) throws Exception {
-    return ((ContentAccessSyncCI) this.offering).getSync(computationURI, key);
+    return ((ContentAccessSyncI) this.offering).getSync(computationURI, key);
   }
 
   @Override
   public ContentDataI putSync(String computationURI, ContentKeyI key, ContentDataI value) throws Exception {
-    return ((ContentAccessSyncCI) this.offering).putSync(computationURI, key, value);
+    return ((ContentAccessSyncI) this.offering).putSync(computationURI, key, value);
   }
 
   @Override
   public ContentDataI removeSync(String computationURI, ContentKeyI key) throws Exception {
-    return ((ContentAccessSyncCI) this.offering).removeSync(computationURI, key);
+    return ((ContentAccessSyncI) this.offering).removeSync(computationURI, key);
   }
 
   @Override
   public void clearComputation(String computationURI) throws Exception {
-    ((ContentAccessSyncCI) this.offering).clearComputation(computationURI);
+    ((ContentAccessSyncI) this.offering).clearComputation(computationURI);
   }
 }

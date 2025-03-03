@@ -39,6 +39,14 @@ public class DHTFacade extends AbstractComponent implements DHTServicesI {
     this.nodeFacadeCompositeEndpoint = nodeFacadeCompositeEndpoint;
     this.facadeClientDHTServicesEndpoint = facadeClientDHTServicesEndpoint;
 
+    assert this.nodeFacadeCompositeEndpoint.serverSideInitialised();
+    try {
+      this.facadeClientDHTServicesEndpoint.initialiseServerSide(this);
+      this.nodeFacadeCompositeEndpoint.initialiseClientSide(this);
+    } catch (Exception e) {
+      throw new Exception(e);
+    }
+
     this.toggleLogging();
     this.toggleTracing();
   }
@@ -46,15 +54,6 @@ public class DHTFacade extends AbstractComponent implements DHTServicesI {
   @Override
   public synchronized void start() throws ComponentStartException {
     this.logMessage("[DHT-FACADE] Starting DHT Facade component.");
-    assert this.nodeFacadeCompositeEndpoint.serverSideInitialised();
-
-    try {
-      this.facadeClientDHTServicesEndpoint.initialiseServerSide(this);
-      this.nodeFacadeCompositeEndpoint.initialiseClientSide(this);
-    } catch (Exception e) {
-      throw new ComponentStartException(e);
-    }
-    this.logMessage("[DHT-FACADE] DHT Facade component started.");
     super.start();
   }
 

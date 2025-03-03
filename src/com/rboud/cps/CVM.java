@@ -18,12 +18,12 @@ public class CVM extends AbstractCVM {
 
   @Override
   public void deploy() throws Exception {
-    AbstractCVM.DEBUG_MODE.add(CVMDebugModes.LIFE_CYCLE);
-    AbstractCVM.DEBUG_MODE.add(CVMDebugModes.INTERFACES);
-    AbstractCVM.DEBUG_MODE.add(CVMDebugModes.PORTS);
-    AbstractCVM.DEBUG_MODE.add(CVMDebugModes.CONNECTING);
-    AbstractCVM.DEBUG_MODE.add(CVMDebugModes.CALLING);
-    AbstractCVM.DEBUG_MODE.add(CVMDebugModes.EXECUTOR_SERVICES);
+    // AbstractCVM.DEBUG_MODE.add(CVMDebugModes.LIFE_CYCLE);
+    // AbstractCVM.DEBUG_MODE.add(CVMDebugModes.INTERFACES);
+    // AbstractCVM.DEBUG_MODE.add(CVMDebugModes.PORTS);
+    // AbstractCVM.DEBUG_MODE.add(CVMDebugModes.CONNECTING);
+    // AbstractCVM.DEBUG_MODE.add(CVMDebugModes.CALLING);
+    // AbstractCVM.DEBUG_MODE.add(CVMDebugModes.EXECUTOR_SERVICES);
 
     FacadeClientDHTServicesEndpoint dhtServicesEndpoint = new FacadeClientDHTServicesEndpoint();
     NodeFacadeCompositeEndpoint nodeFacadeCompositeEndpoint = new NodeFacadeCompositeEndpoint();
@@ -39,6 +39,11 @@ public class CVM extends AbstractCVM {
     String clientURI = AbstractComponent.createComponent(
         Client.class.getCanonicalName(),
         new Object[] { dhtServicesEndpoint.copyWithSharable() });
+
+    // assert nodeFacadeCompositeEndpoint.serverSideInitialised();
+    // assert dhtServicesEndpoint.serverSideInitialised();
+    // assert dhtServicesEndpoint.clientSideInitialised();
+    // assert nodeFacadeCompositeEndpoint.clientSideInitialised();
 
     super.deploy();
   }

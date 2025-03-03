@@ -14,10 +14,17 @@ public class Client extends AbstractComponent {
 
   FacadeClientDHTServicesEndpoint dhtServicesEndpoint;
 
-  protected Client(FacadeClientDHTServicesEndpoint dhtServicesEndpoint) {
+  protected Client(FacadeClientDHTServicesEndpoint dhtServicesEndpoint) throws Exception {
     super(1, 0);
 
     this.dhtServicesEndpoint = dhtServicesEndpoint;
+
+    assert this.dhtServicesEndpoint.serverSideInitialised();
+    try {
+      this.dhtServicesEndpoint.initialiseClientSide(this);
+    } catch (Exception e) {
+      throw new Exception(e);
+    }
 
     this.toggleLogging();
     this.toggleTracing();
@@ -30,14 +37,6 @@ public class Client extends AbstractComponent {
   @Override
   public synchronized void start() throws ComponentStartException {
     this.logMessage("[CLIENT] Starting client component.");
-    assert this.dhtServicesEndpoint.serverSideInitialised();
-
-    try {
-      this.dhtServicesEndpoint.initialiseClientSide(this);
-    } catch (Exception e) {
-      throw new ComponentStartException(e);
-    }
-    this.logMessage("[CLIENT] Client component started.");
     super.start();
   }
 
@@ -48,7 +47,6 @@ public class Client extends AbstractComponent {
     for (int i = 0; i < 10; i++) {
       Personne temp = Personne.getRandomPersonne();
       this.logMessage("[CLIENT] Putting Personne: " + temp);
-      System.out.println(this.getDHTServices());
       this.getDHTServices().put(temp.getId(), temp);
       this.logMessage("[CLIENT] Personne put.");
     }
