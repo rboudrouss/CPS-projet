@@ -1,9 +1,9 @@
 package com.rboud.cps;
 
-import com.rboud.cps.client.LoadTester;
-import com.rboud.cps.connectors.DHTContentAccessConnector;
-import com.rboud.cps.connectors.DHTMapReduceConnector;
+import com.rboud.cps.connections.connectors.DHTContentAccessConnector;
+import com.rboud.cps.connections.connectors.DHTMapReduceConnector;
 import com.rboud.cps.core.DHTNode;
+import com.rboud.cps.core.Client;
 
 import fr.sorbonne_u.components.AbstractComponent;
 import fr.sorbonne_u.components.cvm.AbstractCVM;
@@ -17,18 +17,18 @@ public class CVM extends AbstractCVM {
   @Override
   public void deploy() throws Exception {
     String DHTNodeURI = AbstractComponent.createComponent(DHTNode.class.getCanonicalName(), new Object[] {});
-    String clientURI = AbstractComponent.createComponent(LoadTester.class.getCanonicalName(), new Object[] {});
+    String clientURI = AbstractComponent.createComponent(Client.class.getCanonicalName(), new Object[] {});
 
     this.doPortConnection(
         clientURI,
-        LoadTester.CONTENT_ACCESS_URI,
+        Client.CONTENT_ACCESS_URI,
         DHTNode.CONTENT_ACCESS_INBOUND_PORT_URI,
         DHTContentAccessConnector.class.getCanonicalName() // formatting hack
     );
 
     this.doPortConnection(
         clientURI,
-        LoadTester.MAP_REDUCE_URI,
+        Client.MAP_REDUCE_URI,
         DHTNode.MAP_REDUCE_INBOUND_PORT_URI,
         DHTMapReduceConnector.class.getCanonicalName() // formatting hack
     );

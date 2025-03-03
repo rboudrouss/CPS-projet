@@ -1,4 +1,4 @@
-package com.rboud.cps.client;
+package com.rboud.cps.utils;
 
 import java.io.Serializable;
 import java.util.Random;

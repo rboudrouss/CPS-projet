@@ -1,7 +1,7 @@
-package com.rboud.cps.endpoint;
+package com.rboud.cps.connections.endpoints;
 
-import com.rboud.cps.ports.ClientMapReduceOutboundPort;
-import com.rboud.cps.ports.DHTMapReduceInboundPort;
+import com.rboud.cps.connections.ports.Client.ClientMapReduceOutboundPort;
+import com.rboud.cps.connections.ports.Node.NodeMapReduceInboundPort;
 
 import fr.sorbonne_u.components.AbstractComponent;
 import fr.sorbonne_u.components.endpoints.BCMEndPoint;
@@ -16,7 +16,7 @@ public class DHTContentMapReduceEndpoint extends BCMEndPoint<MapReduceSyncCI> {
 
   @Override
   protected AbstractInboundPort makeInboundPort(AbstractComponent c, String inboundPortURI) throws Exception {
-    DHTMapReduceInboundPort port = new DHTMapReduceInboundPort(inboundPortURI, c);
+    NodeMapReduceInboundPort port = new NodeMapReduceInboundPort(inboundPortURI, c);
     port.publishPort();
     return port;
   }

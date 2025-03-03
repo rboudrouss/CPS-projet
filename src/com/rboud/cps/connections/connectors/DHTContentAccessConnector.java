@@ -1,4 +1,4 @@
-package com.rboud.cps.connectors;
+package com.rboud.cps.connections.connectors;
 
 import fr.sorbonne_u.components.connectors.AbstractConnector;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentAccessSyncCI;

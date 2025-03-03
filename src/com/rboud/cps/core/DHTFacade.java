@@ -2,55 +2,69 @@ package com.rboud.cps.core;
 
 import java.io.Serializable;
 
+import com.rboud.cps.connections.endpoints.NodeFacade.NodeFacadeCompositeEndpoint;
+
+import fr.sorbonne_u.components.AbstractComponent;
+import fr.sorbonne_u.components.annotations.OfferedInterfaces;
+import fr.sorbonne_u.components.annotations.RequiredInterfaces;
 import fr.sorbonne_u.components.endpoints.EndPointI;
-import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentAccessSyncI;
+import fr.sorbonne_u.components.exceptions.ComponentStartException;
+import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentAccessSyncCI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentDataI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentKeyI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.frontend.DHTServicesCI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.CombinatorI;
-import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.MapReduceSyncI;
+import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.MapReduceSyncCI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.ProcessorI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.ReductorI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.SelectorI;
 import fr.sorbonne_u.cps.mapreduce.utils.URIGenerator;
 
-public class DHTFacade implements DHTServicesCI {
-  private EndPointI<MapReduceSyncI> mapReduceEndpoint;
-  private EndPointI<ContentAccessSyncI> contentAccessEndpoint;
+@RequiredInterfaces(required = { MapReduceSyncCI.class, ContentAccessSyncCI.class })
+@OfferedInterfaces(offered = { DHTServicesCI.class })
+public class DHTFacade extends AbstractComponent implements DHTServicesCI {
+  private NodeFacadeCompositeEndpoint nodeFacadeCompositeEndpoint;
 
-  static final String URIPrefix = "DHTFacade";
-  final String URI;
+  private final static String URI_PREFIX = "dht-facade-";
+  private final String outboundPortURI;
 
-  public DHTFacade(EndPointI<ContentAccessSyncI> contentAccessEndpoint,
-      EndPointI<MapReduceSyncI> mapReduceEndpoint) {
-    this.mapReduceEndpoint = mapReduceEndpoint;
-    this.contentAccessEndpoint = contentAccessEndpoint;
-    this.URI = URIGenerator.generateURI(URIPrefix);
+  protected DHTFacade(NodeFacadeCompositeEndpoint nodeFacadeCompositeEndpoint) {
+    super(1, 0);
+    this.nodeFacadeCompositeEndpoint = nodeFacadeCompositeEndpoint;
+    this.outboundPortURI = URIGenerator.generateURI(URI_PREFIX);
   }
 
-  public DHTFacade(DHTPOJOEndpoint compositeEndpoint) {
-    this(compositeEndpoint.getContentAccessEndpoint(), compositeEndpoint.getMapReduceEndpoint());
+  @Override
+  public synchronized void start() throws ComponentStartException {
+    super.start();
+    try {
+      this.nodeFacadeCompositeEndpoint.initialiseClientSide(this);
+    } catch (Exception e) {
+      throw new ComponentStartException(e);
+    }
+  }
+
+  private EndPointI<ContentAccessSyncCI> getContentAccessEndPoint() {
+    return this.nodeFacadeCompositeEndpoint.getContentAccessEndpoint();
+  }
+
+  private EndPointI<MapReduceSyncCI> getMapReduceEndPoint() {
+    return this.nodeFacadeCompositeEndpoint.getMapReduceEndpoint();
   }
 
   @Override
   public ContentDataI get(ContentKeyI key) throws Exception {
-    assert this.contentAccessEndpoint.serverSideInitialised();
-
-    return this.contentAccessEndpoint.getClientSideReference().getSync(URI, key);
+    return this.getContentAccessEndPoint().getClientSideReference().getSync(outboundPortURI, key);
   }
 
   @Override
   public ContentDataI put(ContentKeyI key, ContentDataI value) throws Exception {
-    assert this.contentAccessEndpoint.serverSideInitialised();
-
-    return this.contentAccessEndpoint.getClientSideReference().putSync(URI, key, value);
+    return this.getContentAccessEndPoint().getClientSideReference().putSync(outboundPortURI, key, value);
   }
 
   @Override
   public ContentDataI remove(ContentKeyI key) throws Exception {
-    assert this.contentAccessEndpoint.serverSideInitialised();
-
-    return this.contentAccessEndpoint.getClientSideReference().removeSync(URI, key);
+    return this.getContentAccessEndPoint().getClientSideReference().removeSync(outboundPortURI, key);
   }
 
   @Override
@@ -60,10 +74,11 @@ public class DHTFacade implements DHTServicesCI {
       ReductorI<A, R> reductor,
       CombinatorI<A> combinator,
       A initialAcc) throws Exception {
-    assert this.mapReduceEndpoint.serverSideInitialised();
+    assert this.getMapReduceEndPoint().serverSideInitialised();
 
-    this.mapReduceEndpoint.getClientSideReference().mapSync(URI, selector, processor);
-    return this.mapReduceEndpoint.getClientSideReference().reduceSync(URI, reductor, combinator,
+    this.getMapReduceEndPoint().getClientSideReference().mapSync(outboundPortURI, selector, processor);
+    return this.getMapReduceEndPoint().getClientSideReference().reduceSync(outboundPortURI, reductor, combinator,
         initialAcc);
   }
+
 }

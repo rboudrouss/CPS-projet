@@ -1,4 +1,4 @@
-package com.rboud.cps.ports;
+package com.rboud.cps.connections.ports.Node;
 
 import fr.sorbonne_u.components.ComponentI;
 import fr.sorbonne_u.components.ports.AbstractInboundPort;
@@ -6,13 +6,13 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentAccessSyncCI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentDataI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentKeyI;
 
-public class DHTContentAccessInboundPort extends AbstractInboundPort implements ContentAccessSyncCI {
+public class NodeContentAccessInboundPort extends AbstractInboundPort implements ContentAccessSyncCI {
 
-  public DHTContentAccessInboundPort(ComponentI owner) throws Exception {
+  public NodeContentAccessInboundPort(ComponentI owner) throws Exception {
     super(ContentAccessSyncCI.class, owner);
   }
 
-  public DHTContentAccessInboundPort(String URI, ComponentI owner) throws Exception {
+  public NodeContentAccessInboundPort(String URI, ComponentI owner) throws Exception {
     super(URI, ContentAccessSyncCI.class, owner);
   }
 

@@ -1,6 +1,4 @@
-package com.rboud.cps.endpoint;
-
-import java.util.ArrayList;
+package com.rboud.cps.connections.endpoints;
 
 import fr.sorbonne_u.components.endpoints.BCMCompositeEndPoint;
 import fr.sorbonne_u.components.endpoints.EndPointI;
@@ -10,13 +8,13 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.MapReduceSyncCI;
 
 public class DHTCompositeEndpoint extends BCMCompositeEndPoint
     implements ContentNodeBaseCompositeEndPointI<ContentAccessSyncCI, MapReduceSyncCI> {
+  
+  private final static long serialVersionUID = 1L;
+
+  private static final int N_ENDPOINTS = 2;
 
   public DHTCompositeEndpoint() {
-    super(2);
-  }
-
-  public DHTCompositeEndpoint(ArrayList<EndPointI<?>> initialEndPoints) {
-    super(initialEndPoints);
+    super(N_ENDPOINTS);
   }
 
   @Override

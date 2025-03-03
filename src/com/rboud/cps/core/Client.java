@@ -1,7 +1,9 @@
-package com.rboud.cps.client;
+package com.rboud.cps.core;
 
-import com.rboud.cps.ports.ClientContentAccessOutboudPort;
-import com.rboud.cps.ports.ClientMapReduceOutboundPort;
+import com.rboud.cps.connections.ports.Client.ClientContentAccessOutboudPort;
+import com.rboud.cps.connections.ports.Client.ClientMapReduceOutboundPort;
+import com.rboud.cps.utils.Id;
+import com.rboud.cps.utils.Personne;
 
 import fr.sorbonne_u.components.AbstractComponent;
 import fr.sorbonne_u.components.annotations.RequiredInterfaces;
@@ -10,7 +12,7 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentAccessSyncCI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.MapReduceSyncCI;
 
 @RequiredInterfaces(required = { ContentAccessSyncCI.class, MapReduceSyncCI.class })
-public class LoadTester extends AbstractComponent {
+public class Client extends AbstractComponent {
 
   protected ClientContentAccessOutboudPort contentAccessOutboundPort;
   public static final String CONTENT_ACCESS_URI = "content-access-uri";
@@ -18,7 +20,7 @@ public class LoadTester extends AbstractComponent {
   protected ClientMapReduceOutboundPort mapReduceOutboundPort;
   public static final String MAP_REDUCE_URI = "map-reduce-uri";
 
-  protected LoadTester() {
+  protected Client() {
     super(1, 0);
     try {
       this.contentAccessOutboundPort = new ClientContentAccessOutboudPort(CONTENT_ACCESS_URI, this);

@@ -7,8 +7,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import com.rboud.cps.ports.DHTContentAccessInboundPort;
-import com.rboud.cps.ports.DHTMapReduceInboundPort;
+import com.rboud.cps.connections.endpoints.NodeFacade.NodeFacadeCompositeEndpoint;
 
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentAccessSyncCI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentDataI;
@@ -20,8 +19,10 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.ReductorI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.SelectorI;
 
 import fr.sorbonne_u.components.AbstractComponent;
-import fr.sorbonne_u.components.exceptions.ComponentShutdownException;
+import fr.sorbonne_u.components.annotations.OfferedInterfaces;
+import fr.sorbonne_u.components.exceptions.ComponentStartException;
 
+@OfferedInterfaces(offered = { ContentAccessSyncCI.class, MapReduceSyncCI.class })
 public class DHTNode extends AbstractComponent implements ContentAccessSyncCI, MapReduceSyncCI {
   private Set<String> seenURIs = new HashSet<String>();
 
@@ -35,43 +36,38 @@ public class DHTNode extends AbstractComponent implements ContentAccessSyncCI, M
   // Used to store the results of a map computation for a given URI
   private Map<String, ArrayList<?>> mapResults = new HashMap<>();
 
+  // Describe the range of hash values that this node is responsible for
   private int minHash;
   private int maxHash;
 
+  // Pointer to the next node in the ring
   private DHTNode next; // CANNOT BE NULL
+
+  // Storage
   private final Map<ContentKeyI, ContentDataI> localStorage = new HashMap<>();
 
-  protected DHTContentAccessInboundPort contentAccessInboudPort;
+  // Ports URIS
   public static final String CONTENT_ACCESS_INBOUND_PORT_URI = "content-access-inbound-port-uri";
-
-  protected DHTMapReduceInboundPort mapReduceInboundPort;
   public static final String MAP_REDUCE_INBOUND_PORT_URI = "map-reduce-inbound-port-uri";
 
-  protected DHTNode() {
+  NodeFacadeCompositeEndpoint nodeFacadeCompositeEndpoint;
+
+  protected DHTNode(NodeFacadeCompositeEndpoint nodeFacadeCompositeEndpoint) {
     super(1, 0);
     this.minHash = Integer.MIN_VALUE;
     this.maxHash = Integer.MAX_VALUE;
     this.next = this;
-    try {
-      this.contentAccessInboudPort = new DHTContentAccessInboundPort(CONTENT_ACCESS_INBOUND_PORT_URI, this);
-      this.contentAccessInboudPort.publishPort();
-
-      this.mapReduceInboundPort = new DHTMapReduceInboundPort(MAP_REDUCE_INBOUND_PORT_URI, this);
-      this.mapReduceInboundPort.publishPort();
-    } catch (Exception e) {
-      e.printStackTrace();
-      return;
-    }
+    this.nodeFacadeCompositeEndpoint = nodeFacadeCompositeEndpoint;
   }
 
   @Override
-  public synchronized void shutdown() throws ComponentShutdownException {
+  public synchronized void start() throws ComponentStartException {
+    super.start();
     try {
-      this.contentAccessInboudPort.unpublishPort();
+      this.nodeFacadeCompositeEndpoint.initialiseServerSide(this);
     } catch (Exception e) {
-      throw new ComponentShutdownException(e);
+      throw new ComponentStartException(e);
     }
-    super.shutdown();
   }
 
   public static boolean isBetween(int value, int min, int max) {
@@ -245,4 +241,6 @@ public class DHTNode extends AbstractComponent implements ContentAccessSyncCI, M
     this.seenURIs.remove(URI);
     return currentResult;
   }
+
+
 }

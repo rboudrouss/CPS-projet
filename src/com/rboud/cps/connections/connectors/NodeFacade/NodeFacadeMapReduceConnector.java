@@ -1,4 +1,4 @@
-package com.rboud.cps.connectors;
+package com.rboud.cps.connections.connectors.NodeFacade;
 
 import java.io.Serializable;
 
@@ -9,7 +9,7 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.ProcessorI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.ReductorI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.SelectorI;
 
-public class DHTMapReduceConnector extends AbstractConnector implements MapReduceSyncCI {
+public class NodeFacadeMapReduceConnector extends AbstractConnector implements MapReduceSyncCI {
 
   @Override
   public <R extends Serializable> void mapSync(String computationURI, SelectorI selector, ProcessorI<R> processor)

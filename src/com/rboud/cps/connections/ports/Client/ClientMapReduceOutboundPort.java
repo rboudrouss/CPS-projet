@@ -1,4 +1,4 @@
-package com.rboud.cps.ports;
+package com.rboud.cps.connections.ports.Client;
 
 import java.io.Serializable;
 

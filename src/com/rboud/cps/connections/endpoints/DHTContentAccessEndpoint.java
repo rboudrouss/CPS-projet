@@ -1,7 +1,7 @@
-package com.rboud.cps.endpoint;
+package com.rboud.cps.connections.endpoints;
 
-import com.rboud.cps.ports.ClientContentAccessOutboudPort;
-import com.rboud.cps.ports.DHTContentAccessInboundPort;
+import com.rboud.cps.connections.ports.Client.ClientContentAccessOutboudPort;
+import com.rboud.cps.connections.ports.Node.NodeContentAccessInboundPort;
 
 import fr.sorbonne_u.components.AbstractComponent;
 import fr.sorbonne_u.components.endpoints.BCMEndPoint;
@@ -16,7 +16,7 @@ public class DHTContentAccessEndpoint extends BCMEndPoint<ContentAccessSyncCI> {
 
   @Override
   protected AbstractInboundPort makeInboundPort(AbstractComponent c, String inboundPortURI) throws Exception {
-    DHTContentAccessInboundPort port = new DHTContentAccessInboundPort(inboundPortURI, c);
+    NodeContentAccessInboundPort port = new NodeContentAccessInboundPort(inboundPortURI, c);
     port.publishPort();
     return port;
   }

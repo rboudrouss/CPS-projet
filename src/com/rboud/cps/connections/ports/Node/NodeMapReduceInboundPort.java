@@ -1,4 +1,4 @@
-package com.rboud.cps.ports;
+package com.rboud.cps.connections.ports.Node;
 
 import java.io.Serializable;
 
@@ -10,13 +10,13 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.ProcessorI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.ReductorI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.SelectorI;
 
-public class DHTMapReduceInboundPort extends AbstractInboundPort implements MapReduceSyncCI {
+public class NodeMapReduceInboundPort extends AbstractInboundPort implements MapReduceSyncCI {
 
-  public DHTMapReduceInboundPort(ComponentI owner) throws Exception {
+  public NodeMapReduceInboundPort(ComponentI owner) throws Exception {
     super(MapReduceSyncCI.class, owner);
   }
 
-  public DHTMapReduceInboundPort(String URI, ComponentI owner) throws Exception {
+  public NodeMapReduceInboundPort(String URI, ComponentI owner) throws Exception {
     super(URI, MapReduceSyncCI.class, owner);
   }
 
