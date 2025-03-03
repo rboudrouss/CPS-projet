@@ -29,12 +29,14 @@ public class Client extends AbstractComponent {
 
   @Override
   public synchronized void start() throws ComponentStartException {
+    this.logMessage("[CLIENT] Starting client component.");
     super.start();
     try {
       this.dhtServicesEndpoint.initialiseClientSide(this);
     } catch (Exception e) {
       throw new ComponentStartException(e);
     }
+    this.logMessage("[CLIENT] Client component started.");
   }
 
   @Override
@@ -43,12 +45,15 @@ public class Client extends AbstractComponent {
 
     for (int i = 0; i < 10; i++) {
       Personne temp = Personne.getRandomPersonne();
+      this.logMessage("[CLIENT] Putting Personne: " + temp);
       this.dhtServicesEndpoint.getClientSideReference().put(temp.getId(), temp);
     }
 
+    this.logMessage("[CLIENT] Getting Personne with id 2.");
     Personne temp = (Personne) this.getDHTServices().get(new Id(2));
-    this.logMessage("Personne with id 2: " + temp);
+    this.logMessage("[CLIENT] got personne with id 2: " + temp);
 
+    this.logMessage("[CLIENT] getting sum of ages using mapReduce.");
     int out = this.getDHTServices().mapReduce(
         (a) -> true,
         (a) -> a.getValue("AGE"),
@@ -56,6 +61,6 @@ public class Client extends AbstractComponent {
         (a, b) -> a + b,
         0);
 
-    this.logMessage("Sum of ages: " + out);
+    this.logMessage("[CLIENT] got Sum of ages: " + out);
   }
 }

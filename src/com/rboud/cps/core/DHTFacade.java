@@ -37,17 +37,22 @@ public class DHTFacade extends AbstractComponent implements DHTServicesCI {
     this.outboundPortURI = URIGenerator.generateURI(URI_PREFIX);
     this.nodeFacadeCompositeEndpoint = nodeFacadeCompositeEndpoint;
     this.facadeClientDHTServicesEndpoint = facadeClientDHTServicesEndpoint;
+
+    this.toggleLogging();
+    this.toggleTracing();
   }
 
   @Override
   public synchronized void start() throws ComponentStartException {
-    super.start();
+    this.logMessage("[DHT-FACADE] Starting DHT Facade component.");
     try {
       this.facadeClientDHTServicesEndpoint.initialiseServerSide(this);
       this.nodeFacadeCompositeEndpoint.initialiseClientSide(this);
     } catch (Exception e) {
       throw new ComponentStartException(e);
     }
+    this.logMessage("[DHT-FACADE] DHT Facade component started.");
+    super.start();
   }
 
   private EndPointI<ContentAccessSyncCI> getContentAccessEndPoint() {
@@ -60,16 +65,19 @@ public class DHTFacade extends AbstractComponent implements DHTServicesCI {
 
   @Override
   public ContentDataI get(ContentKeyI key) throws Exception {
+    this.logMessage("[DHT-FACADE] Getting content with key: " + key);
     return this.getContentAccessEndPoint().getClientSideReference().getSync(outboundPortURI, key);
   }
 
   @Override
   public ContentDataI put(ContentKeyI key, ContentDataI value) throws Exception {
+    this.logMessage("[DHT-FACADE] Putting content with key: " + key + " and value: " + value);
     return this.getContentAccessEndPoint().getClientSideReference().putSync(outboundPortURI, key, value);
   }
 
   @Override
   public ContentDataI remove(ContentKeyI key) throws Exception {
+    this.logMessage("[DHT-FACADE] Removing content with key: " + key);
     return this.getContentAccessEndPoint().getClientSideReference().removeSync(outboundPortURI, key);
   }
 
@@ -81,6 +89,8 @@ public class DHTFacade extends AbstractComponent implements DHTServicesCI {
       CombinatorI<A> combinator,
       A initialAcc) throws Exception {
     assert this.getMapReduceEndPoint().serverSideInitialised();
+
+    this.logMessage("[DHT-FACADE] Starting mapReduce computation.");
 
     this.getMapReduceEndPoint().getClientSideReference().mapSync(outboundPortURI, selector, processor);
     return this.getMapReduceEndPoint().getClientSideReference().reduceSync(outboundPortURI, reductor, combinator,

@@ -58,16 +58,21 @@ public class DHTNode extends AbstractComponent implements ContentAccessSyncCI, M
     this.maxHash = Integer.MAX_VALUE;
     this.next = this;
     this.nodeFacadeCompositeEndpoint = nodeFacadeCompositeEndpoint;
+
+    this.toggleLogging();
+    this.toggleTracing();
   }
 
   @Override
   public synchronized void start() throws ComponentStartException {
-    super.start();
+    this.logMessage("[NODE] Starting DHT Node component.");
     try {
       this.nodeFacadeCompositeEndpoint.initialiseServerSide(this);
     } catch (Exception e) {
       throw new ComponentStartException(e);
     }
+    this.logMessage("[NODE] DHT Node component started.");
+    super.start();
   }
 
   public static boolean isBetween(int value, int min, int max) {
@@ -105,40 +110,43 @@ public class DHTNode extends AbstractComponent implements ContentAccessSyncCI, M
     }
   }
 
-  /*private void splitNode() {
-    int minHashValue = this.maxHash;
-    int maxHashValue = this.minHash;
-
-    // find min and max hash
-    for (ContentKeyI key : localStorage.keySet()) {
-      int hash = key.hashCode();
-      minHashValue = Math.min(minHashValue, hash);
-      maxHashValue = Math.max(maxHashValue, hash);
-    }
-
-    // spliting on the middle of the range of hash values
-    // When working with integer keys, hash values tends to be close to each
-    // other,
-    // that's why we use this method instead of just cutting in half the range
-    // Note: Using long to avoid overflow
-    int newMinHash = (int) Math.floorDiv((long) maxHashValue + (long) maxHashValue, (long) 2);
-    int newMaxHash = this.maxHash;
-
-    this.maxHash = newMinHash - 1;
-    this.next = new DHTNode(next, newMinHash, newMaxHash);
-
-    // Move data
-    Map<ContentKeyI, ContentDataI> newLocalStorage = new HashMap<>();
-    this.localStorage.entrySet().removeIf(entry -> {
-      if (entry.getKey().hashCode() > this.maxHash) {
-        newLocalStorage.put(entry.getKey(), entry.getValue());
-        return true;
-      }
-      return false;
-    });
-
-    this.next.localStorage.putAll(newLocalStorage);
-  }*/
+  /*
+   * private void splitNode() {
+   * int minHashValue = this.maxHash;
+   * int maxHashValue = this.minHash;
+   * 
+   * // find min and max hash
+   * for (ContentKeyI key : localStorage.keySet()) {
+   * int hash = key.hashCode();
+   * minHashValue = Math.min(minHashValue, hash);
+   * maxHashValue = Math.max(maxHashValue, hash);
+   * }
+   * 
+   * // spliting on the middle of the range of hash values
+   * // When working with integer keys, hash values tends to be close to each
+   * // other,
+   * // that's why we use this method instead of just cutting in half the range
+   * // Note: Using long to avoid overflow
+   * int newMinHash = (int) Math.floorDiv((long) maxHashValue + (long)
+   * maxHashValue, (long) 2);
+   * int newMaxHash = this.maxHash;
+   * 
+   * this.maxHash = newMinHash - 1;
+   * this.next = new DHTNode(next, newMinHash, newMaxHash);
+   * 
+   * // Move data
+   * Map<ContentKeyI, ContentDataI> newLocalStorage = new HashMap<>();
+   * this.localStorage.entrySet().removeIf(entry -> {
+   * if (entry.getKey().hashCode() > this.maxHash) {
+   * newLocalStorage.put(entry.getKey(), entry.getValue());
+   * return true;
+   * }
+   * return false;
+   * });
+   * 
+   * this.next.localStorage.putAll(newLocalStorage);
+   * }
+   */
 
   public String toString() {
     return "DHTNode [minHash=" + this.minHash + ", maxHash=" + this.maxHash + ", nbElements=" + this.localStorage.size()
@@ -160,6 +168,7 @@ public class DHTNode extends AbstractComponent implements ContentAccessSyncCI, M
 
   @Override
   public ContentDataI getSync(String URI, ContentKeyI key) throws Exception {
+    this.logMessage("[NODE] Getting content with key: " + key + " and URI: " + URI);
     if (!this.isBetween(key.hashCode()))
       return this.next.getSync(URI, key);
 
@@ -168,6 +177,7 @@ public class DHTNode extends AbstractComponent implements ContentAccessSyncCI, M
 
   @Override
   public ContentDataI putSync(String URI, ContentKeyI key, ContentDataI value) throws Exception {
+    this.logMessage("[NODE] Putting content with key: " + key + " and value: " + value + " and URI: " + URI);
     if (!this.isBetween(key.hashCode()))
       return this.next.putSync(URI, key, value);
 
@@ -178,6 +188,7 @@ public class DHTNode extends AbstractComponent implements ContentAccessSyncCI, M
 
   @Override
   public ContentDataI removeSync(String URI, ContentKeyI key) throws Exception {
+    this.logMessage("[NODE] Removing content with key: " + key + " and URI: " + URI);
     if (!this.isBetween(key.hashCode()))
       return this.next.removeSync(URI, key);
 
@@ -199,6 +210,7 @@ public class DHTNode extends AbstractComponent implements ContentAccessSyncCI, M
   @Override
   public <R extends Serializable> void mapSync(String URI, SelectorI selector, ProcessorI<R> processor)
       throws Exception {
+    this.logMessage("[NODE] Mapping with URI: " + URI);
     if (this.seenURIs.contains(URI)) {
       System.out.println("INFO MAPSYNC loop detected (or called before previous computation ends) with URI" + URI);
       return;
@@ -219,6 +231,7 @@ public class DHTNode extends AbstractComponent implements ContentAccessSyncCI, M
   public <A extends Serializable, R> A reduceSync(String URI, ReductorI<A, R> reductor, CombinatorI<A> combinator,
       A acc)
       throws Exception {
+    this.logMessage("[NODE] Reducing with URI: " + URI);
     if (this.seenURIs.contains(URI)) {
       System.out
           .println("INFO REDUCESYNC loop detected (or called before previous computation ends) with URI" + URI);
@@ -241,6 +254,5 @@ public class DHTNode extends AbstractComponent implements ContentAccessSyncCI, M
     this.seenURIs.remove(URI);
     return currentResult;
   }
-
 
 }
