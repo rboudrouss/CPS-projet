@@ -1,1 +1,1 @@
-7z a cps-projet.zip src .vscode .git .gitignore
+7z a Boudrouss-CPS.zip src .vscode .gitignore
