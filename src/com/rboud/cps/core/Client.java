@@ -44,16 +44,27 @@ public class Client extends AbstractComponent {
   public synchronized void execute() throws Exception {
     super.execute();
 
+    final boolean USE_INT_ID = true;
+
+
+    Personne temp = Personne.getRandomPersonne();
     for (int i = 0; i < 10; i++) {
-      Personne temp = Personne.getRandomPersonne();
+      temp = Personne.getRandomPersonne();
       this.logMessage("[CLIENT] Putting Personne: " + temp);
-      this.getDHTServices().put(temp.getId(), temp);
+      if (USE_INT_ID)
+        this.getDHTServices().put(temp.getId(), temp);
+      else
+        this.getDHTServices().put(temp.getNameId(), temp);  
       this.logMessage("[CLIENT] Personne put.");
     }
 
     this.logMessage("[CLIENT] Getting Personne with id 2.");
-    Personne temp = (Personne) this.getDHTServices().get(new Id(2));
-    this.logMessage("[CLIENT] got personne with id 2: " + temp);
+    Personne temp2 = (Personne) this.getDHTServices().get(new Id(2));
+    this.logMessage("[CLIENT] got personne with id 2: " + temp2);
+
+    this.logMessage("[CLIENT] Getting personne with nameid " + temp.getNameId());
+    temp2 = (Personne) this.getDHTServices().get(temp.getNameId());
+    this.logMessage("[CLIENT] got personne with nameid " + temp.getNameId() + ": " + temp2);
 
     this.logMessage("[CLIENT] getting sum of ages using mapReduce.");
     int out = this.getDHTServices().mapReduce(
