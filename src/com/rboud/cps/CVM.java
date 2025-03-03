@@ -2,6 +2,7 @@ package com.rboud.cps;
 
 import com.rboud.cps.connections.endpoints.FacadeClient.FacadeClientDHTServicesEndpoint;
 import com.rboud.cps.connections.endpoints.NodeFacade.NodeFacadeCompositeEndpoint;
+import com.rboud.cps.connections.endpoints.NodeNode.NodeNodeCompositeEndpoint;
 import com.rboud.cps.core.Client;
 import com.rboud.cps.core.DHTFacade;
 import com.rboud.cps.core.DHTNode;
@@ -27,10 +28,11 @@ public class CVM extends AbstractCVM {
 
     FacadeClientDHTServicesEndpoint dhtServicesEndpoint = new FacadeClientDHTServicesEndpoint();
     NodeFacadeCompositeEndpoint nodeFacadeCompositeEndpoint = new NodeFacadeCompositeEndpoint();
+    NodeNodeCompositeEndpoint nodeNodeCompositeEndpoint = new NodeNodeCompositeEndpoint();
 
     String nodeURI = AbstractComponent.createComponent(
         DHTNode.class.getCanonicalName(),
-        new Object[] { nodeFacadeCompositeEndpoint.copyWithSharable() });
+        new Object[] { nodeFacadeCompositeEndpoint.copyWithSharable(), nodeNodeCompositeEndpoint.copyWithSharable() });
 
     String facadeURI = AbstractComponent.createComponent(
         DHTFacade.class.getCanonicalName(),
@@ -39,7 +41,7 @@ public class CVM extends AbstractCVM {
     String clientURI = AbstractComponent.createComponent(
         Client.class.getCanonicalName(),
         new Object[] { dhtServicesEndpoint.copyWithSharable() });
-
+    
     // assert nodeFacadeCompositeEndpoint.serverSideInitialised();
     // assert dhtServicesEndpoint.serverSideInitialised();
     // assert dhtServicesEndpoint.clientSideInitialised();

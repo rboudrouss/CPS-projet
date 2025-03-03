@@ -1,6 +1,7 @@
 package com.rboud.cps.core;
 
 import java.io.Serializable;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -8,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.rboud.cps.connections.endpoints.NodeFacade.NodeFacadeCompositeEndpoint;
+import com.rboud.cps.connections.endpoints.NodeNode.NodeNodeCompositeEndpoint;
 
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentAccessSyncCI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentAccessSyncI;
@@ -22,17 +24,19 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.SelectorI;
 
 import fr.sorbonne_u.components.AbstractComponent;
 import fr.sorbonne_u.components.annotations.OfferedInterfaces;
+import fr.sorbonne_u.components.annotations.RequiredInterfaces;
 import fr.sorbonne_u.components.exceptions.ComponentStartException;
 
 @OfferedInterfaces(offered = { ContentAccessSyncCI.class, MapReduceSyncCI.class })
+@RequiredInterfaces(required = { ContentAccessSyncCI.class, MapReduceSyncCI.class })
 public class DHTNode extends AbstractComponent implements ContentAccessSyncI, MapReduceSyncI {
   private Set<String> seenURIs = new HashSet<String>();
 
   // used for debugging at first, not really used rn
-  private Set<String> seenPrintURIs = new HashSet<String>();
+  // private Set<String> seenPrintURIs = new HashSet<String>();
 
   // max element in node, Must be >= 2
-  public static final int MAX_VALUE = Integer.MAX_VALUE;
+  public static final int MAX_VALUE = 5;
 
   // key: computationURI, value: results extended from Array.
   // Used to store the results of a map computation for a given URI
@@ -43,32 +47,64 @@ public class DHTNode extends AbstractComponent implements ContentAccessSyncI, Ma
   private int maxHash;
 
   // Pointer to the next node in the ring
-  private DHTNode next; // CANNOT BE NULL
+  // private DHTNode next; // CANNOT BE NULL
 
   // Storage
   private final Map<ContentKeyI, ContentDataI> localStorage = new HashMap<>();
 
-  // Ports URIS
+  // Ports URIS, not used so far
   public static final String CONTENT_ACCESS_INBOUND_PORT_URI = "content-access-inbound-port-uri";
   public static final String MAP_REDUCE_INBOUND_PORT_URI = "map-reduce-inbound-port-uri";
 
-  NodeFacadeCompositeEndpoint nodeFacadeCompositeEndpoint;
+  // Endpoint
+  NodeFacadeCompositeEndpoint nodeFacadeCompositeEndpoint; // Can be null
+  NodeNodeCompositeEndpoint nodeNodeCompositeEndpoint; // CANNOT BE NULL
 
-  protected DHTNode(NodeFacadeCompositeEndpoint nodeFacadeCompositeEndpoint) throws Exception {
+  protected DHTNode(
+      NodeFacadeCompositeEndpoint nodeFacadeCompositeEndpoint,
+      NodeNodeCompositeEndpoint nodeNodeCompositeEndpoint // formating hack
+  ) throws Exception {
     super(1, 0);
+    assert nodeNodeCompositeEndpoint != null;
+
     this.minHash = Integer.MIN_VALUE;
     this.maxHash = Integer.MAX_VALUE;
-    this.next = this;
-    this.nodeFacadeCompositeEndpoint = nodeFacadeCompositeEndpoint;
+    // this.next = this;
+    this.nodeFacadeCompositeEndpoint = nodeFacadeCompositeEndpoint; // Can be null
+    this.nodeNodeCompositeEndpoint = nodeNodeCompositeEndpoint; // CANNOT BE NULL
 
     try {
-      this.nodeFacadeCompositeEndpoint.initialiseServerSide(this);
+      if (this.nodeFacadeCompositeEndpoint != null) {
+        this.nodeFacadeCompositeEndpoint.initialiseServerSide(this);
+      }
+
+      if (!this.nodeNodeCompositeEndpoint.serverSideInitialised()) {
+        this.nodeNodeCompositeEndpoint.initialiseServerSide(this);
+      }
+      this.nodeNodeCompositeEndpoint.initialiseClientSide(this);
+      assert this.nodeNodeCompositeEndpoint.clientSideInitialised();
+      assert this.nodeNodeCompositeEndpoint.serverSideInitialised();
     } catch (Exception e) {
       throw new Exception(e);
     }
 
     this.toggleLogging();
     this.toggleTracing();
+  }
+
+  protected DHTNode(NodeFacadeCompositeEndpoint nodeFacadeCompositeEndpoint,
+      NodeNodeCompositeEndpoint nodeNodeCompositeEndpoint, Map<ContentKeyI, ContentDataI> data) throws Exception {
+    this(nodeFacadeCompositeEndpoint, nodeNodeCompositeEndpoint);
+    this.localStorage.putAll(data);
+  }
+
+  protected DHTNode(NodeFacadeCompositeEndpoint nodeFacadeCompositeEndpoint,
+      NodeNodeCompositeEndpoint nextNodeCompositeEndpoint, NodeNodeCompositeEndpoint parentNodeCompositeEndpoint,
+      int minHash, int maxHash) throws Exception {
+    this(nodeFacadeCompositeEndpoint, nextNodeCompositeEndpoint);
+    parentNodeCompositeEndpoint.initialiseServerSide(this);
+    this.minHash = minHash;
+    this.maxHash = maxHash;
   }
 
   @Override
@@ -82,8 +118,17 @@ public class DHTNode extends AbstractComponent implements ContentAccessSyncI, Ma
     this.logMessage("[NODE] Finalising DHT Node component.");
     this.printExecutionLogOnFile("logs/dht-node");
 
-    this.nodeFacadeCompositeEndpoint.cleanUpServerSide();
+    if (this.nodeFacadeCompositeEndpoint != null)
+      this.nodeFacadeCompositeEndpoint.cleanUpServerSide();
     super.finalise();
+  }
+
+  private ContentAccessSyncI getNextNodeContentAccess() {
+    return this.nodeNodeCompositeEndpoint.getContentAccessEndpoint().getClientSideReference();
+  }
+
+  private MapReduceSyncI getNextNodeMapReduce() {
+    return this.nodeNodeCompositeEndpoint.getMapReduceEndpoint().getClientSideReference();
   }
 
   public static boolean isBetween(int value, int min, int max) {
@@ -94,94 +139,109 @@ public class DHTNode extends AbstractComponent implements ContentAccessSyncI, Ma
     return isBetween(value, minHash, maxHash);
   }
 
-  private void checkMerge() {
-    if (this.localStorage.size() < MAX_VALUE / 3 && this.next.localStorage.size() < MAX_VALUE / 3) {
-      // this.merge();
-    }
-  }
-
-  @SuppressWarnings("unused")
-  private void merge() {
-    if (this.next == this) {
-      return;
-    }
-
-    // merge data
-    this.localStorage.putAll(this.next.localStorage);
-    this.next.localStorage.clear();
-
-    // merge hash
-    this.maxHash = this.next.maxHash;
-    this.next = this.next.next;
-  }
-
-  private void checkSplit() {
-    if (this.localStorage.size() > MAX_VALUE) {
-      // this.splitNode();
-    }
-  }
-
   /*
-   * private void splitNode() {
-   * int minHashValue = this.maxHash;
-   * int maxHashValue = this.minHash;
-   * 
-   * // find min and max hash
-   * for (ContentKeyI key : localStorage.keySet()) {
-   * int hash = key.hashCode();
-   * minHashValue = Math.min(minHashValue, hash);
-   * maxHashValue = Math.max(maxHashValue, hash);
+   * private void checkMerge() {
+   * if (this.localStorage.size() < MAX_VALUE / 3 && this.next.localStorage.size()
+   * < MAX_VALUE / 3) {
+   * this.merge();
+   * }
    * }
    * 
-   * // spliting on the middle of the range of hash values
-   * // When working with integer keys, hash values tends to be close to each
-   * // other,
-   * // that's why we use this method instead of just cutting in half the range
-   * // Note: Using long to avoid overflow
-   * int newMinHash = (int) Math.floorDiv((long) maxHashValue + (long)
-   * maxHashValue, (long) 2);
-   * int newMaxHash = this.maxHash;
-   * 
-   * this.maxHash = newMinHash - 1;
-   * this.next = new DHTNode(next, newMinHash, newMaxHash);
-   * 
-   * // Move data
-   * Map<ContentKeyI, ContentDataI> newLocalStorage = new HashMap<>();
-   * this.localStorage.entrySet().removeIf(entry -> {
-   * if (entry.getKey().hashCode() > this.maxHash) {
-   * newLocalStorage.put(entry.getKey(), entry.getValue());
-   * return true;
+   * private void merge() {
+   * if (this.next == this) {
+   * return;
    * }
-   * return false;
-   * });
    * 
-   * this.next.localStorage.putAll(newLocalStorage);
+   * // merge data
+   * this.localStorage.putAll(this.next.localStorage);
+   * this.next.localStorage.clear();
+   * 
+   * // merge hash
+   * this.maxHash = this.next.maxHash;
+   * this.next = this.next.next;
    * }
    */
+
+  private void checkSplit() throws Exception {
+    if (this.localStorage.size() > MAX_VALUE) {
+      this.splitNode();
+    }
+  }
+
+  private void splitNode() throws Exception {
+    int minHashValue = this.maxHash;
+    int maxHashValue = this.minHash;
+
+    // find min and max hash
+    for (ContentKeyI key : localStorage.keySet()) {
+      int hash = key.hashCode();
+      minHashValue = Math.min(minHashValue, hash);
+      maxHashValue = Math.max(maxHashValue, hash);
+    }
+
+    // spliting on the middle of the range of hash values
+    // When working with integer keys, hash values tends to be close to each
+    // other,
+    // that's why we use this method instead of just cutting in half the range
+    // Note: Using long to avoid overflow
+    int newMinHash = (int) Math.floorDiv((long) maxHashValue + (long) maxHashValue, (long) 2);
+    int newMaxHash = this.maxHash;
+
+    this.maxHash = newMinHash - 1;
+
+    this.nodeNodeCompositeEndpoint.cleanUpClientSide();
+
+    NodeNodeCompositeEndpoint newEndpoint = new NodeNodeCompositeEndpoint();
+
+    AbstractComponent.createComponent(DHTNode.class.getCanonicalName(), new Object[] {
+        new NodeFacadeCompositeEndpoint(), // FIXME : should be null but cannot pass null
+        this.nodeNodeCompositeEndpoint,
+        newEndpoint,
+        newMinHash,
+        newMaxHash
+    });
+
+    newEndpoint.initialiseClientSide(this);
+    this.nodeNodeCompositeEndpoint = newEndpoint;
+
+    // Move data
+    Map<ContentKeyI, ContentDataI> newLocalStorage = new HashMap<>();
+    this.localStorage.entrySet().removeIf(entry -> {
+      if (entry.getKey().hashCode() > this.maxHash) {
+        newLocalStorage.put(entry.getKey(), entry.getValue());
+        return true;
+      }
+      return false;
+    });
+  }
 
   public String toString() {
     return "DHTNode [minHash=" + this.minHash + ", maxHash=" + this.maxHash + ", nbElements=" + this.localStorage.size()
         + "]";
   }
 
-  public void printChain(String URI) {
-    if (this.seenPrintURIs.contains(URI)) {
-      System.out.println("INFO PRINTCHAIN loop detected (or called before previous computation ends)");
-      return;
-    }
-    this.seenPrintURIs.add(URI);
-    System.out.println("Node: " + this);
-    System.out.println("Data: " + localStorage);
-    System.out.println();
-    this.next.printChain(URI);
-    this.seenPrintURIs.remove(URI);
-  }
+  /*
+   * public void printChain(String URI) {
+   * if (this.seenPrintURIs.contains(URI)) {
+   * System.out.
+   * println("INFO PRINTCHAIN loop detected (or called before previous computation ends)"
+   * );
+   * return;
+   * }
+   * this.seenPrintURIs.add(URI);
+   * System.out.println("Node: " + this);
+   * System.out.println("Data: " + localStorage);
+   * System.out.println();
+   * this.next.printChain(URI);
+   * this.seenPrintURIs.remove(URI);
+   * }
+   */
 
   @Override
   public ContentDataI getSync(String URI, ContentKeyI key) throws Exception {
     this.logMessage("[NODE] Getting content with key: " + key + " and URI: " + URI);
     if (!this.isBetween(key.hashCode()))
-      return this.next.getSync(URI, key);
+      return this.getNextNodeContentAccess().getSync(URI, key);
 
     return this.localStorage.get(key);
   }
@@ -190,7 +250,7 @@ public class DHTNode extends AbstractComponent implements ContentAccessSyncI, Ma
   public ContentDataI putSync(String URI, ContentKeyI key, ContentDataI value) throws Exception {
     this.logMessage("[NODE] Putting content with key: " + key + " and value: " + value + " and URI: " + URI);
     if (!this.isBetween(key.hashCode()))
-      return this.next.putSync(URI, key, value);
+      return this.getNextNodeContentAccess().putSync(URI, key, value);
 
     ContentDataI out = this.localStorage.put(key, value);
     this.checkSplit();
@@ -201,10 +261,10 @@ public class DHTNode extends AbstractComponent implements ContentAccessSyncI, Ma
   public ContentDataI removeSync(String URI, ContentKeyI key) throws Exception {
     this.logMessage("[NODE] Removing content with key: " + key + " and URI: " + URI);
     if (!this.isBetween(key.hashCode()))
-      return this.next.removeSync(URI, key);
+      return this.getNextNodeContentAccess().removeSync(URI, key);
 
     ContentDataI out = this.localStorage.remove(key);
-    this.checkMerge();
+    // this.checkMerge();
     return out;
   }
 
@@ -234,7 +294,7 @@ public class DHTNode extends AbstractComponent implements ContentAccessSyncI, Ma
         .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
 
     this.mapResults.put(URI, results);
-    this.next.mapSync(URI, selector, processor);
+    this.getNextNodeMapReduce().mapSync(URI, selector, processor);
     this.seenURIs.remove(URI);
   }
 
@@ -259,7 +319,7 @@ public class DHTNode extends AbstractComponent implements ContentAccessSyncI, Ma
 
     A currentResult = data.stream().reduce(acc, reductor::apply, combinator::apply);
 
-    A nextResult = next.reduceSync(URI, reductor, combinator, acc);
+    A nextResult = this.getNextNodeMapReduce().reduceSync(URI, reductor, combinator, acc);
     currentResult = combinator.apply(currentResult, nextResult);
 
     this.seenURIs.remove(URI);

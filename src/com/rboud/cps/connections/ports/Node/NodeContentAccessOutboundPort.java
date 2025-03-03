@@ -1,0 +1,39 @@
+package com.rboud.cps.connections.ports.Node;
+
+import fr.sorbonne_u.components.ComponentI;
+import fr.sorbonne_u.components.ports.AbstractOutboundPort;
+import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentAccessSyncCI;
+import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentAccessSyncI;
+import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentDataI;
+import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentKeyI;
+
+public class NodeContentAccessOutboundPort extends AbstractOutboundPort implements ContentAccessSyncCI {
+
+  public NodeContentAccessOutboundPort(String URI, ComponentI owner) throws Exception {
+    super(URI, ContentAccessSyncCI.class, owner);
+  }
+
+  public NodeContentAccessOutboundPort(ComponentI owner) throws Exception {
+    super(ContentAccessSyncCI.class, owner);
+  }
+
+  @Override
+  public void clearComputation(String computationURI) throws Exception {
+    ((ContentAccessSyncI) this.getConnector()).clearComputation(computationURI);
+  }
+
+  @Override
+  public ContentDataI getSync(String computationURI, ContentKeyI key) throws Exception {
+    return ((ContentAccessSyncI) this.getConnector()).getSync(computationURI, key);
+  }
+
+  @Override
+  public ContentDataI putSync(String computationURI, ContentKeyI key, ContentDataI value) throws Exception {
+    return ((ContentAccessSyncI) this.getConnector()).putSync(computationURI, key, value);
+  }
+
+  @Override
+  public ContentDataI removeSync(String computationURI, ContentKeyI key) throws Exception {
+    return ((ContentAccessSyncI) this.getConnector()).removeSync(computationURI, key);
+  }
+}
