@@ -4,6 +4,7 @@ import java.io.Serializable;
 
 import com.rboud.cps.connections.endpoints.FacadeClient.FacadeClientDHTServicesEndpoint;
 import com.rboud.cps.connections.endpoints.NodeFacade.NodeFacadeCompositeEndpoint;
+import com.rboud.cps.utils.Id;
 
 import fr.sorbonne_u.components.AbstractComponent;
 import fr.sorbonne_u.components.annotations.OfferedInterfaces;
@@ -45,6 +46,8 @@ public class DHTFacade extends AbstractComponent implements DHTServicesCI {
   @Override
   public synchronized void start() throws ComponentStartException {
     this.logMessage("[DHT-FACADE] Starting DHT Facade component.");
+    assert this.nodeFacadeCompositeEndpoint.serverSideInitialised();
+
     try {
       this.facadeClientDHTServicesEndpoint.initialiseServerSide(this);
       this.nodeFacadeCompositeEndpoint.initialiseClientSide(this);

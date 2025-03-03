@@ -30,13 +30,15 @@ public class Client extends AbstractComponent {
   @Override
   public synchronized void start() throws ComponentStartException {
     this.logMessage("[CLIENT] Starting client component.");
-    super.start();
+    assert this.dhtServicesEndpoint.serverSideInitialised();
+
     try {
       this.dhtServicesEndpoint.initialiseClientSide(this);
     } catch (Exception e) {
       throw new ComponentStartException(e);
     }
     this.logMessage("[CLIENT] Client component started.");
+    super.start();
   }
 
   @Override
@@ -46,7 +48,7 @@ public class Client extends AbstractComponent {
     for (int i = 0; i < 10; i++) {
       Personne temp = Personne.getRandomPersonne();
       this.logMessage("[CLIENT] Putting Personne: " + temp);
-      this.dhtServicesEndpoint.getClientSideReference().put(temp.getId(), temp);
+      this.getDHTServices().put(temp.getId(), temp);
     }
 
     this.logMessage("[CLIENT] Getting Personne with id 2.");

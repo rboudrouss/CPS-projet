@@ -22,19 +22,21 @@ public class CVM extends AbstractCVM {
     NodeFacadeCompositeEndpoint nodeFacadeCompositeEndpoint = new NodeFacadeCompositeEndpoint();
 
     String nodeURI = AbstractComponent.createComponent(
-      DHTNode.class.getCanonicalName(),
-      new Object[] {nodeFacadeCompositeEndpoint.copyWithSharable()}
-    );
+        DHTNode.class.getCanonicalName(),
+        new Object[] { nodeFacadeCompositeEndpoint.copyWithSharable() });
 
     String facadeURI = AbstractComponent.createComponent(
-      DHTFacade.class.getCanonicalName(),
-      new Object[] {nodeFacadeCompositeEndpoint.copyWithSharable(),dhtServicesEndpoint.copyWithSharable()}
-    );
+        DHTFacade.class.getCanonicalName(),
+        new Object[] { nodeFacadeCompositeEndpoint.copyWithSharable(), dhtServicesEndpoint.copyWithSharable() });
 
     String clientURI = AbstractComponent.createComponent(
-      Client.class.getCanonicalName(),
-      new Object[] {dhtServicesEndpoint.copyWithSharable()}
-    );
+        Client.class.getCanonicalName(),
+        new Object[] { dhtServicesEndpoint.copyWithSharable() });
+    
+
+    
+    assert dhtServicesEndpoint.clientSideInitialised() && dhtServicesEndpoint.serverSideInitialised();
+    assert nodeFacadeCompositeEndpoint.clientSideInitialised() && nodeFacadeCompositeEndpoint.serverSideInitialised();
 
     super.deploy();
   }
@@ -46,6 +48,7 @@ public class CVM extends AbstractCVM {
       System.exit(0);
     } catch (Exception e) {
       e.printStackTrace();
+      System.exit(0);
     }
   }
 
