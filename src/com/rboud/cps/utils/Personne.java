@@ -35,7 +35,7 @@ public class Personne implements ContentDataI {
 
   @Override
   public String toString() {
-    return "Personne [nom=" + nom + ", prenom=" + prenom + ", age=" + age + "]";
+    return "Personne [nom=" + nom + ", prenom=" + prenom + ", age=" + age + ", id=" + id + "]";
   }
 
   public Serializable getValue(String attributeName) {
