@@ -14,6 +14,7 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentAccessSyncCI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentDataI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentKeyI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.frontend.DHTServicesCI;
+import fr.sorbonne_u.cps.dht_mapreduce.interfaces.frontend.DHTServicesI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.CombinatorI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.MapReduceSyncCI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.ProcessorI;
@@ -23,7 +24,7 @@ import fr.sorbonne_u.cps.mapreduce.utils.URIGenerator;
 
 @RequiredInterfaces(required = { MapReduceSyncCI.class, ContentAccessSyncCI.class })
 @OfferedInterfaces(offered = { DHTServicesCI.class })
-public class DHTFacade extends AbstractComponent implements DHTServicesCI {
+public class DHTFacade extends AbstractComponent implements DHTServicesI {
   private NodeFacadeCompositeEndpoint nodeFacadeCompositeEndpoint;
   private FacadeClientDHTServicesEndpoint facadeClientDHTServicesEndpoint;
 
