@@ -23,15 +23,15 @@ public class CVM extends AbstractCVM {
 
     String nodeURI = AbstractComponent.createComponent(
         DHTNode.class.getCanonicalName(),
-        new Object[] { nodeFacadeCompositeEndpoint.copyWithSharable() });
+        new Object[] { nodeFacadeCompositeEndpoint });
 
     String facadeURI = AbstractComponent.createComponent(
         DHTFacade.class.getCanonicalName(),
-        new Object[] { nodeFacadeCompositeEndpoint.copyWithSharable(), dhtServicesEndpoint.copyWithSharable() });
+        new Object[] { nodeFacadeCompositeEndpoint, dhtServicesEndpoint });
 
     String clientURI = AbstractComponent.createComponent(
         Client.class.getCanonicalName(),
-        new Object[] { dhtServicesEndpoint.copyWithSharable() });
+        new Object[] { dhtServicesEndpoint });
     
 
     

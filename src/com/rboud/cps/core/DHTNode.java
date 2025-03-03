@@ -65,7 +65,7 @@ public class DHTNode extends AbstractComponent implements ContentAccessSyncCI, M
 
   @Override
   public synchronized void start() throws ComponentStartException {
-    this.logMessage("[NODE] Starting DHT Node component.");
+    this.logMessage("[NODE] Starting DHT Node component : " + this);
     try {
       this.nodeFacadeCompositeEndpoint.initialiseServerSide(this);
     } catch (Exception e) {
@@ -73,6 +73,15 @@ public class DHTNode extends AbstractComponent implements ContentAccessSyncCI, M
     }
     this.logMessage("[NODE] DHT Node component started.");
     super.start();
+  }
+
+  @Override
+  public synchronized void finalise() throws Exception {
+    this.logMessage("[NODE] Finalising DHT Node component.");
+    this.printExecutionLogOnFile("logs/dht-node");
+
+    this.nodeFacadeCompositeEndpoint.cleanUpServerSide();
+    super.finalise();
   }
 
   public static boolean isBetween(int value, int min, int max) {

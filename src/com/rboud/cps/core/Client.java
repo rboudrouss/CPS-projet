@@ -48,7 +48,9 @@ public class Client extends AbstractComponent {
     for (int i = 0; i < 10; i++) {
       Personne temp = Personne.getRandomPersonne();
       this.logMessage("[CLIENT] Putting Personne: " + temp);
+      System.out.println(this.getDHTServices());
       this.getDHTServices().put(temp.getId(), temp);
+      this.logMessage("[CLIENT] Personne put.");
     }
 
     this.logMessage("[CLIENT] Getting Personne with id 2.");
@@ -65,4 +67,16 @@ public class Client extends AbstractComponent {
 
     this.logMessage("[CLIENT] got Sum of ages: " + out);
   }
+
+  @Override
+  public synchronized void finalise() throws Exception {
+    this.logMessage("[CLIENT] Finalising client component.");
+    this.printExecutionLogOnFile("logs/client");
+
+    this.dhtServicesEndpoint.cleanUpClientSide();
+
+    super.finalise();
+  }
+
+  
 }
