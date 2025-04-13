@@ -49,6 +49,10 @@ public class DHTFacade extends AbstractComponent implements DHTServicesI {
     this.toggleTracing();
   }
 
+  // ------------------------------------------------------------------------
+  // Component lifecycle methods
+  // ------------------------------------------------------------------------
+
   @Override
   public synchronized void start() throws ComponentStartException {
     this.logMessage("[DHT-FACADE] Starting DHT Facade component.");
@@ -66,55 +70,35 @@ public class DHTFacade extends AbstractComponent implements DHTServicesI {
     super.finalise();
   }
 
-  private EndPointI<ContentAccessSyncCI> getContentAccessEndPoint() {
-    return this.nodeFacadeCompositeEndpoint.getContentAccessEndpoint();
-  }
 
-  private <U, R extends ContentDataI> R contentComputeAndClear(ThrowingBiFunction<String, U, R> func, U arg)
-      throws Exception {
-    String computeURI = URIGenerator.generateURI(URI_PREFIX);
-    R result = func.apply(computeURI, arg);
-    this.getMapReduceEndPoint().getClientSideReference().clearMapReduceComputation(computeURI);
-    return result;
-  }
-
-  private <U, V, R extends ContentDataI> R contentComputeAndClear(ThrowingTriFunction<String, U, V, R> func, U arg1,
-      V arg2)
-      throws Exception {
-    String computeURI = URIGenerator.generateURI(URI_PREFIX);
-    R result = func.apply(computeURI, arg1, arg2);
-    this.getMapReduceEndPoint().getClientSideReference().clearMapReduceComputation(computeURI);
-    return result;
-  }
-
-  private EndPointI<MapReduceSyncCI> getMapReduceEndPoint() {
-    return this.nodeFacadeCompositeEndpoint.getMapReduceEndpoint();
-  }
+  // ------------------------------------------------------------------------
+  // DHTServicesI implementation
+  // ------------------------------------------------------------------------
 
   @Override
   public ContentDataI get(ContentKeyI key) throws Exception {
     this.logMessage("[DHT-FACADE] Getting content with key: " + key);
     return this.contentComputeAndClear(
-        this.getContentAccessEndPoint().getClientSideReference()::getSync,
+        this.getContentAccessClientReference()::getSync,
         key // formatter hack
-      );
+    );
   }
 
   @Override
   public ContentDataI put(ContentKeyI key, ContentDataI value) throws Exception {
     this.logMessage("[DHT-FACADE] Putting content with key: " + key + " and value: " + value);
     return this.contentComputeAndClear(
-        this.getContentAccessEndPoint().getClientSideReference()::putSync,
+        this.getContentAccessClientReference()::putSync,
         key,
         value // formatter hack
-      );
+    );
   }
 
   @Override
   public ContentDataI remove(ContentKeyI key) throws Exception {
     this.logMessage("[DHT-FACADE] Removing content with key: " + key);
     return this.contentComputeAndClear(
-        this.getContentAccessEndPoint().getClientSideReference()::removeSync,
+        this.getContentAccessClientReference()::removeSync,
         key // formatter hack
     );
   }
@@ -129,12 +113,42 @@ public class DHTFacade extends AbstractComponent implements DHTServicesI {
     this.logMessage("[DHT-FACADE] Starting mapReduce computation.");
     String computeURI = URIGenerator.generateURI(URI_PREFIX);
 
-    this.getMapReduceEndPoint().getClientSideReference().mapSync(computeURI, selector, processor);
-    A out = this.getMapReduceEndPoint().getClientSideReference().reduceSync(computeURI, reductor, combinator,
+    this.getMapReduceClientReference().mapSync(computeURI, selector, processor);
+    A out = this.getMapReduceClientReference().reduceSync(computeURI, reductor, combinator,
         initialAcc);
-    this.getMapReduceEndPoint().getClientSideReference().clearMapReduceComputation(computeURI);
+    this.getMapReduceClientReference().clearMapReduceComputation(computeURI);
     return out;
   }
+
+  // ------------------------------------------------------------------------
+  // Helpers
+  // ------------------------------------------------------------------------
+
+  private ContentAccessSyncCI getContentAccessClientReference() {
+    return this.nodeFacadeCompositeEndpoint.getContentAccessEndpoint().getClientSideReference();
+  }
+
+  private <U, R extends ContentDataI> R contentComputeAndClear(ThrowingBiFunction<String, U, R> func, U arg)
+      throws Exception {
+    String computeURI = URIGenerator.generateURI(URI_PREFIX);
+    R result = func.apply(computeURI, arg);
+    this.getMapReduceClientReference().clearMapReduceComputation(computeURI);
+    return result;
+  }
+
+  private <U, V, R extends ContentDataI> R contentComputeAndClear(ThrowingTriFunction<String, U, V, R> func, U arg1,
+      V arg2)
+      throws Exception {
+    String computeURI = URIGenerator.generateURI(URI_PREFIX);
+    R result = func.apply(computeURI, arg1, arg2);
+    this.getMapReduceClientReference().clearMapReduceComputation(computeURI);
+    return result;
+  }
+
+  private MapReduceSyncCI getMapReduceClientReference() {
+    return this.nodeFacadeCompositeEndpoint.getMapReduceEndpoint().getClientSideReference();
+  }
+
 
   @FunctionalInterface
   public interface ThrowingTriFunction<T, U, V, R> {
