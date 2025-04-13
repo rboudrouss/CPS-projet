@@ -8,6 +8,12 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentDataI;
 public class Personne implements ContentDataI {
   private static int n = 0;
 
+  public static final String NOM = "NOM";
+  public static final String PRENOM = "PRENOM";
+  public static final String AGE = "AGE";
+  public static final String ID = "ID";
+  public static final String[] ATTRIBUTES = { NOM, PRENOM, AGE, ID };
+
   private String nom;
   private String prenom;
   private int age;
@@ -39,11 +45,11 @@ public class Personne implements ContentDataI {
   }
 
   public Serializable getValue(String attributeName) {
-    if (attributeName.equals("NOM")) {
+    if (attributeName.equals(Personne.NOM)) {
       return nom;
-    } else if (attributeName.equals("PRENOM")) {
+    } else if (attributeName.equals(Personne.PRENOM)) {
       return prenom;
-    } else if (attributeName.equals("AGE")) {
+    } else if (attributeName.equals(Personne.AGE)) {
       return age;
     }
     System.out.println("WARNING personne#getvalue : " + attributeName + " not found");
