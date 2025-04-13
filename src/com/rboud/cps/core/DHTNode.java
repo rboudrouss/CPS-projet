@@ -58,11 +58,7 @@ public class DHTNode extends AbstractComponent implements ContentAccessSyncI, Ma
     this.next = this;
     this.nodeFacadeCompositeEndpoint = nodeFacadeCompositeEndpoint;
 
-    try {
-      this.nodeFacadeCompositeEndpoint.initialiseServerSide(this);
-    } catch (Exception e) {
-      throw new Exception(e);
-    }
+    this.nodeFacadeCompositeEndpoint.initialiseServerSide(this);
 
     this.toggleLogging();
     this.toggleTracing();

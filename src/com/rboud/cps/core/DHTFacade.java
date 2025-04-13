@@ -37,13 +37,7 @@ public class DHTFacade extends AbstractComponent implements DHTServicesI {
     this.nodeFacadeCompositeEndpoint = nodeFacadeCompositeEndpoint;
     this.facadeClientDHTServicesEndpoint = facadeClientDHTServicesEndpoint;
 
-    assert this.nodeFacadeCompositeEndpoint.serverSideInitialised();
-    try {
-      this.facadeClientDHTServicesEndpoint.initialiseServerSide(this);
-      this.nodeFacadeCompositeEndpoint.initialiseClientSide(this);
-    } catch (Exception e) {
-      throw new Exception(e);
-    }
+    this.facadeClientDHTServicesEndpoint.initialiseServerSide(this);
 
     this.toggleLogging();
     this.toggleTracing();
@@ -56,6 +50,11 @@ public class DHTFacade extends AbstractComponent implements DHTServicesI {
   @Override
   public synchronized void start() throws ComponentStartException {
     this.logMessage("[DHT-FACADE] Starting DHT Facade component.");
+    try {
+      this.nodeFacadeCompositeEndpoint.initialiseClientSide(this);
+    } catch (Exception e) {
+      throw new ComponentStartException(e);
+    }
     super.start();
   }
 
@@ -69,7 +68,6 @@ public class DHTFacade extends AbstractComponent implements DHTServicesI {
 
     super.finalise();
   }
-
 
   // ------------------------------------------------------------------------
   // DHTServicesI implementation
@@ -148,7 +146,6 @@ public class DHTFacade extends AbstractComponent implements DHTServicesI {
   private MapReduceSyncCI getMapReduceClientReference() {
     return this.nodeFacadeCompositeEndpoint.getMapReduceEndpoint().getClientSideReference();
   }
-
 
   @FunctionalInterface
   public interface ThrowingTriFunction<T, U, V, R> {

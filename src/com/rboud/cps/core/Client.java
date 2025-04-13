@@ -19,24 +19,22 @@ public class Client extends AbstractComponent {
 
     this.dhtServicesEndpoint = dhtServicesEndpoint;
 
-    assert this.dhtServicesEndpoint.serverSideInitialised();
-    try {
-      this.dhtServicesEndpoint.initialiseClientSide(this);
-    } catch (Exception e) {
-      throw new Exception(e);
-    }
-
     this.toggleLogging();
     this.toggleTracing();
   }
 
-  private DHTServicesCI getDHTServices() {
-    return this.dhtServicesEndpoint.getClientSideReference();
-  }
+  // ------------------------------------------------------------------------
+  // Component lifecycle methods
+  // ------------------------------------------------------------------------
 
   @Override
   public synchronized void start() throws ComponentStartException {
     this.logMessage("[CLIENT] Starting client component.");
+    try {
+      this.dhtServicesEndpoint.initialiseClientSide(this);
+    } catch (Exception e) {
+      throw new ComponentStartException(e);
+    }
     super.start();
   }
 
@@ -46,7 +44,6 @@ public class Client extends AbstractComponent {
 
     final boolean USE_INT_ID = true;
 
-
     Personne temp = Personne.getRandomPersonne();
     for (int i = 0; i < 10; i++) {
       temp = Personne.getRandomPersonne();
@@ -54,7 +51,7 @@ public class Client extends AbstractComponent {
       if (USE_INT_ID)
         this.getDHTServices().put(temp.getId(), temp);
       else
-        this.getDHTServices().put(temp.getNameId(), temp);  
+        this.getDHTServices().put(temp.getNameId(), temp);
       this.logMessage("[CLIENT] Personne put.");
     }
 
@@ -87,5 +84,11 @@ public class Client extends AbstractComponent {
     super.finalise();
   }
 
-  
+  // ------------------------------------------------------------------------
+  // Helpers
+  // ------------------------------------------------------------------------
+
+  private DHTServicesCI getDHTServices() {
+    return this.dhtServicesEndpoint.getClientSideReference();
+  }
 }
