@@ -22,37 +22,26 @@ public class NodeMapReduceInboundPort extends AbstractInboundPort implements Map
   }
 
   @Override
-  public <R extends Serializable> void mapSync(String computationURI, SelectorI selector, ProcessorI<R> processor) {
-    try {
-      this.getOwner().handleRequest(c -> {
-        ((MapReduceSyncI) c).mapSync(computationURI, selector, processor);
-        return null;
-      });
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
+  public <R extends Serializable> void mapSync(String computationURI, SelectorI selector, ProcessorI<R> processor)
+      throws Exception {
+    this.getOwner().handleRequest(c -> {
+      ((MapReduceSyncI) c).mapSync(computationURI, selector, processor);
+      return null;
+    });
   }
 
   @Override
   public <A extends Serializable, R> A reduceSync(String computationURI, ReductorI<A, R> reductor,
       CombinatorI<A> combinator, A currentAcc) throws Exception {
-    try {
-      return this.getOwner()
-          .handleRequest(c -> ((MapReduceSyncI) c).reduceSync(computationURI, reductor, combinator, currentAcc));
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
+    return this.getOwner()
+        .handleRequest(c -> ((MapReduceSyncI) c).reduceSync(computationURI, reductor, combinator, currentAcc));
   }
 
   @Override
   public void clearMapReduceComputation(String computationURI) throws Exception {
-    try {
-      this.getOwner().handleRequest(c -> {
-        ((MapReduceSyncI) c).clearMapReduceComputation(computationURI);
-        return null;
-      });
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
+    this.getOwner().handleRequest(c -> {
+      ((MapReduceSyncI) c).clearMapReduceComputation(computationURI);
+      return null;
+    });
   }
 }
