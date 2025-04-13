@@ -140,7 +140,7 @@ public class DHTNode extends AbstractComponent implements ContentAccessSyncI, Ma
       throws Exception {
     this.logMessage("[NODE] Mapping with URI: " + URI);
     if (this.seenURIs.contains(URI)) {
-      System.out.println("INFO MAPSYNC loop detected (or called before previous computation ends) with URI" + URI);
+      this.logMessage("INFO MAPSYNC loop detected with URI " + URI);
       return;
     }
     this.seenURIs.add(URI);
@@ -160,8 +160,7 @@ public class DHTNode extends AbstractComponent implements ContentAccessSyncI, Ma
       throws Exception {
     this.logMessage("[NODE] Reducing with URI: " + URI);
     if (this.seenURIs.contains(URI)) {
-      System.out
-          .println("INFO REDUCESYNC loop detected (or called before previous computation ends) with URI" + URI);
+      this.logMessage("INFO REDUCESYNC loop detected With URI " + URI);
       return acc;
     }
     this.seenURIs.add(URI);
