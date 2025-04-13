@@ -1,11 +1,11 @@
 package com.rboud.cps.core;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import com.rboud.cps.connections.endpoints.NodeFacade.NodeFacadeCompositeEndpoint;
 
@@ -33,7 +33,7 @@ public class DHTNode extends AbstractComponent implements ContentAccessSyncI, Ma
 
   // key: computationURI, value: results extended from Array.
   // Used to store the results of a map computation for a given URI
-  private Map<String, ArrayList<?>> mapResults = new HashMap<>();
+  private Map<String, Stream<?>> mapResults = new HashMap<>();
 
   // Describe the range of hash values that this node is responsible for
   private int minHash;
@@ -145,10 +145,9 @@ public class DHTNode extends AbstractComponent implements ContentAccessSyncI, Ma
     }
     this.seenURIs.add(URI);
 
-    ArrayList<R> results = this.localStorage.values().stream()
+    Stream<R> results = this.localStorage.values().stream()
         .filter(selector)
-        .map(processor)
-        .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+        .map(processor);
 
     this.mapResults.put(URI, results);
     this.next.mapSync(URI, selector, processor);
@@ -169,12 +168,12 @@ public class DHTNode extends AbstractComponent implements ContentAccessSyncI, Ma
 
     // HACK Il faut vérifier si le cast est possible
     @SuppressWarnings("unchecked")
-    ArrayList<R> data = (ArrayList<R>) this.mapResults.get(URI);
+    Stream<R> data = (Stream<R>) this.mapResults.get(URI);
     if (data == null) {
       throw new Exception("No data found for URI " + URI);
     }
 
-    A currentResult = data.stream().reduce(acc, reductor, combinator);
+    A currentResult = data.reduce(acc, reductor, combinator);
 
     A nextResult = next.reduceSync(URI, reductor, combinator, acc);
     currentResult = combinator.apply(currentResult, nextResult);
