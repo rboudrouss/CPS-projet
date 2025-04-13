@@ -1,6 +1,6 @@
 package com.rboud.cps.connections.endpoints.NodeFacade;
 
-import com.rboud.cps.connections.connectors.NodeFacade.NodeFacadeMapReduceConnector;
+import com.rboud.cps.connections.connectors.MapReduceConnector;
 import com.rboud.cps.connections.ports.Facade.FacadeMapReduceOutboundPort;
 import com.rboud.cps.connections.ports.Node.NodeMapReduceInboundPort;
 
@@ -33,7 +33,7 @@ public class NodeFacadeMapReduceEndpoint extends BCMEndPoint<MapReduceSyncCI> {
     c.doPortConnection(
       port.getPortURI(),
       inboundPortURI,
-      NodeFacadeMapReduceConnector.class.getCanonicalName()
+      MapReduceConnector.class.getCanonicalName()
     );
     return port;
   }

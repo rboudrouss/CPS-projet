@@ -1,4 +1,4 @@
-package com.rboud.cps.connections.connectors.NodeFacade;
+package com.rboud.cps.connections.connectors;
 
 import fr.sorbonne_u.components.connectors.AbstractConnector;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentAccessSyncCI;
@@ -6,7 +6,7 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentAccessSyncI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentDataI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentKeyI;
 
-public class NodeFacadeContentAccessConnector extends AbstractConnector implements ContentAccessSyncCI {
+public class ContentAccessConnector extends AbstractConnector implements ContentAccessSyncCI {
   @Override
   public ContentDataI getSync(String computationURI, ContentKeyI key) throws Exception {
     return ((ContentAccessSyncI) this.offering).getSync(computationURI, key);

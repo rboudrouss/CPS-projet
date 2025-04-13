@@ -1,6 +1,6 @@
 package com.rboud.cps.connections.endpoints.FacadeClient;
 
-import com.rboud.cps.connections.connectors.FacadeClient.FacadeClientDHTServicesConnector;
+import com.rboud.cps.connections.connectors.DHTServicesConnector;
 import com.rboud.cps.connections.ports.Client.ClientDHTServicesOutboundPort;
 import com.rboud.cps.connections.ports.Facade.FacadeDHTServicesInboundPort;
 
@@ -33,7 +33,7 @@ public class FacadeClientDHTServicesEndpoint extends BCMEndPoint<DHTServicesCI> 
     c.doPortConnection(
       port.getPortURI(),
       inboundPortURI,
-      FacadeClientDHTServicesConnector.class.getCanonicalName()
+      DHTServicesConnector.class.getCanonicalName()
     );
     return port;
   }

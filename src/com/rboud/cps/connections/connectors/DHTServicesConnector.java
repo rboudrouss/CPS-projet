@@ -1,4 +1,4 @@
-package com.rboud.cps.connections.connectors.FacadeClient;
+package com.rboud.cps.connections.connectors;
 
 import java.io.Serializable;
 
@@ -11,7 +11,7 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.ProcessorI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.ReductorI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.SelectorI;
 
-public class FacadeClientDHTServicesConnector extends AbstractConnector implements DHTServicesCI {
+public class DHTServicesConnector extends AbstractConnector implements DHTServicesCI {
 
   @Override
   public ContentDataI get(ContentKeyI key) throws Exception {

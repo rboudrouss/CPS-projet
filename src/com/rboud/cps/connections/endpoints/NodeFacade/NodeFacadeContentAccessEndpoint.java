@@ -1,6 +1,6 @@
 package com.rboud.cps.connections.endpoints.NodeFacade;
 
-import com.rboud.cps.connections.connectors.NodeFacade.NodeFacadeContentAccessConnector;
+import com.rboud.cps.connections.connectors.ContentAccessConnector;
 import com.rboud.cps.connections.ports.Facade.FacadeContentAccessOutboundPort;
 import com.rboud.cps.connections.ports.Node.NodeContentAccessInboundPort;
 
@@ -33,7 +33,7 @@ public class NodeFacadeContentAccessEndpoint extends BCMEndPoint<ContentAccessSy
     c.doPortConnection(
         port.getPortURI(),
         inboundPortURI,
-        NodeFacadeContentAccessConnector.class.getCanonicalName());
+        ContentAccessConnector.class.getCanonicalName());
     return port;
   }
 
