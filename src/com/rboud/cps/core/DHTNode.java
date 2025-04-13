@@ -28,9 +28,6 @@ import fr.sorbonne_u.components.exceptions.ComponentStartException;
 public class DHTNode extends AbstractComponent implements ContentAccessSyncI, MapReduceSyncI {
   private Set<String> seenURIs = new HashSet<String>();
 
-  // used for debugging at first, not really used rn
-  private Set<String> seenPrintURIs = new HashSet<String>();
-
   // max element in node, Must be >= 2
   public static final int MAX_VALUE = Integer.MAX_VALUE;
 
@@ -94,87 +91,9 @@ public class DHTNode extends AbstractComponent implements ContentAccessSyncI, Ma
     return isBetween(value, minHash, maxHash);
   }
 
-  private void checkMerge() {
-    if (this.localStorage.size() < MAX_VALUE / 3 && this.next.localStorage.size() < MAX_VALUE / 3) {
-      // this.merge();
-    }
-  }
-
-  @SuppressWarnings("unused")
-  private void merge() {
-    if (this.next == this) {
-      return;
-    }
-
-    // merge data
-    this.localStorage.putAll(this.next.localStorage);
-    this.next.localStorage.clear();
-
-    // merge hash
-    this.maxHash = this.next.maxHash;
-    this.next = this.next.next;
-  }
-
-  private void checkSplit() {
-    if (this.localStorage.size() > MAX_VALUE) {
-      // this.splitNode();
-    }
-  }
-
-  /*
-   * private void splitNode() {
-   * int minHashValue = this.maxHash;
-   * int maxHashValue = this.minHash;
-   * 
-   * // find min and max hash
-   * for (ContentKeyI key : localStorage.keySet()) {
-   * int hash = key.hashCode();
-   * minHashValue = Math.min(minHashValue, hash);
-   * maxHashValue = Math.max(maxHashValue, hash);
-   * }
-   * 
-   * // spliting on the middle of the range of hash values
-   * // When working with integer keys, hash values tends to be close to each
-   * // other,
-   * // that's why we use this method instead of just cutting in half the range
-   * // Note: Using long to avoid overflow
-   * int newMinHash = (int) Math.floorDiv((long) maxHashValue + (long)
-   * maxHashValue, (long) 2);
-   * int newMaxHash = this.maxHash;
-   * 
-   * this.maxHash = newMinHash - 1;
-   * this.next = new DHTNode(next, newMinHash, newMaxHash);
-   * 
-   * // Move data
-   * Map<ContentKeyI, ContentDataI> newLocalStorage = new HashMap<>();
-   * this.localStorage.entrySet().removeIf(entry -> {
-   * if (entry.getKey().hashCode() > this.maxHash) {
-   * newLocalStorage.put(entry.getKey(), entry.getValue());
-   * return true;
-   * }
-   * return false;
-   * });
-   * 
-   * this.next.localStorage.putAll(newLocalStorage);
-   * }
-   */
-
   public String toString() {
     return "DHTNode [minHash=" + this.minHash + ", maxHash=" + this.maxHash + ", nbElements=" + this.localStorage.size()
         + "]";
-  }
-
-  public void printChain(String URI) {
-    if (this.seenPrintURIs.contains(URI)) {
-      System.out.println("INFO PRINTCHAIN loop detected (or called before previous computation ends)");
-      return;
-    }
-    this.seenPrintURIs.add(URI);
-    System.out.println("Node: " + this);
-    System.out.println("Data: " + localStorage);
-    System.out.println();
-    this.next.printChain(URI);
-    this.seenPrintURIs.remove(URI);
   }
 
   @Override
@@ -193,7 +112,6 @@ public class DHTNode extends AbstractComponent implements ContentAccessSyncI, Ma
       return this.next.putSync(URI, key, value);
 
     ContentDataI out = this.localStorage.put(key, value);
-    this.checkSplit();
     return out;
   }
 
@@ -204,7 +122,6 @@ public class DHTNode extends AbstractComponent implements ContentAccessSyncI, Ma
       return this.next.removeSync(URI, key);
 
     ContentDataI out = this.localStorage.remove(key);
-    this.checkMerge();
     return out;
   }
 
@@ -229,8 +146,8 @@ public class DHTNode extends AbstractComponent implements ContentAccessSyncI, Ma
     this.seenURIs.add(URI);
 
     ArrayList<R> results = this.localStorage.values().stream()
-        .filter(selector::test)
-        .map(processor::apply)
+        .filter(selector)
+        .map(processor)
         .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
 
     this.mapResults.put(URI, results);
@@ -257,7 +174,7 @@ public class DHTNode extends AbstractComponent implements ContentAccessSyncI, Ma
       throw new Exception("No data found for URI " + URI);
     }
 
-    A currentResult = data.stream().reduce(acc, reductor::apply, combinator::apply);
+    A currentResult = data.stream().reduce(acc, reductor, combinator);
 
     A nextResult = next.reduceSync(URI, reductor, combinator, acc);
     currentResult = combinator.apply(currentResult, nextResult);
