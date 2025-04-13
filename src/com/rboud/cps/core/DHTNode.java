@@ -68,6 +68,10 @@ public class DHTNode extends AbstractComponent implements ContentAccessSyncI, Ma
     this.toggleTracing();
   }
 
+  // ------------------------------------------------------------------------
+  // Component lifecycle methods
+  // ------------------------------------------------------------------------
+
   @Override
   public synchronized void start() throws ComponentStartException {
     this.logMessage("[NODE] Starting DHT Node component : " + this);
@@ -83,19 +87,11 @@ public class DHTNode extends AbstractComponent implements ContentAccessSyncI, Ma
     super.finalise();
   }
 
-  public static boolean isBetween(int value, int min, int max) {
-    return value >= min && value < max;
-  }
+  // ------------------------------------------------------------------------
+  // DHTNode methods (ContentAccessSyncI, MapReduceSyncI)
+  // ------------------------------------------------------------------------
 
-  private boolean isBetween(int value) {
-    return isBetween(value, minHash, maxHash);
-  }
-
-  public String toString() {
-    return "DHTNode [minHash=" + this.minHash + ", maxHash=" + this.maxHash + ", nbElements=" + this.localStorage.size()
-        + "]";
-  }
-
+  // ContentAccessSyncI ----------------------
   @Override
   public ContentDataI getSync(String URI, ContentKeyI key) throws Exception {
     this.logMessage("[NODE] Getting content with key: " + key + " and URI: " + URI);
@@ -129,11 +125,7 @@ public class DHTNode extends AbstractComponent implements ContentAccessSyncI, Ma
   public void clearComputation(String URI) throws Exception {
   }
 
-  @Override
-  public void clearMapReduceComputation(String URI) throws Exception {
-    this.seenURIs.remove(URI);
-    this.mapResults.remove(URI);
-  }
+  // MapReduceSyncI ----------------------
 
   @Override
   public <R extends Serializable> void mapSync(String URI, SelectorI selector, ProcessorI<R> processor)
@@ -181,4 +173,26 @@ public class DHTNode extends AbstractComponent implements ContentAccessSyncI, Ma
     return currentResult;
   }
 
+  @Override
+  public void clearMapReduceComputation(String URI) throws Exception {
+    this.seenURIs.remove(URI);
+    this.mapResults.remove(URI);
+  }
+
+  // ------------------------------------------------------------------------
+  // Helper methods
+  // ------------------------------------------------------------------------
+
+  public static boolean isBetween(int value, int min, int max) {
+    return value >= min && value < max;
+  }
+
+  private boolean isBetween(int value) {
+    return isBetween(value, minHash, maxHash);
+  }
+
+  public String toString() {
+    return "DHTNode [minHash=" + this.minHash + ", maxHash=" + this.maxHash + ", nbElements=" + this.localStorage.size()
+        + "]";
+  }
 }
