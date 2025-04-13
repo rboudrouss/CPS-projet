@@ -25,7 +25,7 @@ import fr.sorbonne_u.components.annotations.OfferedInterfaces;
 import fr.sorbonne_u.components.exceptions.ComponentStartException;
 
 @OfferedInterfaces(offered = { ContentAccessSyncCI.class, MapReduceSyncCI.class })
-public class DHTNode extends AbstractComponent implements ContentAccessSyncI, MapReduceSyncI {
+public class Node extends AbstractComponent implements ContentAccessSyncI, MapReduceSyncI {
   private Set<String> seenURIs = new HashSet<String>();
 
   // max element in node, Must be >= 2
@@ -40,7 +40,7 @@ public class DHTNode extends AbstractComponent implements ContentAccessSyncI, Ma
   private int maxHash;
 
   // Pointer to the next node in the ring
-  private DHTNode next; // CANNOT BE NULL
+  private Node next; // CANNOT BE NULL
 
   // Storage
   private final Map<ContentKeyI, ContentDataI> localStorage = new HashMap<>();
@@ -51,7 +51,7 @@ public class DHTNode extends AbstractComponent implements ContentAccessSyncI, Ma
 
   NodeFacadeCompositeEndpoint nodeFacadeCompositeEndpoint;
 
-  protected DHTNode(NodeFacadeCompositeEndpoint nodeFacadeCompositeEndpoint) throws Exception {
+  protected Node(NodeFacadeCompositeEndpoint nodeFacadeCompositeEndpoint) throws Exception {
     super(1, 0);
     this.minHash = Integer.MIN_VALUE;
     this.maxHash = Integer.MAX_VALUE;

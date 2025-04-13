@@ -24,13 +24,13 @@ import fr.sorbonne_u.cps.mapreduce.utils.URIGenerator;
 
 @RequiredInterfaces(required = { MapReduceSyncCI.class, ContentAccessSyncCI.class })
 @OfferedInterfaces(offered = { DHTServicesCI.class })
-public class DHTFacade extends AbstractComponent implements DHTServicesI {
+public class Facade extends AbstractComponent implements DHTServicesI {
   private NodeFacadeCompositeEndpoint nodeFacadeCompositeEndpoint;
   private FacadeClientDHTServicesEndpoint facadeClientDHTServicesEndpoint;
 
   private final static String URI_PREFIX = "dht-facade-";
 
-  protected DHTFacade(NodeFacadeCompositeEndpoint nodeFacadeCompositeEndpoint,
+  protected Facade(NodeFacadeCompositeEndpoint nodeFacadeCompositeEndpoint,
       FacadeClientDHTServicesEndpoint facadeClientDHTServicesEndpoint)
       throws Exception {
     super(1, 0);
