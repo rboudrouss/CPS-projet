@@ -7,12 +7,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import com.rboud.cps.connections.endpoints.NodeFacade.NodeFacadeCompositeEndpoint;
+import com.rboud.cps.utils.MyInterval;
 
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentAccessSyncCI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentAccessSyncI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentDataI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentKeyI;
+import fr.sorbonne_u.cps.dht_mapreduce.interfaces.endpoints.ContentNodeBaseCompositeEndPointI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.CombinatorI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.MapReduceSyncCI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.MapReduceSyncI;
@@ -22,46 +23,65 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.SelectorI;
 
 import fr.sorbonne_u.components.AbstractComponent;
 import fr.sorbonne_u.components.annotations.OfferedInterfaces;
+import fr.sorbonne_u.components.annotations.RequiredInterfaces;
 import fr.sorbonne_u.components.exceptions.ComponentStartException;
 
 @OfferedInterfaces(offered = { ContentAccessSyncCI.class, MapReduceSyncCI.class })
+@RequiredInterfaces(required = { MapReduceSyncCI.class, ContentAccessSyncCI.class })
 public class Node extends AbstractComponent implements ContentAccessSyncI, MapReduceSyncI {
   private Set<String> seenURIs = new HashSet<String>();
-
-  // max element in node, Must be >= 2
-  public static final int MAX_VALUE = Integer.MAX_VALUE;
 
   // key: computationURI, value: results extended from Array.
   // Used to store the results of a map computation for a given URI
   private Map<String, Stream<?>> mapResults = new HashMap<>();
 
   // Describe the range of hash values that this node is responsible for
-  private int minHash;
-  private int maxHash;
-
-  // Pointer to the next node in the ring
-  private Node next; // CANNOT BE NULL
+  private MyInterval interval;
 
   // Storage
   private final Map<ContentKeyI, ContentDataI> localStorage = new HashMap<>();
 
   // Ports URIS
-  public static final String CONTENT_ACCESS_INBOUND_PORT_URI = "content-access-inbound-port-uri";
-  public static final String MAP_REDUCE_INBOUND_PORT_URI = "map-reduce-inbound-port-uri";
+  public static final String URI_PREFIX = "node-";
 
-  NodeFacadeCompositeEndpoint nodeFacadeCompositeEndpoint;
+  // Composite endpoint for connecting to the Facade, may be null
+  ContentNodeBaseCompositeEndPointI<ContentAccessSyncI, MapReduceSyncI> nodeFacadeCompositeEndpoint;
 
-  protected Node(NodeFacadeCompositeEndpoint nodeFacadeCompositeEndpoint) throws Exception {
+  // Composite endpoint for connecting to next node in chain, both CANNOT BE NULL
+  ContentNodeBaseCompositeEndPointI<ContentAccessSyncI, MapReduceSyncI> selfNodeCompositeEndpoint;
+  ContentNodeBaseCompositeEndPointI<ContentAccessSyncI, MapReduceSyncI> nextNodeCompositeEndpoint;
+
+  protected Node(
+      ContentNodeBaseCompositeEndPointI<ContentAccessSyncI, MapReduceSyncI> nodeFacadeCompositeEndpoint,
+      ContentNodeBaseCompositeEndPointI<ContentAccessSyncI, MapReduceSyncI> selfNodeCompositeEndpoint,
+      ContentNodeBaseCompositeEndPointI<ContentAccessSyncI, MapReduceSyncI> nextNodeCompositeEndpoint)
+      throws Exception {
     super(1, 0);
-    this.minHash = Integer.MIN_VALUE;
-    this.maxHash = Integer.MAX_VALUE;
-    this.next = this;
-    this.nodeFacadeCompositeEndpoint = nodeFacadeCompositeEndpoint;
 
-    this.nodeFacadeCompositeEndpoint.initialiseServerSide(this);
+    assert selfNodeCompositeEndpoint != null;
+    assert nextNodeCompositeEndpoint != null;
+
+    this.interval = new MyInterval(Integer.MIN_VALUE, Integer.MAX_VALUE);
+    this.nodeFacadeCompositeEndpoint = nodeFacadeCompositeEndpoint;
+    this.selfNodeCompositeEndpoint = selfNodeCompositeEndpoint;
+    this.nextNodeCompositeEndpoint = nextNodeCompositeEndpoint;
+
+    this.selfNodeCompositeEndpoint.initialiseServerSide(this);
+    if (this.nodeFacadeCompositeEndpoint != null) {
+      this.nodeFacadeCompositeEndpoint.initialiseServerSide(this);
+    }
 
     this.toggleLogging();
     this.toggleTracing();
+  }
+
+  protected Node(
+    ContentNodeBaseCompositeEndPointI<ContentAccessSyncI, MapReduceSyncI> nodeFacadeCompositeEndpoint,
+      ContentNodeBaseCompositeEndPointI<ContentAccessSyncI, MapReduceSyncI> selfNodeCompositeEndpoint,
+      ContentNodeBaseCompositeEndPointI<ContentAccessSyncI, MapReduceSyncI> nextNodeCompositeEndpoint,
+      int minValue, int maxValue) throws Exception {
+    this(nodeFacadeCompositeEndpoint, selfNodeCompositeEndpoint, nextNodeCompositeEndpoint);
+    this.interval = new MyInterval(minValue, maxValue);
   }
 
   // ------------------------------------------------------------------------
@@ -71,6 +91,11 @@ public class Node extends AbstractComponent implements ContentAccessSyncI, MapRe
   @Override
   public synchronized void start() throws ComponentStartException {
     this.logMessage("[NODE] Starting DHT Node component : " + this);
+    try {
+      this.nextNodeCompositeEndpoint.initialiseClientSide(this);
+    } catch (Throwable e) {
+      throw new ComponentStartException(e);
+    }
     super.start();
   }
 
@@ -79,7 +104,11 @@ public class Node extends AbstractComponent implements ContentAccessSyncI, MapRe
     this.logMessage("[NODE] Finalising DHT Node component.");
     this.printExecutionLogOnFile("logs/dht-node");
 
-    this.nodeFacadeCompositeEndpoint.cleanUpServerSide();
+    if (this.nodeFacadeCompositeEndpoint != null) {
+      this.nodeFacadeCompositeEndpoint.cleanUpServerSide();
+    }
+    this.selfNodeCompositeEndpoint.cleanUpServerSide();
+    this.nextNodeCompositeEndpoint.cleanUpClientSide();
     super.finalise();
   }
 
@@ -91,8 +120,8 @@ public class Node extends AbstractComponent implements ContentAccessSyncI, MapRe
   @Override
   public ContentDataI getSync(String URI, ContentKeyI key) throws Exception {
     this.logMessage("[NODE] Getting content with key: " + key + " and URI: " + URI);
-    if (!this.isBetween(key.hashCode()))
-      return this.next.getSync(URI, key);
+    if (!this.interval.in(key.hashCode()))
+      return this.getNextContentAccessReference().getSync(URI, key);
 
     return this.localStorage.get(key);
   }
@@ -100,8 +129,8 @@ public class Node extends AbstractComponent implements ContentAccessSyncI, MapRe
   @Override
   public ContentDataI putSync(String URI, ContentKeyI key, ContentDataI value) throws Exception {
     this.logMessage("[NODE] Putting content with key: " + key + " and value: " + value + " and URI: " + URI);
-    if (!this.isBetween(key.hashCode()))
-      return this.next.putSync(URI, key, value);
+    if (!this.interval.in(key.hashCode()))
+      return this.getNextContentAccessReference().putSync(URI, key, value);
 
     ContentDataI out = this.localStorage.put(key, value);
     return out;
@@ -110,8 +139,8 @@ public class Node extends AbstractComponent implements ContentAccessSyncI, MapRe
   @Override
   public ContentDataI removeSync(String URI, ContentKeyI key) throws Exception {
     this.logMessage("[NODE] Removing content with key: " + key + " and URI: " + URI);
-    if (!this.isBetween(key.hashCode()))
-      return this.next.removeSync(URI, key);
+    if (!this.interval.in(key.hashCode()))
+      return this.getNextContentAccessReference().removeSync(URI, key);
 
     ContentDataI out = this.localStorage.remove(key);
     return out;
@@ -127,19 +156,17 @@ public class Node extends AbstractComponent implements ContentAccessSyncI, MapRe
   public <R extends Serializable> void mapSync(String URI, SelectorI selector, ProcessorI<R> processor)
       throws Exception {
     this.logMessage("[NODE] Mapping with URI: " + URI);
-    if (this.seenURIs.contains(URI)) {
-      this.logMessage("INFO MAPSYNC loop detected with URI " + URI);
+    if (this.mapResults.containsKey(URI)) {
+      this.logMessage("INFO MAPSYNC loop detected With URI " + URI);
       return;
     }
-    this.seenURIs.add(URI);
 
     Stream<R> results = this.localStorage.values().stream()
         .filter(selector)
         .map(processor);
 
     this.mapResults.put(URI, results);
-    this.next.mapSync(URI, selector, processor);
-    this.seenURIs.remove(URI);
+    this.getNextMapReduceReference().mapSync(URI, selector, processor);
   }
 
   @Override
@@ -162,7 +189,7 @@ public class Node extends AbstractComponent implements ContentAccessSyncI, MapRe
 
     A currentResult = data.reduce(acc, reductor, combinator);
 
-    A nextResult = next.reduceSync(URI, reductor, combinator, acc);
+    A nextResult = this.getNextMapReduceReference().reduceSync(URI, reductor, combinator, acc);
     currentResult = combinator.apply(currentResult, nextResult);
 
     this.seenURIs.remove(URI);
@@ -171,8 +198,10 @@ public class Node extends AbstractComponent implements ContentAccessSyncI, MapRe
 
   @Override
   public void clearMapReduceComputation(String URI) throws Exception {
-    this.seenURIs.remove(URI);
-    this.mapResults.remove(URI);
+    if (!this.mapResults.containsKey(URI)) return;
+      this.mapResults.get(URI).close();
+      this.mapResults.remove(URI);
+      this.getNextMapReduceReference().clearMapReduceComputation(URI);
   }
 
   // ------------------------------------------------------------------------
@@ -183,12 +212,17 @@ public class Node extends AbstractComponent implements ContentAccessSyncI, MapRe
     return value >= min && value < max;
   }
 
-  private boolean isBetween(int value) {
-    return isBetween(value, minHash, maxHash);
+  public String toString() {
+    return "DHTNode [minHash=" + this.interval.first() + ", maxHash=" + this.interval.last() + ", nbElements="
+        + this.localStorage.size()
+        + "]";
   }
 
-  public String toString() {
-    return "DHTNode [minHash=" + this.minHash + ", maxHash=" + this.maxHash + ", nbElements=" + this.localStorage.size()
-        + "]";
+  private ContentAccessSyncI getNextContentAccessReference() {
+    return this.nextNodeCompositeEndpoint.getContentAccessEndpoint().getClientSideReference();
+  }
+
+  private MapReduceSyncI getNextMapReduceReference() {
+    return this.nextNodeCompositeEndpoint.getMapReduceEndpoint().getClientSideReference();
   }
 }
