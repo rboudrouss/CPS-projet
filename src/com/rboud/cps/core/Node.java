@@ -20,7 +20,7 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.MapReduceSyncI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.ProcessorI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.ReductorI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.SelectorI;
-
+import fr.sorbonne_u.cps.mapreduce.utils.URIGenerator;
 import fr.sorbonne_u.components.AbstractComponent;
 import fr.sorbonne_u.components.annotations.OfferedInterfaces;
 import fr.sorbonne_u.components.annotations.RequiredInterfaces;
@@ -30,6 +30,9 @@ import fr.sorbonne_u.components.exceptions.ComponentStartException;
 @RequiredInterfaces(required = { MapReduceSyncCI.class, ContentAccessSyncCI.class })
 public class Node extends AbstractComponent implements ContentAccessSyncI, MapReduceSyncI {
   private Set<String> seenURIs = new HashSet<String>();
+
+  // String id
+  private String id;
 
   // key: computationURI, value: results extended from Array.
   // Used to store the results of a map computation for a given URI
@@ -41,7 +44,7 @@ public class Node extends AbstractComponent implements ContentAccessSyncI, MapRe
   // Storage
   private final Map<ContentKeyI, ContentDataI> localStorage = new HashMap<>();
 
-  // Ports URIS
+  // URIs prefix
   public static final String URI_PREFIX = "node-";
 
   // Composite endpoint for connecting to the Facade, may be null
@@ -60,6 +63,8 @@ public class Node extends AbstractComponent implements ContentAccessSyncI, MapRe
 
     assert selfNodeCompositeEndpoint != null;
     assert nextNodeCompositeEndpoint != null;
+
+    this.id = URIGenerator.generateURI(URI_PREFIX);
 
     this.interval = new MyInterval(Integer.MIN_VALUE, Integer.MAX_VALUE);
     this.nodeFacadeCompositeEndpoint = nodeFacadeCompositeEndpoint;

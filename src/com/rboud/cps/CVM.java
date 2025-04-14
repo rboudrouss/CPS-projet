@@ -2,6 +2,7 @@ package com.rboud.cps;
 
 import com.rboud.cps.connections.endpoints.FacadeClient.FacadeClientDHTServicesEndpoint;
 import com.rboud.cps.connections.endpoints.NodeFacade.NodeFacadeCompositeEndpoint;
+import com.rboud.cps.connections.endpoints.NodeNode.NodeNodeCompositeEndpoint;
 import com.rboud.cps.core.Client;
 import com.rboud.cps.core.Facade;
 import com.rboud.cps.core.Node;
@@ -28,9 +29,20 @@ public class CVM extends AbstractCVM {
     FacadeClientDHTServicesEndpoint dhtServicesEndpoint = new FacadeClientDHTServicesEndpoint();
     NodeFacadeCompositeEndpoint nodeFacadeCompositeEndpoint = new NodeFacadeCompositeEndpoint();
 
-    String nodeURI = AbstractComponent.createComponent(
+    NodeFacadeCompositeEndpoint nullendpoint = new NodeFacadeCompositeEndpoint();
+
+    NodeNodeCompositeEndpoint nodeEndpoint12 = new NodeNodeCompositeEndpoint();
+    NodeNodeCompositeEndpoint nodeEndpoint21 = new NodeNodeCompositeEndpoint();
+
+    String node1URI = AbstractComponent.createComponent(
         Node.class.getCanonicalName(),
-        new Object[] { nodeFacadeCompositeEndpoint.copyWithSharable() });
+        new Object[] { nodeFacadeCompositeEndpoint.copyWithSharable(), nodeEndpoint12.copyWithSharable(),
+            nodeEndpoint21.copyWithSharable(), Integer.MIN_VALUE, 5 });
+
+    String node2URI = AbstractComponent.createComponent(
+        Node.class.getCanonicalName(),
+        new Object[] { nullendpoint.copyWithSharable(), nodeEndpoint21.copyWithSharable(),
+            nodeEndpoint12.copyWithSharable(), 6, Integer.MAX_VALUE });
 
     String facadeURI = AbstractComponent.createComponent(
         Facade.class.getCanonicalName(),
@@ -39,11 +51,6 @@ public class CVM extends AbstractCVM {
     String clientURI = AbstractComponent.createComponent(
         Client.class.getCanonicalName(),
         new Object[] { dhtServicesEndpoint.copyWithSharable() });
-
-    // assert nodeFacadeCompositeEndpoint.serverSideInitialised();
-    // assert dhtServicesEndpoint.serverSideInitialised();
-    // assert dhtServicesEndpoint.clientSideInitialised();
-    // assert nodeFacadeCompositeEndpoint.clientSideInitialised();
 
     super.deploy();
   }
