@@ -17,7 +17,19 @@ public class Tester {
 
   private DHTServicesI dht;
 
-  public Tester(DHTServicesI dht, LogFunction logFunction) {
+  public Tester(DHTServicesI dht, LogFunction logFunction) throws Exception {
+    boolean assertEnabled = false;
+    try {
+      assert false;
+    } catch (AssertionError e) {
+      assertEnabled = true;
+    }
+
+    if (!assertEnabled) {
+      throw new RuntimeException("Assertions are not enabled. Please enable assertions to run the tests.");
+    }
+
+
     this.logFunction = message -> logFunction.log("[TESTER] " + message);
     this.dht = dht;
     if (allowRandomValues) {
@@ -30,6 +42,18 @@ public class Tester {
 
   public void disableRandomTests() {
     this.allowRandomValues = false;
+  }
+
+  // ------------------------------------------------------------------------
+  // General
+  // ------------------------------------------------------------------------
+
+  public void allTesting() throws Exception {
+    this.logFunction.log("Testing all methods");
+    this.getAndPutTesting();
+    this.removeTesting();
+    this.mapReduceTesting();
+    this.logFunction.log("All tests passed");
   }
 
   // ------------------------------------------------------------------------
@@ -145,7 +169,7 @@ public class Tester {
     Random random = new Random();
 
     int[] populatedHashs = { Integer.MIN_VALUE, 0, 6728163, 72819361, 1828391 };
-    int[] testHashs = { -1, 0, 1, Integer.MAX_VALUE, 39192849, 27181930, 91030481 };
+    int[] testHashs = { -1, 1, Integer.MAX_VALUE, 39192849, 27181930, 91030481 };
 
     for (int i : populatedHashs) {
       this.dht.put(new Id(i), Personne.getRandomPersonne());
@@ -207,7 +231,7 @@ public class Tester {
     ContentDataI data;
     Random random = new Random();
 
-    int[] testHashs = { -1, 0, 1, Integer.MAX_VALUE, 39192849, 27181930, 91030481 };
+    int[] testHashs = { -1, 1, Integer.MAX_VALUE, 39192849, 27181930, 91030481 };
     int[] populatedHashs = { Integer.MIN_VALUE, 0, 6728163, 72819361, 1828391 };
 
     // populating the DHT
@@ -367,6 +391,7 @@ public class Tester {
         new Personne("Charlie", "Brown", 45),
     };
 
+    // populating the DHT
     for (Personne p : population) {
       this.dht.put(p.getNameId(), p);
     }
@@ -426,12 +451,14 @@ public class Tester {
       assert Arrays.asList(result).contains("John") && Arrays.asList(result).contains("Jane") : "Result is not correct";
     }
 
-
-
+    // remove data
+    for (Personne p : population) {
+      this.dht.remove(p.getNameId());
+    }
   }
 
   @FunctionalInterface
-  interface LogFunction {
+  public interface LogFunction {
     void log(String message);
   }
 }

@@ -1,5 +1,7 @@
 package com.rboud.cps.components;
 
+import com.rboud.cps.tests.Tester;
+
 import fr.sorbonne_u.components.AbstractComponent;
 import fr.sorbonne_u.components.annotations.RequiredInterfaces;
 import fr.sorbonne_u.components.endpoints.EndPointI;
@@ -40,6 +42,11 @@ public class Client extends AbstractComponent {
   public synchronized void execute() throws Exception {
     super.execute();
 
+    Tester tester = new Tester(this.getDHTServices(), this::logMessage);
+
+    // tester.disableRandomTests();
+
+    tester.allTesting();
   }
 
   @Override

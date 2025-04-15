@@ -54,7 +54,6 @@ public class Personne implements ContentDataI {
     } else if (attributeName.equals(Personne.ID_ATTRIBUTE)) {
       return id;
     }
-    System.out.println("WARNING personne#getvalue : " + attributeName + " not found");
     return "Attribute not found";
   }
 
