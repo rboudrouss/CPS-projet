@@ -186,7 +186,6 @@ public class Node extends AbstractComponent implements ContentAccessSyncI, MapRe
     this.seenURIs.add(URI);
 
     // HACK Il faut vérifier si le cast est possible
-    @SuppressWarnings("unchecked")
     Stream<R> data = (Stream<R>) this.mapResults.get(URI);
     if (data == null) {
       throw new Exception("No data found for URI " + URI);
