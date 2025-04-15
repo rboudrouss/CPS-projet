@@ -8,11 +8,11 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentDataI;
 public class Personne implements ContentDataI {
   private static int n = 0;
 
-  public static final String NOM = "NOM";
-  public static final String PRENOM = "PRENOM";
-  public static final String AGE = "AGE";
-  public static final String ID = "ID";
-  public static final String[] ATTRIBUTES = { NOM, PRENOM, AGE, ID };
+  public static final String NOM_ATTRIBUTE = "NOM";
+  public static final String PRENOM_ATTRIBUTE = "PRENOM";
+  public static final String AGE_ATTRIBUTE = "AGE";
+  public static final String ID_ATTRIBUTE = "ID";
+  public static final String[] ATTRIBUTES = { NOM_ATTRIBUTE, PRENOM_ATTRIBUTE, AGE_ATTRIBUTE, ID_ATTRIBUTE };
 
   private String nom;
   private String prenom;
@@ -45,12 +45,14 @@ public class Personne implements ContentDataI {
   }
 
   public Serializable getValue(String attributeName) {
-    if (attributeName.equals(Personne.NOM)) {
+    if (attributeName.equals(Personne.NOM_ATTRIBUTE)) {
       return nom;
-    } else if (attributeName.equals(Personne.PRENOM)) {
+    } else if (attributeName.equals(Personne.PRENOM_ATTRIBUTE)) {
       return prenom;
-    } else if (attributeName.equals(Personne.AGE)) {
+    } else if (attributeName.equals(Personne.AGE_ATTRIBUTE)) {
       return age;
+    } else if (attributeName.equals(Personne.ID_ATTRIBUTE)) {
+      return id;
     }
     System.out.println("WARNING personne#getvalue : " + attributeName + " not found");
     return "Attribute not found";
@@ -77,5 +79,15 @@ public class Personne implements ContentDataI {
 
   public NameId getNameId() {
     return new NameId(nom);
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o)
+      return true;
+    if (o == null || getClass() != o.getClass())
+      return false;
+    Personne personne = (Personne) o;
+    return id == personne.id && nom.equals(personne.nom) && prenom.equals(personne.prenom) && age == personne.age;
   }
 }

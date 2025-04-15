@@ -1,8 +1,5 @@
 package com.rboud.cps.components;
 
-import com.rboud.cps.utils.Id;
-import com.rboud.cps.utils.Personne;
-
 import fr.sorbonne_u.components.AbstractComponent;
 import fr.sorbonne_u.components.annotations.RequiredInterfaces;
 import fr.sorbonne_u.components.endpoints.EndPointI;
@@ -43,36 +40,6 @@ public class Client extends AbstractComponent {
   public synchronized void execute() throws Exception {
     super.execute();
 
-    final boolean USE_INT_ID = false;
-
-    Personne temp = Personne.getRandomPersonne();
-    for (int i = 0; i < 10; i++) {
-      temp = Personne.getRandomPersonne();
-      this.logMessage("[CLIENT] Putting Personne: " + temp);
-      if (USE_INT_ID)
-        this.getDHTServices().put(temp.getId(), temp);
-      else
-        this.getDHTServices().put(temp.getNameId(), temp);
-      this.logMessage("[CLIENT] Personne put.");
-    }
-
-    this.logMessage("[CLIENT] Getting Personne with id 2.");
-    Personne temp2 = (Personne) this.getDHTServices().get(new Id(2));
-    this.logMessage("[CLIENT] got personne with id 2: " + temp2);
-
-    this.logMessage("[CLIENT] Getting personne with nameid " + temp.getNameId());
-    temp2 = (Personne) this.getDHTServices().get(temp.getNameId());
-    this.logMessage("[CLIENT] got personne with nameid " + temp.getNameId() + ": " + temp2);
-
-    this.logMessage("[CLIENT] getting sum of ages using mapReduce.");
-    int out = this.getDHTServices().mapReduce(
-        (a) -> true,
-        (a) -> a.getValue("AGE"),
-        (a, b) -> a + (int) b,
-        (a, b) -> a + b,
-        0);
-
-    this.logMessage("[CLIENT] got Sum of ages: " + out);
   }
 
   @Override
