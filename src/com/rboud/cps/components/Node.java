@@ -171,7 +171,9 @@ public class Node extends AbstractComponent implements ContentAccessSyncI, MapRe
         .map(processor);
 
     this.mapResults.put(URI, results);
+    this.logMessage("[NODE] Map finished for this component, sending to next node.");
     this.getNextMapReduceReference().mapSync(URI, selector, processor);
+    this.logMessage("[NODE] Map finished for next node(s).");
   }
 
   @Override

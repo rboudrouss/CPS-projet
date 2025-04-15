@@ -43,7 +43,7 @@ public class Client extends AbstractComponent {
   public synchronized void execute() throws Exception {
     super.execute();
 
-    final boolean USE_INT_ID = true;
+    final boolean USE_INT_ID = false;
 
     Personne temp = Personne.getRandomPersonne();
     for (int i = 0; i < 10; i++) {
