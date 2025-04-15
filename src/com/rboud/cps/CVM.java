@@ -1,11 +1,11 @@
 package com.rboud.cps;
 
+import com.rboud.cps.components.Client;
+import com.rboud.cps.components.Facade;
+import com.rboud.cps.components.Node;
 import com.rboud.cps.connections.endpoints.FacadeClient.FacadeClientDHTServicesEndpoint;
 import com.rboud.cps.connections.endpoints.NodeFacade.NodeFacadeCompositeEndpoint;
 import com.rboud.cps.connections.endpoints.NodeNode.NodeNodeCompositeEndpoint;
-import com.rboud.cps.core.Client;
-import com.rboud.cps.core.Facade;
-import com.rboud.cps.core.Node;
 
 import fr.sorbonne_u.components.AbstractComponent;
 import fr.sorbonne_u.components.cvm.AbstractCVM;

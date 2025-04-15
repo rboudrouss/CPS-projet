@@ -1,4 +1,4 @@
-package com.rboud.cps.core;
+package com.rboud.cps.components;
 
 import java.io.Serializable;
 
