@@ -107,7 +107,7 @@ public class Node extends AbstractComponent implements ContentAccessSyncI, MapRe
   @Override
   public synchronized void finalise() throws Exception {
     this.logMessage("[NODE] Finalising DHT Node component.");
-    this.printExecutionLogOnFile("logs/dht-node");
+    this.printExecutionLogOnFile("logs/node-" + this.id);
 
     if (this.nodeFacadeCompositeEndpoint != null) {
       this.nodeFacadeCompositeEndpoint.cleanUpServerSide();
@@ -212,10 +212,6 @@ public class Node extends AbstractComponent implements ContentAccessSyncI, MapRe
   // ------------------------------------------------------------------------
   // Helper methods
   // ------------------------------------------------------------------------
-
-  public static boolean isBetween(int value, int min, int max) {
-    return value >= min && value < max;
-  }
 
   public String toString() {
     return "DHTNode [minHash=" + this.interval.first() + ", maxHash=" + this.interval.last() + ", nbElements="
