@@ -13,9 +13,30 @@ import fr.sorbonne_u.components.helpers.CVMDebugModes;
 
 public class CVM extends AbstractCVM {
 
+  private final int NODES = 2;
+
   public CVM() throws Exception {
     super();
   }
+
+  // ------------------------------------------------------------------------
+  // Main method
+  // ------------------------------------------------------------------------
+
+  public static void main(String[] args) {
+    try {
+      CVM c = new CVM();
+      c.startStandardLifeCycle(10000L);
+      System.exit(0);
+    } catch (Exception e) {
+      e.printStackTrace();
+      System.exit(0);
+    }
+  }
+
+  // ------------------------------------------------------------------------
+  // life cycle methods
+  // ------------------------------------------------------------------------
 
   @Override
   public void deploy() throws Exception {
@@ -29,20 +50,7 @@ public class CVM extends AbstractCVM {
     FacadeClientDHTServicesEndpoint dhtServicesEndpoint = new FacadeClientDHTServicesEndpoint();
     NodeFacadeCompositeEndpoint nodeFacadeCompositeEndpoint = new NodeFacadeCompositeEndpoint();
 
-    NodeFacadeCompositeEndpoint nullendpoint = new NodeFacadeCompositeEndpoint();
-
-    NodeNodeCompositeEndpoint nodeEndpoint12 = new NodeNodeCompositeEndpoint();
-    NodeNodeCompositeEndpoint nodeEndpoint21 = new NodeNodeCompositeEndpoint();
-
-    String node1URI = AbstractComponent.createComponent(
-        Node.class.getCanonicalName(),
-        new Object[] { nodeFacadeCompositeEndpoint.copyWithSharable(), nodeEndpoint12.copyWithSharable(),
-            nodeEndpoint21.copyWithSharable(), Integer.MIN_VALUE, 5 });
-
-    String node2URI = AbstractComponent.createComponent(
-        Node.class.getCanonicalName(),
-        new Object[] { nullendpoint.copyWithSharable(), nodeEndpoint21.copyWithSharable(),
-            nodeEndpoint12.copyWithSharable(), 6, Integer.MAX_VALUE });
+    String[] nodeURIs = createAndConnectNodes(NODES, nodeFacadeCompositeEndpoint);
 
     String facadeURI = AbstractComponent.createComponent(
         Facade.class.getCanonicalName(),
@@ -55,15 +63,41 @@ public class CVM extends AbstractCVM {
     super.deploy();
   }
 
-  public static void main(String[] args) {
-    try {
-      CVM c = new CVM();
-      c.startStandardLifeCycle(10000L);
-      System.exit(0);
-    } catch (Exception e) {
-      e.printStackTrace();
-      System.exit(0);
+  // ------------------------------------------------------------------------
+  // Helper methods
+  // ------------------------------------------------------------------------
+
+  private String[] createAndConnectNodes(int n, NodeFacadeCompositeEndpoint facadeEndpoint) throws Exception {
+    int step = (int) (((long) Integer.MAX_VALUE) * 2L / (long) n);
+
+    NodeFacadeCompositeEndpoint currentFacadeEndpoint = facadeEndpoint;
+
+    NodeNodeCompositeEndpoint firstEndpoint = new NodeNodeCompositeEndpoint();
+
+    NodeNodeCompositeEndpoint oldEndpoint = firstEndpoint, newEndpoint = new NodeNodeCompositeEndpoint();
+
+    String[] nodeURIs = new String[n];
+
+    for (int i = 0; i < n - 1; i++) {
+      nodeURIs[i] = AbstractComponent.createComponent(
+          Node.class.getCanonicalName(),
+          new Object[] { currentFacadeEndpoint.copyWithSharable(), oldEndpoint.copyWithSharable(),
+              newEndpoint.copyWithSharable(), Integer.MIN_VALUE + step * i, Integer.MIN_VALUE + step * (i + 1) });
+
+      oldEndpoint = newEndpoint;
+      newEndpoint = new NodeNodeCompositeEndpoint();
+
+      // Creating fake empty endpoint since we cannot pass null
+      currentFacadeEndpoint = new NodeFacadeCompositeEndpoint(); 
     }
+
+    // last node must connect to the first node
+    nodeURIs[n - 1] = AbstractComponent.createComponent(
+        Node.class.getCanonicalName(),
+        new Object[] { currentFacadeEndpoint.copyWithSharable(), oldEndpoint.copyWithSharable(),
+            firstEndpoint.copyWithSharable(), Integer.MIN_VALUE + step * (n - 1), Integer.MAX_VALUE });
+
+    return nodeURIs;
   }
 
 }
