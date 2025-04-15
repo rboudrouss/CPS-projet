@@ -77,7 +77,7 @@ public class Personne implements ContentDataI {
   }
 
   public NameId getNameId() {
-    return new NameId(nom);
+    return new NameId(nom + id);
   }
 
   @Override
