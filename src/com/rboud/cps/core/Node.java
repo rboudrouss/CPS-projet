@@ -32,7 +32,7 @@ public class Node extends AbstractComponent implements ContentAccessSyncI, MapRe
   private Set<String> seenURIs = new HashSet<String>();
 
   // String id
-  private String id;
+  private String nodeURI;
 
   // key: computationURI, value: results extended from Array.
   // Used to store the results of a map computation for a given URI
@@ -64,7 +64,7 @@ public class Node extends AbstractComponent implements ContentAccessSyncI, MapRe
     assert selfNodeCompositeEndpoint != null;
     assert nextNodeCompositeEndpoint != null;
 
-    this.id = URIGenerator.generateURI(URI_PREFIX);
+    this.nodeURI = URIGenerator.generateURI(URI_PREFIX);
 
     this.interval = new MyInterval(Integer.MIN_VALUE, Integer.MAX_VALUE);
     this.nodeFacadeCompositeEndpoint = nodeFacadeCompositeEndpoint;
@@ -107,7 +107,7 @@ public class Node extends AbstractComponent implements ContentAccessSyncI, MapRe
   @Override
   public synchronized void finalise() throws Exception {
     this.logMessage("[NODE] Finalising DHT Node component.");
-    this.printExecutionLogOnFile("logs/node-" + this.id);
+    this.printExecutionLogOnFile("logs/node-" + this.nodeURI);
 
     if (this.nodeFacadeCompositeEndpoint != null) {
       this.nodeFacadeCompositeEndpoint.cleanUpServerSide();
