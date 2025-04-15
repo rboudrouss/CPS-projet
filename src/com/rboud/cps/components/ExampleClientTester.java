@@ -10,11 +10,11 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.frontend.DHTServicesCI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.frontend.DHTServicesI;
 
 @RequiredInterfaces(required = { DHTServicesCI.class })
-public class Client extends AbstractComponent {
+public class ExampleClientTester extends AbstractComponent {
 
   EndPointI<DHTServicesI> dhtServicesEndpoint;
 
-  protected Client(EndPointI<DHTServicesI> dhtServicesEndpoint) throws Exception {
+  protected ExampleClientTester(EndPointI<DHTServicesI> dhtServicesEndpoint) throws Exception {
     super(1, 0);
 
     this.dhtServicesEndpoint = dhtServicesEndpoint;

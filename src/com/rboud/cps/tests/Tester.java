@@ -3,8 +3,8 @@ package com.rboud.cps.tests;
 import java.util.Arrays;
 import java.util.Random;
 
-import com.rboud.cps.utils.Id;
-import com.rboud.cps.utils.Personne;
+import com.rboud.cps.utils.keyDataExample.Id;
+import com.rboud.cps.utils.keyDataExample.Personne;
 
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentDataI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.frontend.DHTServicesI;

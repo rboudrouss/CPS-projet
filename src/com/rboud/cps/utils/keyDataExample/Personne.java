@@ -1,4 +1,4 @@
-package com.rboud.cps.utils;
+package com.rboud.cps.utils.keyDataExample;
 
 import java.io.Serializable;
 import java.util.Random;

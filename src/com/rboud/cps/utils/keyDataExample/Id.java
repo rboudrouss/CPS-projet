@@ -1,4 +1,4 @@
-package com.rboud.cps.utils;
+package com.rboud.cps.utils.keyDataExample;
 
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentKeyI;
 
