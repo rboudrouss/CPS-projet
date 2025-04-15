@@ -343,6 +343,8 @@ public class Tester {
   public void mapReduceTesting() throws Exception {
     this.logFunction.log("");
     this.logFunction.log("Testing map reduce methods");
+    this.mapReduceReturnsAccWhenEmpty();
+    this.mapReduceReturnsCorrectValue();
   }
 
   public void mapReduceReturnsAccWhenEmpty() throws Exception {
