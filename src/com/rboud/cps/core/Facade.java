@@ -2,20 +2,21 @@ package com.rboud.cps.core;
 
 import java.io.Serializable;
 
-import com.rboud.cps.connections.endpoints.FacadeClient.FacadeClientDHTServicesEndpoint;
-import com.rboud.cps.connections.endpoints.NodeFacade.NodeFacadeCompositeEndpoint;
-
 import fr.sorbonne_u.components.AbstractComponent;
 import fr.sorbonne_u.components.annotations.OfferedInterfaces;
 import fr.sorbonne_u.components.annotations.RequiredInterfaces;
+import fr.sorbonne_u.components.endpoints.EndPointI;
 import fr.sorbonne_u.components.exceptions.ComponentStartException;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentAccessSyncCI;
+import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentAccessSyncI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentDataI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentKeyI;
+import fr.sorbonne_u.cps.dht_mapreduce.interfaces.endpoints.ContentNodeBaseCompositeEndPointI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.frontend.DHTServicesCI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.frontend.DHTServicesI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.CombinatorI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.MapReduceSyncCI;
+import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.MapReduceSyncI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.ProcessorI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.ReductorI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.SelectorI;
@@ -24,13 +25,13 @@ import fr.sorbonne_u.cps.mapreduce.utils.URIGenerator;
 @RequiredInterfaces(required = { MapReduceSyncCI.class, ContentAccessSyncCI.class })
 @OfferedInterfaces(offered = { DHTServicesCI.class })
 public class Facade extends AbstractComponent implements DHTServicesI {
-  private NodeFacadeCompositeEndpoint nodeFacadeCompositeEndpoint;
-  private FacadeClientDHTServicesEndpoint facadeClientDHTServicesEndpoint;
-
   private final static String URI_PREFIX = "dht-facade-";
+  
+  private ContentNodeBaseCompositeEndPointI<ContentAccessSyncI, MapReduceSyncI> nodeFacadeCompositeEndpoint;
+  private EndPointI<DHTServicesI> facadeClientDHTServicesEndpoint;
 
-  protected Facade(NodeFacadeCompositeEndpoint nodeFacadeCompositeEndpoint,
-      FacadeClientDHTServicesEndpoint facadeClientDHTServicesEndpoint)
+  protected Facade(ContentNodeBaseCompositeEndPointI<ContentAccessSyncI, MapReduceSyncI> nodeFacadeCompositeEndpoint,
+      EndPointI<DHTServicesI> facadeClientDHTServicesEndpoint)
       throws Exception {
     super(1, 0);
     this.nodeFacadeCompositeEndpoint = nodeFacadeCompositeEndpoint;
@@ -121,7 +122,7 @@ public class Facade extends AbstractComponent implements DHTServicesI {
   // Helpers
   // ------------------------------------------------------------------------
 
-  private ContentAccessSyncCI getContentAccessClientReference() {
+  private ContentAccessSyncI getContentAccessClientReference() {
     return this.nodeFacadeCompositeEndpoint.getContentAccessEndpoint().getClientSideReference();
   }
 
@@ -142,7 +143,7 @@ public class Facade extends AbstractComponent implements DHTServicesI {
     return result;
   }
 
-  private MapReduceSyncCI getMapReduceClientReference() {
+  private MapReduceSyncI getMapReduceClientReference() {
     return this.nodeFacadeCompositeEndpoint.getMapReduceEndpoint().getClientSideReference();
   }
 

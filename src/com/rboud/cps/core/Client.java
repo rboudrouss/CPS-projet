@@ -1,20 +1,21 @@
 package com.rboud.cps.core;
 
-import com.rboud.cps.connections.endpoints.FacadeClient.FacadeClientDHTServicesEndpoint;
 import com.rboud.cps.utils.Id;
 import com.rboud.cps.utils.Personne;
 
 import fr.sorbonne_u.components.AbstractComponent;
 import fr.sorbonne_u.components.annotations.RequiredInterfaces;
+import fr.sorbonne_u.components.endpoints.EndPointI;
 import fr.sorbonne_u.components.exceptions.ComponentStartException;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.frontend.DHTServicesCI;
+import fr.sorbonne_u.cps.dht_mapreduce.interfaces.frontend.DHTServicesI;
 
 @RequiredInterfaces(required = { DHTServicesCI.class })
 public class Client extends AbstractComponent {
 
-  FacadeClientDHTServicesEndpoint dhtServicesEndpoint;
+  EndPointI<DHTServicesI> dhtServicesEndpoint;
 
-  protected Client(FacadeClientDHTServicesEndpoint dhtServicesEndpoint) throws Exception {
+  protected Client(EndPointI<DHTServicesI> dhtServicesEndpoint) throws Exception {
     super(1, 0);
 
     this.dhtServicesEndpoint = dhtServicesEndpoint;
@@ -88,7 +89,7 @@ public class Client extends AbstractComponent {
   // Helpers
   // ------------------------------------------------------------------------
 
-  private DHTServicesCI getDHTServices() {
+  private DHTServicesI getDHTServices() {
     return this.dhtServicesEndpoint.getClientSideReference();
   }
 }
