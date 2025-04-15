@@ -2,9 +2,7 @@ package com.rboud.cps.components;
 
 import java.io.Serializable;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Stream;
 
 import com.rboud.cps.utils.MyInterval;
@@ -186,13 +184,10 @@ public class Node extends AbstractComponent implements ContentAccessSyncI, MapRe
 
     // HACK Il faut vérifier si le cast est possible
     Stream<R> data = (Stream<R>) this.mapResults.get(URI);
-    if (data == null) {
-      throw new Exception("No data found for URI " + URI);
-    }
+    this.mapResults.remove(URI);
 
     A currentResult = data.reduce(acc, reductor, combinator);
-    this.mapResults.get(URI).close();
-    this.mapResults.remove(URI);
+    data.close();
 
     A nextResult = this.getNextMapReduceReference().reduceSync(URI, reductor, combinator, acc);
     currentResult = combinator.apply(currentResult, nextResult);
