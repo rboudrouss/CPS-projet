@@ -29,8 +29,6 @@ import fr.sorbonne_u.components.exceptions.ComponentStartException;
 @OfferedInterfaces(offered = { ContentAccessSyncCI.class, MapReduceSyncCI.class })
 @RequiredInterfaces(required = { MapReduceSyncCI.class, ContentAccessSyncCI.class })
 public class Node extends AbstractComponent implements ContentAccessSyncI, MapReduceSyncI {
-  private Set<String> seenURIs = new HashSet<String>();
-
   // String id
   private String nodeURI;
 
@@ -181,11 +179,10 @@ public class Node extends AbstractComponent implements ContentAccessSyncI, MapRe
       A acc)
       throws Exception {
     this.logMessage("[NODE] Reducing with URI: " + URI);
-    if (this.seenURIs.contains(URI)) {
-      this.logMessage("INFO REDUCESYNC loop detected With URI " + URI);
+    if (!this.mapResults.containsKey(URI)) {
+      this.logMessage("[NODE] INFO REDUCESYNC, nothing in mapresults, maybe a loop detected With URI " + URI);
       return acc;
     }
-    this.seenURIs.add(URI);
 
     // HACK Il faut vérifier si le cast est possible
     Stream<R> data = (Stream<R>) this.mapResults.get(URI);
@@ -194,11 +191,12 @@ public class Node extends AbstractComponent implements ContentAccessSyncI, MapRe
     }
 
     A currentResult = data.reduce(acc, reductor, combinator);
+    this.mapResults.get(URI).close();
+    this.mapResults.remove(URI);
 
     A nextResult = this.getNextMapReduceReference().reduceSync(URI, reductor, combinator, acc);
     currentResult = combinator.apply(currentResult, nextResult);
 
-    this.seenURIs.remove(URI);
     return currentResult;
   }
 
