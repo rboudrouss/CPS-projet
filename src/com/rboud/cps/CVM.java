@@ -13,7 +13,7 @@ import fr.sorbonne_u.components.helpers.CVMDebugModes;
 
 public class CVM extends AbstractCVM {
 
-  private final int NODES = 1;
+  private final int NODES = 2;
 
   public CVM() throws Exception {
     super();
