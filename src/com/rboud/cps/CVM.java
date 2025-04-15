@@ -13,7 +13,7 @@ import fr.sorbonne_u.components.helpers.CVMDebugModes;
 
 public class CVM extends AbstractCVM {
 
-  private final int NODES = 2;
+  private final int NODES = 1;
 
   public CVM() throws Exception {
     super();
@@ -68,6 +68,15 @@ public class CVM extends AbstractCVM {
   // ------------------------------------------------------------------------
 
   private String[] createAndConnectNodes(int n, NodeFacadeCompositeEndpoint facadeEndpoint) throws Exception {
+    if (n <= 1) {
+      NodeNodeCompositeEndpoint endpoint = new NodeNodeCompositeEndpoint();
+      String nodeURI = AbstractComponent.createComponent(
+          Node.class.getCanonicalName(),
+          new Object[] { facadeEndpoint.copyWithSharable(), endpoint.copyWithSharable(), endpoint.copyWithSharable(),
+              Integer.MIN_VALUE, Integer.MAX_VALUE });
+      return new String[] { nodeURI };
+    }
+
     int step = (int) (((long) Integer.MAX_VALUE) * 2L / (long) n);
 
     NodeFacadeCompositeEndpoint currentFacadeEndpoint = facadeEndpoint;
@@ -82,20 +91,21 @@ public class CVM extends AbstractCVM {
       nodeURIs[i] = AbstractComponent.createComponent(
           Node.class.getCanonicalName(),
           new Object[] { currentFacadeEndpoint.copyWithSharable(), oldEndpoint.copyWithSharable(),
-              newEndpoint.copyWithSharable(), Integer.MIN_VALUE + step * i, Integer.MIN_VALUE + step * (i + 1) });
+              newEndpoint.copyWithSharable(), Integer.MIN_VALUE + (step * i) + (i == 0 ? 0 : 1),
+              Integer.MIN_VALUE + step * (i + 1) });
 
       oldEndpoint = newEndpoint;
       newEndpoint = new NodeNodeCompositeEndpoint();
 
       // Creating fake empty endpoint since we cannot pass null
-      currentFacadeEndpoint = new NodeFacadeCompositeEndpoint(); 
+      currentFacadeEndpoint = new NodeFacadeCompositeEndpoint();
     }
 
     // last node must connect to the first node
     nodeURIs[n - 1] = AbstractComponent.createComponent(
         Node.class.getCanonicalName(),
         new Object[] { currentFacadeEndpoint.copyWithSharable(), oldEndpoint.copyWithSharable(),
-            firstEndpoint.copyWithSharable(), Integer.MIN_VALUE + step * (n - 1), Integer.MAX_VALUE });
+            firstEndpoint.copyWithSharable(), Integer.MIN_VALUE + (step * (n - 1)) + 1, Integer.MAX_VALUE });
 
     return nodeURIs;
   }

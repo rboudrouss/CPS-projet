@@ -59,7 +59,7 @@ public class Node extends AbstractComponent implements ContentAccessSyncI, MapRe
       ContentNodeBaseCompositeEndPointI<ContentAccessSyncI, MapReduceSyncI> selfNodeCompositeEndpoint,
       ContentNodeBaseCompositeEndPointI<ContentAccessSyncI, MapReduceSyncI> nextNodeCompositeEndpoint)
       throws Exception {
-    super(1, 0);
+    super(2, 0);
 
     assert selfNodeCompositeEndpoint != null;
     assert nextNodeCompositeEndpoint != null;
