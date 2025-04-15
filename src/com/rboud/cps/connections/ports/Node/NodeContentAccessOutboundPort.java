@@ -19,22 +19,22 @@ public class NodeContentAccessOutboundPort extends AbstractOutboundPort implemen
 
   @Override
   public ContentDataI getSync(String computationURI, ContentKeyI key) throws Exception {
-    return ((ContentAccessSyncI) this.connector).getSync(computationURI, key);
+    return ((ContentAccessSyncI) this.getConnector()).getSync(computationURI, key);
   }
 
   @Override
   public ContentDataI putSync(String computationURI, ContentKeyI key, ContentDataI value) throws Exception {
-    return ((ContentAccessSyncI) this.connector).putSync(computationURI, key, value);
+    return ((ContentAccessSyncI) this.getConnector()).putSync(computationURI, key, value);
   }
 
   @Override
   public ContentDataI removeSync(String computationURI, ContentKeyI key) throws Exception {
-    return ((ContentAccessSyncI) this.connector).removeSync(computationURI, key);
+    return ((ContentAccessSyncI) this.getConnector()).removeSync(computationURI, key);
   }
 
   @Override
   public void clearComputation(String computationURI) throws Exception {
-    ((ContentAccessSyncI) this.connector).clearComputation(computationURI);
+    ((ContentAccessSyncI) this.getConnector()).clearComputation(computationURI);
   }
 
 }
