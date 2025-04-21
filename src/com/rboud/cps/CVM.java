@@ -2,7 +2,7 @@ package com.rboud.cps;
 
 import com.rboud.cps.components.ExampleClientTester;
 import com.rboud.cps.components.Facade;
-import com.rboud.cps.components.Node;
+import com.rboud.cps.components.SyncNode;
 import com.rboud.cps.connections.endpoints.FacadeClient.FacadeClientDHTServicesEndpoint;
 import com.rboud.cps.connections.endpoints.NodeFacade.NodeFacadeCompositeEndpoint;
 import com.rboud.cps.connections.endpoints.NodeNode.NodeNodeCompositeEndpoint;
@@ -71,7 +71,7 @@ public class CVM extends AbstractCVM {
     if (n <= 1) {
       NodeNodeCompositeEndpoint endpoint = new NodeNodeCompositeEndpoint();
       String nodeURI = AbstractComponent.createComponent(
-          Node.class.getCanonicalName(),
+          SyncNode.class.getCanonicalName(),
           new Object[] { facadeEndpoint.copyWithSharable(), endpoint.copyWithSharable(), endpoint.copyWithSharable(),
               Integer.MIN_VALUE, Integer.MAX_VALUE });
       return new String[] { nodeURI };
@@ -89,7 +89,7 @@ public class CVM extends AbstractCVM {
 
     for (int i = 0; i < n - 1; i++) {
       nodeURIs[i] = AbstractComponent.createComponent(
-          Node.class.getCanonicalName(),
+          SyncNode.class.getCanonicalName(),
           new Object[] { currentFacadeEndpoint.copyWithSharable(), oldEndpoint.copyWithSharable(),
               newEndpoint.copyWithSharable(), Integer.MIN_VALUE + (step * i) + (i == 0 ? 0 : 1),
               Integer.MIN_VALUE + step * (i + 1) });
@@ -103,7 +103,7 @@ public class CVM extends AbstractCVM {
 
     // last node must connect to the first node
     nodeURIs[n - 1] = AbstractComponent.createComponent(
-        Node.class.getCanonicalName(),
+        SyncNode.class.getCanonicalName(),
         new Object[] { currentFacadeEndpoint.copyWithSharable(), oldEndpoint.copyWithSharable(),
             firstEndpoint.copyWithSharable(), Integer.MIN_VALUE + (step * (n - 1)) + 1, Integer.MAX_VALUE });
 

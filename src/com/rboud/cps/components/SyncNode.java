@@ -26,7 +26,7 @@ import fr.sorbonne_u.components.exceptions.ComponentStartException;
 
 @OfferedInterfaces(offered = { ContentAccessSyncCI.class, MapReduceSyncCI.class })
 @RequiredInterfaces(required = { MapReduceSyncCI.class, ContentAccessSyncCI.class })
-public class Node extends AbstractComponent implements ContentAccessSyncI, MapReduceSyncI {
+public class SyncNode extends AbstractComponent implements ContentAccessSyncI, MapReduceSyncI {
   // String id
   private String nodeURI;
 
@@ -50,11 +50,13 @@ public class Node extends AbstractComponent implements ContentAccessSyncI, MapRe
   ContentNodeBaseCompositeEndPointI<ContentAccessSyncI, MapReduceSyncI> selfNodeCompositeEndpoint;
   ContentNodeBaseCompositeEndPointI<ContentAccessSyncI, MapReduceSyncI> nextNodeCompositeEndpoint;
 
-  protected Node(
+  protected SyncNode(
       ContentNodeBaseCompositeEndPointI<ContentAccessSyncI, MapReduceSyncI> nodeFacadeCompositeEndpoint,
       ContentNodeBaseCompositeEndPointI<ContentAccessSyncI, MapReduceSyncI> selfNodeCompositeEndpoint,
       ContentNodeBaseCompositeEndPointI<ContentAccessSyncI, MapReduceSyncI> nextNodeCompositeEndpoint)
       throws Exception {
+    // 2 threads are necessary for answering the request where this node is blocked
+    // by the facade request and gets an new request from a node
     super(2, 0);
 
     assert selfNodeCompositeEndpoint != null;
@@ -76,8 +78,8 @@ public class Node extends AbstractComponent implements ContentAccessSyncI, MapRe
     this.toggleTracing();
   }
 
-  protected Node(
-    ContentNodeBaseCompositeEndPointI<ContentAccessSyncI, MapReduceSyncI> nodeFacadeCompositeEndpoint,
+  protected SyncNode(
+      ContentNodeBaseCompositeEndPointI<ContentAccessSyncI, MapReduceSyncI> nodeFacadeCompositeEndpoint,
       ContentNodeBaseCompositeEndPointI<ContentAccessSyncI, MapReduceSyncI> selfNodeCompositeEndpoint,
       ContentNodeBaseCompositeEndPointI<ContentAccessSyncI, MapReduceSyncI> nextNodeCompositeEndpoint,
       int minValue, int maxValue) throws Exception {
@@ -114,7 +116,7 @@ public class Node extends AbstractComponent implements ContentAccessSyncI, MapRe
   }
 
   // ------------------------------------------------------------------------
-  // DHTNode methods (ContentAccessSyncI, MapReduceSyncI)
+  // DHTNode sync methods (ContentAccessSyncI, MapReduceSyncI)
   // ------------------------------------------------------------------------
 
   // ContentAccessSyncI ----------------------
@@ -197,10 +199,11 @@ public class Node extends AbstractComponent implements ContentAccessSyncI, MapRe
 
   @Override
   public void clearMapReduceComputation(String URI) throws Exception {
-    if (!this.mapResults.containsKey(URI)) return;
-      this.mapResults.get(URI).close();
-      this.mapResults.remove(URI);
-      this.getNextMapReduceReference().clearMapReduceComputation(URI);
+    if (!this.mapResults.containsKey(URI))
+      return;
+    this.mapResults.get(URI).close();
+    this.mapResults.remove(URI);
+    this.getNextMapReduceReference().clearMapReduceComputation(URI);
   }
 
   // ------------------------------------------------------------------------
