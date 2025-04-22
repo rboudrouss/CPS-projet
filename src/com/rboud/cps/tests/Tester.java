@@ -26,6 +26,7 @@ public class Tester {
     }
 
     if (!assertEnabled) {
+      logFunction.log("[TESTER] <!> ERROR: Assertions are not enabled, quitting...");
       throw new RuntimeException("Assertions are not enabled. Please enable assertions to run the tests.");
     }
 
