@@ -1,7 +1,7 @@
 package com.rboud.cps;
 
 import com.rboud.cps.components.ExampleClientTester;
-import com.rboud.cps.components.Facade;
+import com.rboud.cps.components.SyncFacade;
 import com.rboud.cps.components.SyncNode;
 import com.rboud.cps.connections.endpoints.FacadeClient.FacadeClientDHTServicesEndpoint;
 import com.rboud.cps.connections.endpoints.NodeFacade.NodeFacadeCompositeEndpoint;
@@ -53,7 +53,7 @@ public class CVM extends AbstractCVM {
     String[] nodeURIs = createAndConnectNodes(NODES, nodeFacadeCompositeEndpoint);
 
     String facadeURI = AbstractComponent.createComponent(
-        Facade.class.getCanonicalName(),
+        SyncFacade.class.getCanonicalName(),
         new Object[] { nodeFacadeCompositeEndpoint.copyWithSharable(), dhtServicesEndpoint.copyWithSharable() });
 
     String clientURI = AbstractComponent.createComponent(
