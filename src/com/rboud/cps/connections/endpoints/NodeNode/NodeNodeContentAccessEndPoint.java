@@ -1,7 +1,7 @@
 package com.rboud.cps.connections.endpoints.NodeNode;
 
 import com.rboud.cps.connections.connectors.ContentAccessConnector;
-import com.rboud.cps.connections.ports.Node.NodeContentAccessInboundPort;
+import com.rboud.cps.connections.ports.Node.NodeContentAccessSyncInboundPort;
 import com.rboud.cps.connections.ports.Node.NodeContentAccessOutboundPort;
 
 import fr.sorbonne_u.components.AbstractComponent;
@@ -21,9 +21,9 @@ public class NodeNodeContentAccessEndPoint extends BCMEndPoint<ContentAccessSync
 
   @Override
   protected AbstractInboundPort makeInboundPort(AbstractComponent c, String inboundPortURI) throws Exception {
-    NodeContentAccessInboundPort port = new NodeContentAccessInboundPort(inboundPortURI, c);
+    NodeContentAccessSyncInboundPort port = new NodeContentAccessSyncInboundPort(inboundPortURI, c);
     port.publishPort();
-    return (NodeContentAccessInboundPort) port;
+    return (NodeContentAccessSyncInboundPort) port;
   }
 
   @Override

@@ -1,7 +1,7 @@
 package com.rboud.cps.connections.endpoints.NodeNode;
 
 import com.rboud.cps.connections.connectors.MapReduceConnector;
-import com.rboud.cps.connections.ports.Node.NodeMapReduceInboundPort;
+import com.rboud.cps.connections.ports.Node.NodeMapReduceSyncInboundPort;
 import com.rboud.cps.connections.ports.Node.NodeMapReduceOutboundPort;
 
 import fr.sorbonne_u.components.AbstractComponent;
@@ -17,7 +17,7 @@ public class NodeNodeMapReduceEndPoint extends BCMEndPoint<MapReduceSyncCI> {
 
   @Override
   protected AbstractInboundPort makeInboundPort(AbstractComponent c, String inboundPortURI) throws Exception {
-    NodeMapReduceInboundPort port = new NodeMapReduceInboundPort(inboundPortURI, c);
+    NodeMapReduceSyncInboundPort port = new NodeMapReduceSyncInboundPort(inboundPortURI, c);
     port.publishPort();
     return port;
   }

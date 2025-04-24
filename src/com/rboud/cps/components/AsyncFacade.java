@@ -10,9 +10,9 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.frontend.DHTServicesI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.MapReduceResultReceptionI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.MapReduceSyncI;
 
-public class Facade extends SyncFacade implements ResultReceptionI, MapReduceResultReceptionI {
+public class AsyncFacade extends SyncFacade implements ResultReceptionI, MapReduceResultReceptionI {
 
-  protected Facade(ContentNodeBaseCompositeEndPointI<ContentAccessSyncI, MapReduceSyncI> nodeFacadeCompositeEndpoint,
+  protected AsyncFacade(ContentNodeBaseCompositeEndPointI<ContentAccessSyncI, MapReduceSyncI> nodeFacadeCompositeEndpoint,
       EndPointI<DHTServicesI> facadeClientDHTServicesEndpoint) throws Exception {
     super(nodeFacadeCompositeEndpoint, facadeClientDHTServicesEndpoint);
   }

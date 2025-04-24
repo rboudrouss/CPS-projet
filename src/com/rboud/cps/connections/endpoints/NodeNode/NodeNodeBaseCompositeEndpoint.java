@@ -6,23 +6,29 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentAccessSyncCI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.endpoints.ContentNodeBaseCompositeEndPointI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.MapReduceSyncCI;
 
-public class NodeNodeCompositeEndpoint extends BCMCompositeEndPoint implements ContentNodeBaseCompositeEndPointI<ContentAccessSyncCI, MapReduceSyncCI> {
-  private final static int N_ENDPOINTS = 2;
+public class NodeNodeBaseCompositeEndpoint<CAI extends ContentAccessSyncCI, MRI extends MapReduceSyncCI>
+    extends BCMCompositeEndPoint implements ContentNodeBaseCompositeEndPointI<CAI, MRI> {
 
-  public NodeNodeCompositeEndpoint() {
-    super(N_ENDPOINTS);
+  public NodeNodeBaseCompositeEndpoint() {
+    super(2);
+    this.addEndPoint(new NodeNodeContentAccessEndPoint());
+    this.addEndPoint(new NodeNodeMapReduceEndPoint());
+  }
+
+  public NodeNodeBaseCompositeEndpoint(int n) {
+    super(n);
     this.addEndPoint(new NodeNodeContentAccessEndPoint());
     this.addEndPoint(new NodeNodeMapReduceEndPoint());
   }
 
   @Override
-  public EndPointI<ContentAccessSyncCI> getContentAccessEndpoint() {
+  public EndPointI<CAI> getContentAccessEndpoint() {
     return this.getEndPoint(ContentAccessSyncCI.class);
   }
 
   @Override
-  public EndPointI<MapReduceSyncCI> getMapReduceEndpoint() {
+  public EndPointI<MRI> getMapReduceEndpoint() {
     return this.getEndPoint(MapReduceSyncCI.class);
   }
-  
+
 }

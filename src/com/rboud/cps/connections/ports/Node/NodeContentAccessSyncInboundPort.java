@@ -7,13 +7,13 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentAccessSyncI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentDataI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentKeyI;
 
-public class NodeContentAccessInboundPort extends AbstractInboundPort implements ContentAccessSyncCI {
+public class NodeContentAccessSyncInboundPort extends AbstractInboundPort implements ContentAccessSyncCI {
 
-  public NodeContentAccessInboundPort(ComponentI owner) throws Exception {
+  public NodeContentAccessSyncInboundPort(ComponentI owner) throws Exception {
     super(ContentAccessSyncCI.class, owner);
   }
 
-  public NodeContentAccessInboundPort(String URI, ComponentI owner) throws Exception {
+  public NodeContentAccessSyncInboundPort(String URI, ComponentI owner) throws Exception {
     super(URI, ContentAccessSyncCI.class, owner);
   }
 

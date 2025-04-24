@@ -11,13 +11,13 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.ProcessorI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.ReductorI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.SelectorI;
 
-public class NodeMapReduceInboundPort extends AbstractInboundPort implements MapReduceSyncCI {
+public class NodeMapReduceSyncInboundPort extends AbstractInboundPort implements MapReduceSyncCI {
 
-  public NodeMapReduceInboundPort(ComponentI owner) throws Exception {
+  public NodeMapReduceSyncInboundPort(ComponentI owner) throws Exception {
     super(MapReduceSyncCI.class, owner);
   }
 
-  public NodeMapReduceInboundPort(String URI, ComponentI owner) throws Exception {
+  public NodeMapReduceSyncInboundPort(String URI, ComponentI owner) throws Exception {
     super(URI, MapReduceSyncCI.class, owner);
   }
 

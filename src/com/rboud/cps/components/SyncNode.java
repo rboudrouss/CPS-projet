@@ -1,5 +1,6 @@
 package com.rboud.cps.components;
 
+import java.io.FileNotFoundException;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
@@ -22,11 +23,13 @@ import fr.sorbonne_u.cps.mapreduce.utils.URIGenerator;
 import fr.sorbonne_u.components.AbstractComponent;
 import fr.sorbonne_u.components.annotations.OfferedInterfaces;
 import fr.sorbonne_u.components.annotations.RequiredInterfaces;
+import fr.sorbonne_u.components.exceptions.ComponentShutdownException;
 import fr.sorbonne_u.components.exceptions.ComponentStartException;
 
 @OfferedInterfaces(offered = { ContentAccessSyncCI.class, MapReduceSyncCI.class })
 @RequiredInterfaces(required = { MapReduceSyncCI.class, ContentAccessSyncCI.class })
-public class SyncNode extends AbstractComponent implements ContentAccessSyncI, MapReduceSyncI {
+public class SyncNode<CAI extends ContentAccessSyncI, MRI extends MapReduceSyncI> extends AbstractComponent
+    implements ContentAccessSyncI, MapReduceSyncI {
   // String id
   private String nodeURI;
 
@@ -44,16 +47,16 @@ public class SyncNode extends AbstractComponent implements ContentAccessSyncI, M
   public static final String URI_PREFIX = "node-";
 
   // Composite endpoint for connecting to the Facade, may be null
-  ContentNodeBaseCompositeEndPointI<ContentAccessSyncI, MapReduceSyncI> nodeFacadeCompositeEndpoint;
+  ContentNodeBaseCompositeEndPointI<CAI, MRI> nodeFacadeCompositeEndpoint;
 
   // Composite endpoint for connecting to next node in chain, both CANNOT BE NULL
-  ContentNodeBaseCompositeEndPointI<ContentAccessSyncI, MapReduceSyncI> selfNodeCompositeEndpoint;
-  ContentNodeBaseCompositeEndPointI<ContentAccessSyncI, MapReduceSyncI> nextNodeCompositeEndpoint;
+  ContentNodeBaseCompositeEndPointI<CAI, MRI> selfNodeCompositeEndpoint;
+  ContentNodeBaseCompositeEndPointI<CAI, MRI> nextNodeCompositeEndpoint;
 
   protected SyncNode(
-      ContentNodeBaseCompositeEndPointI<ContentAccessSyncI, MapReduceSyncI> nodeFacadeCompositeEndpoint,
-      ContentNodeBaseCompositeEndPointI<ContentAccessSyncI, MapReduceSyncI> selfNodeCompositeEndpoint,
-      ContentNodeBaseCompositeEndPointI<ContentAccessSyncI, MapReduceSyncI> nextNodeCompositeEndpoint)
+      ContentNodeBaseCompositeEndPointI<CAI, MRI> nodeFacadeCompositeEndpoint,
+      ContentNodeBaseCompositeEndPointI<CAI, MRI> selfNodeCompositeEndpoint,
+      ContentNodeBaseCompositeEndPointI<CAI, MRI> nextNodeCompositeEndpoint)
       throws Exception {
     // 2 threads are necessary for answering the request where this node is blocked
     // by the facade request and gets an new request from a node
@@ -69,6 +72,19 @@ public class SyncNode extends AbstractComponent implements ContentAccessSyncI, M
     this.selfNodeCompositeEndpoint = selfNodeCompositeEndpoint;
     this.nextNodeCompositeEndpoint = nextNodeCompositeEndpoint;
 
+    this.initialiseConnection();
+  }
+
+  protected SyncNode(
+      ContentNodeBaseCompositeEndPointI<CAI, MRI> nodeFacadeCompositeEndpoint,
+      ContentNodeBaseCompositeEndPointI<CAI, MRI> selfNodeCompositeEndpoint,
+      ContentNodeBaseCompositeEndPointI<CAI, MRI> nextNodeCompositeEndpoint,
+      int minValue, int maxValue) throws Exception {
+    this(nodeFacadeCompositeEndpoint, selfNodeCompositeEndpoint, nextNodeCompositeEndpoint);
+    this.interval = new MyInterval(minValue, maxValue);
+  }
+
+  private void initialiseConnection() throws Exception {
     this.selfNodeCompositeEndpoint.initialiseServerSide(this);
     if (this.nodeFacadeCompositeEndpoint != null) {
       this.nodeFacadeCompositeEndpoint.initialiseServerSide(this);
@@ -76,15 +92,6 @@ public class SyncNode extends AbstractComponent implements ContentAccessSyncI, M
 
     this.toggleLogging();
     this.toggleTracing();
-  }
-
-  protected SyncNode(
-      ContentNodeBaseCompositeEndPointI<ContentAccessSyncI, MapReduceSyncI> nodeFacadeCompositeEndpoint,
-      ContentNodeBaseCompositeEndPointI<ContentAccessSyncI, MapReduceSyncI> selfNodeCompositeEndpoint,
-      ContentNodeBaseCompositeEndPointI<ContentAccessSyncI, MapReduceSyncI> nextNodeCompositeEndpoint,
-      int minValue, int maxValue) throws Exception {
-    this(nodeFacadeCompositeEndpoint, selfNodeCompositeEndpoint, nextNodeCompositeEndpoint);
-    this.interval = new MyInterval(minValue, maxValue);
   }
 
   // ------------------------------------------------------------------------
@@ -103,16 +110,20 @@ public class SyncNode extends AbstractComponent implements ContentAccessSyncI, M
   }
 
   @Override
-  public synchronized void finalise() throws Exception {
+  public synchronized void shutdown() throws ComponentShutdownException {
     this.logMessage("[NODE] Finalising DHT Node component.");
-    this.printExecutionLogOnFile("logs/node-" + this.nodeURI);
+    try {
+      this.printExecutionLogOnFile("logs/node-" + this.nodeURI);
+    } catch (FileNotFoundException e) {
+      throw new ComponentShutdownException(e);
+    }
 
     if (this.nodeFacadeCompositeEndpoint != null) {
       this.nodeFacadeCompositeEndpoint.cleanUpServerSide();
     }
     this.selfNodeCompositeEndpoint.cleanUpServerSide();
     this.nextNodeCompositeEndpoint.cleanUpClientSide();
-    super.finalise();
+    super.shutdown();
   }
 
   // ------------------------------------------------------------------------
@@ -216,11 +227,11 @@ public class SyncNode extends AbstractComponent implements ContentAccessSyncI, M
         + "]";
   }
 
-  private ContentAccessSyncI getNextContentAccessReference() {
+  private CAI getNextContentAccessReference() {
     return this.nextNodeCompositeEndpoint.getContentAccessEndpoint().getClientSideReference();
   }
 
-  private MapReduceSyncI getNextMapReduceReference() {
+  private MRI getNextMapReduceReference() {
     return this.nextNodeCompositeEndpoint.getMapReduceEndpoint().getClientSideReference();
   }
 }

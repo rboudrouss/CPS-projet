@@ -5,7 +5,7 @@ import com.rboud.cps.components.SyncFacade;
 import com.rboud.cps.components.SyncNode;
 import com.rboud.cps.connections.endpoints.FacadeClient.FacadeClientDHTServicesEndpoint;
 import com.rboud.cps.connections.endpoints.NodeFacade.NodeFacadeCompositeEndpoint;
-import com.rboud.cps.connections.endpoints.NodeNode.NodeNodeCompositeEndpoint;
+import com.rboud.cps.connections.endpoints.NodeNode.NodeNodeBaseCompositeEndpoint;
 
 import fr.sorbonne_u.components.AbstractComponent;
 import fr.sorbonne_u.components.cvm.AbstractCVM;
@@ -69,7 +69,7 @@ public class CVM extends AbstractCVM {
 
   private String[] createAndConnectNodes(int n, NodeFacadeCompositeEndpoint facadeEndpoint) throws Exception {
     if (n <= 1) {
-      NodeNodeCompositeEndpoint endpoint = new NodeNodeCompositeEndpoint();
+      NodeNodeBaseCompositeEndpoint endpoint = new NodeNodeBaseCompositeEndpoint();
       String nodeURI = AbstractComponent.createComponent(
           SyncNode.class.getCanonicalName(),
           new Object[] { facadeEndpoint.copyWithSharable(), endpoint.copyWithSharable(), endpoint.copyWithSharable(),
@@ -81,9 +81,9 @@ public class CVM extends AbstractCVM {
 
     NodeFacadeCompositeEndpoint currentFacadeEndpoint = facadeEndpoint;
 
-    NodeNodeCompositeEndpoint firstEndpoint = new NodeNodeCompositeEndpoint();
+    NodeNodeBaseCompositeEndpoint firstEndpoint = new NodeNodeBaseCompositeEndpoint();
 
-    NodeNodeCompositeEndpoint oldEndpoint = firstEndpoint, newEndpoint = new NodeNodeCompositeEndpoint();
+    NodeNodeBaseCompositeEndpoint oldEndpoint = firstEndpoint, newEndpoint = new NodeNodeBaseCompositeEndpoint();
 
     String[] nodeURIs = new String[n];
 
@@ -95,7 +95,7 @@ public class CVM extends AbstractCVM {
               Integer.MIN_VALUE + step * (i + 1) });
 
       oldEndpoint = newEndpoint;
-      newEndpoint = new NodeNodeCompositeEndpoint();
+      newEndpoint = new NodeNodeBaseCompositeEndpoint();
 
       // Creating fake empty endpoint since we cannot pass null
       currentFacadeEndpoint = new NodeFacadeCompositeEndpoint();
