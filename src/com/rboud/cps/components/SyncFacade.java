@@ -128,7 +128,7 @@ public class SyncFacade<CAI extends ContentAccessSyncI, MRI extends MapReduceSyn
     return this.nodeFacadeCompositeEndpoint.getContentAccessEndpoint().getClientSideReference();
   }
 
-  protected <U, R extends ContentDataI> R contentComputeAndClear(ThrowingBiFunction<String, U, R> func, U arg)
+  protected <U, R> R contentComputeAndClear(ThrowingBiFunction<String, U, R> func, U arg)
       throws Exception {
     String computeURI = URIGenerator.generateURI(URI_PREFIX);
     R result = func.apply(computeURI, arg);
@@ -136,7 +136,7 @@ public class SyncFacade<CAI extends ContentAccessSyncI, MRI extends MapReduceSyn
     return result;
   }
 
-  protected <U, V, R extends ContentDataI> R contentComputeAndClear(ThrowingTriFunction<String, U, V, R> func, U arg1,
+  protected <U, V, R> R contentComputeAndClear(ThrowingTriFunction<String, U, V, R> func, U arg1,
       V arg2)
       throws Exception {
     String computeURI = URIGenerator.generateURI(URI_PREFIX);
