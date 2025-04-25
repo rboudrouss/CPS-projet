@@ -30,28 +30,29 @@ import fr.sorbonne_u.components.exceptions.ComponentStartException;
 @RequiredInterfaces(required = { MapReduceSyncCI.class, ContentAccessSyncCI.class })
 public class SyncNode<CAI extends ContentAccessSyncI, MRI extends MapReduceSyncI> extends AbstractComponent
     implements ContentAccessSyncI, MapReduceSyncI {
-  // String id
-  private String nodeURI;
-
-  // key: computationURI, value: results extended from Array.
-  // Used to store the results of a map computation for a given URI
-  private Map<String, Stream<?>> mapResults = new HashMap<>();
-
-  // Describe the range of hash values that this node is responsible for
-  private MyInterval interval;
-
-  // Storage
-  private final Map<ContentKeyI, ContentDataI> localStorage = new HashMap<>();
 
   // URIs prefix
   public static final String URI_PREFIX = "node-";
 
+  // String id
+  protected String nodeURI;
+
+  // key: computationURI, value: results extended from Array.
+  // Used to store the results of a map computation for a given URI
+  protected Map<String, Stream<?>> mapSyncResults = new HashMap<>();
+
+  // Describe the range of hash values that this node is responsible for
+  protected MyInterval interval;
+
+  // Storage
+  protected final Map<ContentKeyI, ContentDataI> localStorage = new HashMap<>();
+
   // Composite endpoint for connecting to the Facade, may be null
-  ContentNodeBaseCompositeEndPointI<CAI, MRI> nodeFacadeCompositeEndpoint;
+  protected ContentNodeBaseCompositeEndPointI<CAI, MRI> nodeFacadeCompositeEndpoint;
 
   // Composite endpoint for connecting to next node in chain, both CANNOT BE NULL
-  ContentNodeBaseCompositeEndPointI<CAI, MRI> selfNodeCompositeEndpoint;
-  ContentNodeBaseCompositeEndPointI<CAI, MRI> nextNodeCompositeEndpoint;
+  protected ContentNodeBaseCompositeEndPointI<CAI, MRI> selfNodeCompositeEndpoint;
+  protected ContentNodeBaseCompositeEndPointI<CAI, MRI> nextNodeCompositeEndpoint;
 
   protected SyncNode(
       ContentNodeBaseCompositeEndPointI<CAI, MRI> nodeFacadeCompositeEndpoint,
@@ -170,19 +171,21 @@ public class SyncNode<CAI extends ContentAccessSyncI, MRI extends MapReduceSyncI
   public <R extends Serializable> void mapSync(String URI, SelectorI selector, ProcessorI<R> processor)
       throws Exception {
     this.logMessage("[NODE] Mapping with URI: " + URI);
-    if (this.mapResults.containsKey(URI)) {
+    if (this.mapSyncResults.containsKey(URI)) {
       this.logMessage("INFO MAPSYNC loop detected With URI " + URI);
       return;
     }
+    this.logMessage("[NODE] sending to next node.");
+    this.getNextMapReduceReference().mapSync(URI, selector, processor);
 
+
+    this.logMessage("[NODE] executing map on local storage.");
     Stream<R> results = this.localStorage.values().stream()
         .filter(selector)
         .map(processor);
 
-    this.mapResults.put(URI, results);
-    this.logMessage("[NODE] Map finished for this component, sending to next node.");
-    this.getNextMapReduceReference().mapSync(URI, selector, processor);
-    this.logMessage("[NODE] Map finished for next node(s).");
+    this.mapSyncResults.put(URI, results);
+    this.logMessage("[NODE] Map finished.");
   }
 
   @Override
@@ -190,14 +193,14 @@ public class SyncNode<CAI extends ContentAccessSyncI, MRI extends MapReduceSyncI
       A acc)
       throws Exception {
     this.logMessage("[NODE] Reducing with URI: " + URI);
-    if (!this.mapResults.containsKey(URI)) {
+    if (!this.mapSyncResults.containsKey(URI)) {
       this.logMessage("[NODE] INFO REDUCESYNC, nothing in mapresults, maybe a loop detected With URI " + URI);
       return acc;
     }
 
     // HACK Il faut vérifier si le cast est possible
-    Stream<R> data = (Stream<R>) this.mapResults.get(URI);
-    this.mapResults.remove(URI);
+    Stream<R> data = (Stream<R>) this.mapSyncResults.get(URI);
+    this.mapSyncResults.remove(URI);
 
     A currentResult = data.reduce(acc, reductor, combinator);
     data.close();
@@ -210,10 +213,10 @@ public class SyncNode<CAI extends ContentAccessSyncI, MRI extends MapReduceSyncI
 
   @Override
   public void clearMapReduceComputation(String URI) throws Exception {
-    if (!this.mapResults.containsKey(URI))
+    if (!this.mapSyncResults.containsKey(URI))
       return;
-    this.mapResults.get(URI).close();
-    this.mapResults.remove(URI);
+    this.mapSyncResults.get(URI).close();
+    this.mapSyncResults.remove(URI);
     this.getNextMapReduceReference().clearMapReduceComputation(URI);
   }
 
@@ -227,11 +230,11 @@ public class SyncNode<CAI extends ContentAccessSyncI, MRI extends MapReduceSyncI
         + "]";
   }
 
-  private CAI getNextContentAccessReference() {
+  protected CAI getNextContentAccessReference() {
     return this.nextNodeCompositeEndpoint.getContentAccessEndpoint().getClientSideReference();
   }
 
-  private MRI getNextMapReduceReference() {
+  protected MRI getNextMapReduceReference() {
     return this.nextNodeCompositeEndpoint.getMapReduceEndpoint().getClientSideReference();
   }
 }

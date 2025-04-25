@@ -8,8 +8,7 @@ public class NodeNodeAsyncCompositeEndpoint<CAI extends ContentAccessCI, MRI ext
     extends NodeNodeBaseCompositeEndpoint<CAI, MRI> implements ContentNodeAsyncCompositeEndPointI<CAI, MRI> {
 
   public NodeNodeAsyncCompositeEndpoint() {
-    super(4);
-    this.addEndPoint(new NodeNodeContentAccessEndPoint());
+    super(3);
     this.addEndPoint(new NodeNodeMapReduceResultReceptionEndpoint());
   }
 
