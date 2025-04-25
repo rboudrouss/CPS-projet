@@ -24,13 +24,15 @@ import fr.sorbonne_u.cps.mapreduce.utils.URIGenerator;
 
 @RequiredInterfaces(required = { MapReduceSyncCI.class, ContentAccessSyncCI.class })
 @OfferedInterfaces(offered = { DHTServicesCI.class })
-public class SyncFacade extends AbstractComponent implements DHTServicesI {
-  private final static String URI_PREFIX = "dht-facade-";
-  
-  private ContentNodeBaseCompositeEndPointI<ContentAccessSyncI, MapReduceSyncI> nodeFacadeCompositeEndpoint;
+public class SyncFacade<CAI extends ContentAccessSyncI, MRI extends MapReduceSyncI> extends AbstractComponent
+    implements DHTServicesI {
+  protected final static String URI_PREFIX = "dht-facade-";
+
+  private ContentNodeBaseCompositeEndPointI<CAI, MRI> nodeFacadeCompositeEndpoint;
   private EndPointI<DHTServicesI> facadeClientDHTServicesEndpoint;
 
-  protected SyncFacade(ContentNodeBaseCompositeEndPointI<ContentAccessSyncI, MapReduceSyncI> nodeFacadeCompositeEndpoint,
+  protected SyncFacade(
+      ContentNodeBaseCompositeEndPointI<CAI, MRI> nodeFacadeCompositeEndpoint,
       EndPointI<DHTServicesI> facadeClientDHTServicesEndpoint)
       throws Exception {
     super(1, 0);
@@ -122,11 +124,11 @@ public class SyncFacade extends AbstractComponent implements DHTServicesI {
   // Helpers
   // ------------------------------------------------------------------------
 
-  private ContentAccessSyncI getContentAccessClientReference() {
+  protected CAI getContentAccessClientReference() {
     return this.nodeFacadeCompositeEndpoint.getContentAccessEndpoint().getClientSideReference();
   }
 
-  private <U, R extends ContentDataI> R contentComputeAndClear(ThrowingBiFunction<String, U, R> func, U arg)
+  protected <U, R extends ContentDataI> R contentComputeAndClear(ThrowingBiFunction<String, U, R> func, U arg)
       throws Exception {
     String computeURI = URIGenerator.generateURI(URI_PREFIX);
     R result = func.apply(computeURI, arg);
@@ -134,7 +136,7 @@ public class SyncFacade extends AbstractComponent implements DHTServicesI {
     return result;
   }
 
-  private <U, V, R extends ContentDataI> R contentComputeAndClear(ThrowingTriFunction<String, U, V, R> func, U arg1,
+  protected <U, V, R extends ContentDataI> R contentComputeAndClear(ThrowingTriFunction<String, U, V, R> func, U arg1,
       V arg2)
       throws Exception {
     String computeURI = URIGenerator.generateURI(URI_PREFIX);
@@ -143,7 +145,7 @@ public class SyncFacade extends AbstractComponent implements DHTServicesI {
     return result;
   }
 
-  private MapReduceSyncI getMapReduceClientReference() {
+  protected MRI getMapReduceClientReference() {
     return this.nodeFacadeCompositeEndpoint.getMapReduceEndpoint().getClientSideReference();
   }
 
