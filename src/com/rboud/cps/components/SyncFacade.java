@@ -35,7 +35,7 @@ public class SyncFacade<CAI extends ContentAccessSyncI, MRI extends MapReduceSyn
       ContentNodeBaseCompositeEndPointI<CAI, MRI> nodeFacadeCompositeEndpoint,
       EndPointI<DHTServicesI> facadeClientDHTServicesEndpoint)
       throws Exception {
-    super(1, 0);
+    super(2, 0);
     this.nodeFacadeCompositeEndpoint = nodeFacadeCompositeEndpoint;
     this.facadeClientDHTServicesEndpoint = facadeClientDHTServicesEndpoint;
 
@@ -43,6 +43,7 @@ public class SyncFacade<CAI extends ContentAccessSyncI, MRI extends MapReduceSyn
 
     this.toggleLogging();
     this.toggleTracing();
+    this.getTracer().setTitle("Facade");
   }
 
   // ------------------------------------------------------------------------

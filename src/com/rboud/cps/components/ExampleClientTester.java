@@ -21,6 +21,7 @@ public class ExampleClientTester extends AbstractComponent {
 
     this.toggleLogging();
     this.toggleTracing();
+    this.getTracer().setTitle("Client");
   }
 
   // ------------------------------------------------------------------------
@@ -44,7 +45,7 @@ public class ExampleClientTester extends AbstractComponent {
 
     Tester tester = new Tester(this.getDHTServices(), this::logMessage);
 
-    // tester.disableRandomTests();
+    tester.disableRandomTests();
 
     tester.allTesting();
   }

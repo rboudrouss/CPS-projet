@@ -24,7 +24,7 @@ public class NodeFacadeMapReduceResultReceptionEndpoint extends BCMEndPoint<MapR
 
   @Override
   protected MapReduceResultReceptionCI makeOutboundPort(AbstractComponent c, String inboundPortURI) throws Exception {
-    NodeMapReduceResultReceptionOutboundPort p = new NodeMapReduceResultReceptionOutboundPort(inboundPortURI, c);
+    NodeMapReduceResultReceptionOutboundPort p = new NodeMapReduceResultReceptionOutboundPort(c);
     p.publishPort();
     c.doPortConnection(
         p.getPortURI(),

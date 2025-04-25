@@ -83,7 +83,9 @@ public class AsyncFacade<CAI extends ContentAccessI, MRI extends MapReduceI> ext
 
     this.getContentAccessClientReference().put(computationURI, key, value,
         this.facadeResultReceptionEndpoint.copyWithSharable());
+    this.logMessage("[DHT-FACADE] Waiting for reception.");
     ContentDataI out = (ContentDataI) result.get();
+    this.logMessage("[DHT-FACADE] Result reception endpoint finished.");
 
     assert this.facadeResultReceptionEndpoint.clientSideClean();
 
@@ -131,6 +133,8 @@ public class AsyncFacade<CAI extends ContentAccessI, MRI extends MapReduceI> ext
 
   @Override
   public void acceptResult(String computationURI, String emitterId, Serializable acc) throws Exception {
+    this.logMessage("[DHT-FACADE] Accepting Map Reduce result with URI: " + computationURI + " and emitterId: " + emitterId);
+
     CompletableFuture<Serializable> future = this.computationResults.remove(computationURI);
     if (future != null) {
       future.complete(acc);
@@ -141,6 +145,8 @@ public class AsyncFacade<CAI extends ContentAccessI, MRI extends MapReduceI> ext
 
   @Override
   public void acceptResult(String computationURI, Serializable result) throws Exception {
+    this.logMessage("[NODE] Accepting Content Access result with URI: " + computationURI);
+
     CompletableFuture<Serializable> future = this.computationResults.remove(computationURI);
     if (future != null) {
       future.complete(result);

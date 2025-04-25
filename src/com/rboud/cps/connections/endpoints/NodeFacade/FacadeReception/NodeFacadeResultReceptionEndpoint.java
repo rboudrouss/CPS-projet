@@ -28,7 +28,7 @@ public class NodeFacadeResultReceptionEndpoint extends BCMEndPoint<ResultRecepti
 
   @Override
   protected ResultReceptionCI makeOutboundPort(AbstractComponent c, String inboundPortURI) throws Exception {
-    NodeResultReceptionOutboundPort p = new NodeResultReceptionOutboundPort(inboundPortURI, c);
+    NodeResultReceptionOutboundPort p = new NodeResultReceptionOutboundPort(c);
     p.publishPort();
     c.doPortConnection(
         p.getPortURI(),

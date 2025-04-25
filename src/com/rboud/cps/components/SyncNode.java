@@ -96,6 +96,7 @@ public class SyncNode<CAI extends ContentAccessSyncI, MRI extends MapReduceSyncI
 
     this.toggleLogging();
     this.toggleTracing();
+    this.getTracer().setTitle("Node " + this.nodeURI);
   }
 
   // ------------------------------------------------------------------------

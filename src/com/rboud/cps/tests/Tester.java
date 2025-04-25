@@ -428,7 +428,8 @@ public class Tester {
           (a, b) -> a + (int) b,
           (a, b) -> a + b,
           0);
-      assert result == 175 : "Result is not correct";
+      this.logFunction.log("Result was " + result);
+      assert result == 175 : "Result is not correct, expected 175 but got " + result;
     }
 
     this.logFunction.log("Test 2");
@@ -440,7 +441,7 @@ public class Tester {
           (a, b) -> a + (int) b,
           (a, b) -> a + b,
           0);
-      assert result == 85 : "Result is not correct";
+      assert result == 85 : "Result is not correct, expected 85 but got " + result;
     }
 
     this.logFunction.log("Test 3");
@@ -452,7 +453,8 @@ public class Tester {
           (a, b) -> a + (String) b,
           (a, b) -> a + b,
           "");
-      assert result.equals("JohnJane") || result.equals("JaneJohn") : "Result is not correct";
+      assert result.equals("JohnJane") || result.equals("JaneJohn")
+          : "Result is not correct, expected JohnJane or JaneJohn but got " + result;
     }
 
     this.logFunction.log("Test 4");
@@ -474,9 +476,11 @@ public class Tester {
             return newArray;
           },
           new String[0]);
-      assert result.length == 2 : "Result is not correct";
-      assert Arrays.asList(result).contains("John") : "Result is not correct";
-      assert Arrays.asList(result).contains("Jane") : "Result is not correct";
+      assert result.length == 2 : "Result is not correct, expected 2 elements but got " + result.length;
+      assert Arrays.asList(result).contains("John")
+          : "Result is not correct, expected a John but got " + Arrays.toString(result);
+      assert Arrays.asList(result).contains("Jane")
+          : "Result is not correct, expected a Jane but got " + Arrays.toString(result);
     }
 
     // remove data

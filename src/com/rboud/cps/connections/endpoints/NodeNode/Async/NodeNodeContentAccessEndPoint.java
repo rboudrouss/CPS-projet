@@ -24,7 +24,7 @@ public class NodeNodeContentAccessEndPoint extends BCMEndPoint<ContentAccessCI> 
 
   @Override
   protected ContentAccessCI makeOutboundPort(AbstractComponent c, String inboundPortURI) throws Exception {
-    NodeContentAccessOutboundPort port = new NodeContentAccessOutboundPort(inboundPortURI, c);
+    NodeContentAccessOutboundPort port = new NodeContentAccessOutboundPort(c);
     port.publishPort();
     c.doPortConnection(
         port.getPortURI(),

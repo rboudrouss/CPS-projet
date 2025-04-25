@@ -14,7 +14,7 @@ import fr.sorbonne_u.components.helpers.CVMDebugModes;
 
 public class CVM extends AbstractCVM {
 
-  private final int NODES = 1;
+  private final int NODES = 5;
 
   public CVM() throws Exception {
     super();
@@ -27,7 +27,7 @@ public class CVM extends AbstractCVM {
   public static void main(String[] args) {
     try {
       CVM c = new CVM();
-      c.startStandardLifeCycle(10000L);
+      c.startStandardLifeCycle(100000L);
       System.exit(0);
     } catch (Exception e) {
       e.printStackTrace();

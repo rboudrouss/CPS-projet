@@ -75,6 +75,7 @@ public class AsyncNode<CAI extends ContentAccessCI, MRI extends MapReduceCI> ext
   public <I extends ResultReceptionCI> void put(String computationURI, ContentKeyI key, ContentDataI value,
       EndPointI<I> caller) throws Exception {
     this.logMessage("[NODE] Putting content with key: " + key + " and URI: " + computationURI);
+    this.logMessage("\n[NODE] hashmap content: " + this.localStorage);
     if (!this.interval.in(key.hashCode())) {
       this.getNextContentAccessReference().put(computationURI, key, value, caller);
       return;
@@ -86,6 +87,7 @@ public class AsyncNode<CAI extends ContentAccessCI, MRI extends MapReduceCI> ext
   public <I extends ResultReceptionCI> void remove(String computationURI, ContentKeyI key, EndPointI<I> caller)
       throws Exception {
     this.logMessage("[NODE] Removing content with key: " + key + " and URI: " + computationURI);
+    this.logMessage("\n[NODE] hashmap content: " + this.localStorage);
     if (!this.interval.in(key.hashCode())) {
       this.getNextContentAccessReference().remove(computationURI, key, caller);
       return;
@@ -130,9 +132,11 @@ public class AsyncNode<CAI extends ContentAccessCI, MRI extends MapReduceCI> ext
     futureStream.thenAcceptAsync(stream -> {
       Stream<R> typedStream = (Stream<R>) stream;
       A result = typedStream.reduce(identityAcc, reductor, combinator);
+      A newAcc = combinator.apply(identityAcc, result);
+      this.logMessage("[NODE] Reduce result: " + result + " with new accumulator: " + newAcc);
       try {
         this.getNextMapReduceReference().reduce(computationURI, reductor, combinator, identityAcc,
-            combinator.apply(currentAcc, result), caller);
+            newAcc, caller);
       } catch (Exception e) {
         this.logMessage("ERROR returning reduce result: " + e.getMessage());
         e.printStackTrace();
@@ -147,7 +151,7 @@ public class AsyncNode<CAI extends ContentAccessCI, MRI extends MapReduceCI> ext
 
   protected <I extends ResultReceptionCI> void sendResult(EndPointI<I> caller, String computationURI,
       Serializable result) throws Exception {
-    this.logMessage("[NODE] Sending result to " + caller + " with computation URI: " + computationURI + " and result: "
+    this.logMessage("[NODE] Sending result with computation URI: " + computationURI + " and result: "
         + result);
     caller.initialiseClientSide(this);
     caller.getClientSideReference().acceptResult(computationURI, result);
@@ -156,7 +160,7 @@ public class AsyncNode<CAI extends ContentAccessCI, MRI extends MapReduceCI> ext
 
   protected <I extends MapReduceResultReceptionCI> void sendResult(EndPointI<I> caller, String computationURI,
       String emitterId, Serializable acc) throws Exception {
-    this.logMessage("[NODE] Sending result to " + caller + " with computation URI: " + computationURI + " and result: "
+    this.logMessage("[NODE] Sending result with computation URI: " + computationURI + " and result: "
         + acc);
     caller.initialiseClientSide(this);
     caller.getClientSideReference().acceptResult(computationURI, emitterId, acc);
