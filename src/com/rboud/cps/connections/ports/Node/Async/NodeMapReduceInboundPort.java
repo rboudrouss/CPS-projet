@@ -14,7 +14,7 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.ProcessorI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.ReductorI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.SelectorI;
 
-public class NodeMapReduceInboundPort extends NodeMapReduceSyncInboundPort implements MapReduceI {
+public class NodeMapReduceInboundPort extends NodeMapReduceSyncInboundPort implements MapReduceCI {
 
   public NodeMapReduceInboundPort(ComponentI owner)
       throws Exception {
