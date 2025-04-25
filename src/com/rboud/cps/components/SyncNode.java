@@ -45,7 +45,7 @@ public class SyncNode<CAI extends ContentAccessSyncI, MRI extends MapReduceSyncI
   protected MyInterval interval;
 
   // Storage
-  protected final Map<ContentKeyI, ContentDataI> localStorage = new HashMap<>();
+  protected final Map<ContentKeyI, ContentDataI> localStorage;
 
   // Composite endpoint for connecting to the Facade, may be null
   protected ContentNodeBaseCompositeEndPointI<CAI, MRI> nodeFacadeCompositeEndpoint;
@@ -70,6 +70,7 @@ public class SyncNode<CAI extends ContentAccessSyncI, MRI extends MapReduceSyncI
     assert nextNodeCompositeEndpoint != null;
 
     this.nodeURI = URIGenerator.generateURI(URI_PREFIX);
+    this.localStorage = this.initLocalStorage();
 
     this.interval = new MyInterval(Integer.MIN_VALUE, Integer.MAX_VALUE);
     this.nodeFacadeCompositeEndpoint = nodeFacadeCompositeEndpoint;
@@ -97,6 +98,10 @@ public class SyncNode<CAI extends ContentAccessSyncI, MRI extends MapReduceSyncI
     this.toggleLogging();
     this.toggleTracing();
     this.getTracer().setTitle("Node " + this.nodeURI);
+  }
+
+  protected Map<ContentKeyI, ContentDataI> initLocalStorage() {
+    return new HashMap<>();
   }
 
   // ------------------------------------------------------------------------

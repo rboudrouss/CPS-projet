@@ -12,7 +12,8 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.frontend.DHTServicesI;
 
 public class Tester {
   private final int NB_RANDOM_VALUES = 10;
-  private boolean allowRandomValues = true;
+  private boolean ALLOW_RANDOM = true;
+  private boolean STOP_ON_FAILURE = true;
 
   private LogFunction logFunction = message -> System.out.println(message);
 
@@ -21,7 +22,7 @@ public class Tester {
   public Tester(DHTServicesI dht, LogFunction logFunction) throws Exception {
     this.logFunction = message -> logFunction.log("[TESTER] " + message);
     this.dht = dht;
-    if (allowRandomValues) {
+    if (ALLOW_RANDOM) {
       this.logFunction.log("Random values are allowed");
       this.logFunction.log("Please note that you can disable random values by calling disableRandomTests()");
     } else {
@@ -30,7 +31,7 @@ public class Tester {
   }
 
   public void disableRandomTests() {
-    this.allowRandomValues = false;
+    this.ALLOW_RANDOM = false;
   }
 
   /**
@@ -51,6 +52,10 @@ public class Tester {
     } catch (Throwable e) {
       this.logFunction.log("FAILURE");
       this.logFunction.log(e.getMessage() + "\n");
+      if (this.STOP_ON_FAILURE) {
+        this.logFunction.log("STOP_ON_FAILURE enabled, Stopping tests");
+        throw new RuntimeException("Stopping tests");
+      }
       e.printStackTrace();
     }
 
@@ -161,7 +166,7 @@ public class Tester {
     // --------------------
     // Random values
     // --------------------
-    if (!this.allowRandomValues) {
+    if (!this.ALLOW_RANDOM) {
       return;
     }
 
@@ -199,7 +204,7 @@ public class Tester {
   }
 
   public void putShouldNeverFail() throws Exception {
-    if (!this.allowRandomValues) {
+    if (!this.ALLOW_RANDOM) {
       return;
     }
 
@@ -245,7 +250,7 @@ public class Tester {
     // ----------------------
     // Random values
     // ----------------------
-    if (!this.allowRandomValues) {
+    if (!this.ALLOW_RANDOM) {
       return;
     }
 
@@ -326,7 +331,7 @@ public class Tester {
     // ----------------------
     // Random values
     // ----------------------
-    if (!this.allowRandomValues) {
+    if (!this.ALLOW_RANDOM) {
       return;
     }
 
@@ -398,7 +403,7 @@ public class Tester {
     // Random values
     // ----------------------
 
-    if (!this.allowRandomValues) {
+    if (!this.ALLOW_RANDOM) {
       return;
     }
 
@@ -456,8 +461,8 @@ public class Tester {
           (a, b) -> a + b,
           412 // formatter hack
       );
-      this.logFunction.log("There should be " + ((result / 412) - 1) + " empty nodes. Result was " + result);
-      forceAssert((result % 412 == 0), "Result should be equal to acc");
+      this.logFunction.log("There should be " + ((result / 412)) + " empty nodes. Result was " + result);
+      forceAssert((result % 412 == 0 && result >= 412), "Result should be equal to acc");
     });
 
     test("Test 2", () -> {
