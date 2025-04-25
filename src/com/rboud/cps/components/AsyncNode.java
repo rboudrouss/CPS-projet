@@ -138,13 +138,17 @@ public class AsyncNode<CAI extends ContentAccessCI, MRI extends MapReduceCI> ext
       Serializable result) throws Exception {
     this.logMessage("[NODE] Sending result to " + caller + " with computation URI: " + computationURI + " and result: "
         + result);
+    caller.initialiseClientSide(this);
     caller.getClientSideReference().acceptResult(computationURI, result);
+    caller.cleanUpClientSide();
   }
 
   protected <I extends MapReduceResultReceptionCI> void sendResult(EndPointI<I> caller, String computationURI,
       String emitterId, Serializable acc) throws Exception {
     this.logMessage("[NODE] Sending result to " + caller + " with computation URI: " + computationURI + " and result: "
         + acc);
+    caller.initialiseClientSide(this);
     caller.getClientSideReference().acceptResult(computationURI, emitterId, acc);
+    caller.cleanUpClientSide();
   }
 }
