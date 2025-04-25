@@ -60,7 +60,10 @@ public class SyncNode<CAI extends ContentAccessSyncI, MRI extends MapReduceSyncI
       ContentNodeBaseCompositeEndPointI<CAI, MRI> nextNodeCompositeEndpoint)
       throws Exception {
     // 2 threads are necessary for answering the request where this node is blocked
-    // by the facade request and gets an new request from a node
+    // by the facade request and gets an new request from a node. This is because
+    // in the inbount ports we used handleRequest an not calling the method
+    // directly.
+    // so the first method call is not handled by the facade thread.
     super(2, 0);
 
     assert selfNodeCompositeEndpoint != null;
@@ -175,9 +178,6 @@ public class SyncNode<CAI extends ContentAccessSyncI, MRI extends MapReduceSyncI
       this.logMessage("INFO MAPSYNC loop detected With URI " + URI);
       return;
     }
-    this.logMessage("[NODE] sending to next node.");
-    this.getNextMapReduceReference().mapSync(URI, selector, processor);
-
 
     this.logMessage("[NODE] executing map on local storage.");
     Stream<R> results = this.localStorage.values().stream()
@@ -185,6 +185,10 @@ public class SyncNode<CAI extends ContentAccessSyncI, MRI extends MapReduceSyncI
         .map(processor);
 
     this.mapSyncResults.put(URI, results);
+
+    this.logMessage("[NODE] sending to next node.");
+    this.getNextMapReduceReference().mapSync(URI, selector, processor);
+
     this.logMessage("[NODE] Map finished.");
   }
 
