@@ -2,6 +2,7 @@ package com.rboud.cps.connections.endpoints.NodeNode.Async;
 
 import com.rboud.cps.connections.connectors.ContentAccessConnector;
 import com.rboud.cps.connections.ports.Node.Async.NodeContentAccessInboundPort;
+import com.rboud.cps.connections.ports.Node.Async.NodeContentAccessOutboundPort;
 
 import fr.sorbonne_u.components.AbstractComponent;
 import fr.sorbonne_u.components.endpoints.BCMEndPoint;
@@ -23,7 +24,7 @@ public class NodeNodeContentAccessEndPoint extends BCMEndPoint<ContentAccessCI> 
 
   @Override
   protected ContentAccessCI makeOutboundPort(AbstractComponent c, String inboundPortURI) throws Exception {
-    NodeContentAccessInboundPort port = new NodeContentAccessInboundPort(inboundPortURI, c);
+    NodeContentAccessOutboundPort port = new NodeContentAccessOutboundPort(inboundPortURI, c);
     port.publishPort();
     c.doPortConnection(
         port.getPortURI(),

@@ -5,16 +5,20 @@ import com.rboud.cps.connections.ports.Node.Sync.NodeContentAccessSyncOutboundPo
 import fr.sorbonne_u.components.ComponentI;
 import fr.sorbonne_u.components.endpoints.EndPointI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentAccessCI;
-import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentAccessI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentDataI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentKeyI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ResultReceptionCI;
 
-public class NodeContentAccessOutboundPort extends NodeContentAccessSyncOutboundPort implements ContentAccessI {
+public class NodeContentAccessOutboundPort extends NodeContentAccessSyncOutboundPort implements ContentAccessCI {
 
   public NodeContentAccessOutboundPort(ComponentI owner)
       throws Exception {
     super(ContentAccessCI.class, owner);
+  }
+
+  public NodeContentAccessOutboundPort(String URI, ComponentI owner)
+      throws Exception {
+    super(ContentAccessCI.class, URI, owner);
   }
 
   @Override
