@@ -1,5 +1,6 @@
 package com.rboud.cps.connections.endpoints.NodeFacade;
 
+import com.rboud.cps.connections.connectors.ResultReceptionConnector;
 import com.rboud.cps.connections.ports.Facade.FacadeResultReceptionInboundPort;
 import com.rboud.cps.connections.ports.Node.NodeResultReceptionOutboundPort;
 
@@ -32,7 +33,7 @@ public class NodeFacadeResultReceptionEndpoint extends BCMEndPoint<ResultRecepti
     c.doPortConnection(
         p.getPortURI(),
         inboundPortURI,
-        NodeResultReceptionOutboundPort.class.getCanonicalName());
+        ResultReceptionConnector.class.getCanonicalName());
     return p;
   }
 

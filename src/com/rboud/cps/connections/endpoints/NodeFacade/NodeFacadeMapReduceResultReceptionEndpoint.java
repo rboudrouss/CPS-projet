@@ -1,5 +1,6 @@
 package com.rboud.cps.connections.endpoints.NodeFacade;
 
+import com.rboud.cps.connections.connectors.MapReduceResultReceptionConnector;
 import com.rboud.cps.connections.ports.Facade.FacadeMapReduceResultReceptionInboundPort;
 import com.rboud.cps.connections.ports.Node.NodeMapReduceResultReceptionOutboundPort;
 
@@ -16,22 +17,20 @@ public class NodeFacadeMapReduceResultReceptionEndpoint extends BCMEndPoint<MapR
 
   @Override
   protected AbstractInboundPort makeInboundPort(AbstractComponent c, String inboundPortURI) throws Exception {
-    FacadeMapReduceResultReceptionInboundPort p =
-        new FacadeMapReduceResultReceptionInboundPort(inboundPortURI, c);
+    FacadeMapReduceResultReceptionInboundPort p = new FacadeMapReduceResultReceptionInboundPort(inboundPortURI, c);
     p.publishPort();
     return p;
   }
 
   @Override
   protected MapReduceResultReceptionCI makeOutboundPort(AbstractComponent c, String inboundPortURI) throws Exception {
-    NodeMapReduceResultReceptionOutboundPort p =
-        new NodeMapReduceResultReceptionOutboundPort(inboundPortURI, c);
+    NodeMapReduceResultReceptionOutboundPort p = new NodeMapReduceResultReceptionOutboundPort(inboundPortURI, c);
     p.publishPort();
     c.doPortConnection(
         p.getPortURI(),
         inboundPortURI,
-        NodeMapReduceResultReceptionOutboundPort.class.getCanonicalName());
+        MapReduceResultReceptionConnector.class.getCanonicalName());
     return p;
   }
-  
+
 }
