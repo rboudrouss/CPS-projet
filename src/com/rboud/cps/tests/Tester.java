@@ -2,6 +2,7 @@ package com.rboud.cps.tests;
 
 import java.util.Arrays;
 import java.util.Random;
+import java.util.function.Function;
 
 import com.rboud.cps.utils.keyDataExample.Id;
 import com.rboud.cps.utils.keyDataExample.Personne;
@@ -18,18 +19,6 @@ public class Tester {
   private DHTServicesI dht;
 
   public Tester(DHTServicesI dht, LogFunction logFunction) throws Exception {
-    boolean assertEnabled = false;
-    try {
-      assert false;
-    } catch (AssertionError e) {
-      assertEnabled = true;
-    }
-
-    if (!assertEnabled) {
-      logFunction.log("[TESTER] <!> ERROR: Assertions are not enabled, quitting...");
-      throw new RuntimeException("Assertions are not enabled. Please enable assertions to run the tests.");
-    }
-
     this.logFunction = message -> logFunction.log("[TESTER] " + message);
     this.dht = dht;
     if (allowRandomValues) {
@@ -42,6 +31,43 @@ public class Tester {
 
   public void disableRandomTests() {
     this.allowRandomValues = false;
+  }
+
+  /**
+   * Wrapper for the tests, logs the label and catches exceptions
+   * logs Failure and the exception message if the test fails
+   * logs Success if the test passes
+   * 
+   * @param label the label of the test
+   * @param test the test to run
+   * 
+   */
+  public void test(String label, TestFunction test) {
+    this.logFunction.log(label);
+
+    try {
+      test.test();
+      this.logFunction.log("SUCCESS");
+    } catch (Exception e) {
+      this.logFunction.log("FAILURE");
+      this.logFunction.log(e.getMessage() + "\n");
+      e.printStackTrace();
+    }
+
+  }
+
+  /**
+   * Force assert method to throw an error if the condition is false
+   * Works even if the assert statement is disabled
+   * 
+   * @param condition the condition to check
+   * @param message the message to display if the condition is false
+   * @throws Error if the condition is false
+   */
+  public void forceAssert(boolean condition, String message) throws Error {
+    if (!condition) {
+      throw new Error(message);
+    }
   }
 
   // ------------------------------------------------------------------------
@@ -73,56 +99,64 @@ public class Tester {
   public void getShouldFailWhenEmpty() throws Exception {
     this.logFunction.log("Get should return null when data is empty");
 
-    ContentDataI data;
     Random random = new Random();
 
     int[] testHashs = { -1, 0, 1, Integer.MIN_VALUE, Integer.MAX_VALUE, };
 
-    this.logFunction.log("Test 1");
-    for (int i : testHashs) {
-      data = this.dht.get(new Id(i));
-      assert data == null : "Data should be null";
-    }
+    test("Test 1", () -> {
+      ContentDataI data;
+      for (int i : testHashs) {
+        data = this.dht.get(new Id(i));
+        forceAssert(data == null, "Data should be null");
+      }
+    });
 
-    this.logFunction.log("Test 2");
-    for (int i = 0; i < NB_RANDOM_VALUES; i++) {
-      int hash = random.nextInt();
-      data = this.dht.get(new Id(hash));
-      assert data == null : "Data not be null";
-    }
+    test("Test 2", () -> {
+      ContentDataI data;
+      for (int i = 0; i < NB_RANDOM_VALUES; i++) {
+        int hash = random.nextInt();
+        data = this.dht.get(new Id(hash));
+        forceAssert(data == null, "Data not be null");
+      }
+    });
   }
 
   public void getFindsPut() throws Exception {
     this.logFunction.log("Get should return the data that was put");
 
-    ContentDataI data;
-
     int[] testHashs = { -1, 0, 1, Integer.MIN_VALUE, Integer.MAX_VALUE, };
     Personne[] testData = new Personne[testHashs.length];
 
     this.logFunction.log("Test 1");
-    for (int i = 0; i < testHashs.length; i++) {
-      testData[i] = Personne.getRandomPersonne();
-      this.dht.put(new Id(testHashs[i]), testData[i]);
+    test("Test 1", () -> {
+      ContentDataI data;
+      for (int i = 0; i < testHashs.length; i++) {
+        testData[i] = Personne.getRandomPersonne();
+        this.dht.put(new Id(testHashs[i]), testData[i]);
 
-      // testing if exists right after put
-      data = this.dht.get(new Id(testHashs[i]));
-      assert data != null : "Data should not be null";
-      assert data.equals(testData[i]) : "Data should be equal to the one that was put";
-    }
+        // testing if exists right after put
+        data = this.dht.get(new Id(testHashs[i]));
+        forceAssert(data != null, "Data should not be null");
+        forceAssert(data.equals(testData[i]), "Data should be equal to the one that was put");
+      }
+    });
 
-    this.logFunction.log("Test 2");
-    // Testing if data still exists after put
-    for (int i = 0; i < testHashs.length; i++) {
-      data = this.dht.get(new Id(testHashs[i]));
-      assert data != null : "Data should not be null";
-      assert data.equals(testData[i]) : "Data should be equal to the one that was put";
-    }
+    test("Test 2", () -> {
+      ContentDataI data;
+      // testing if data still exists after put
+      for (int i = 0; i < testHashs.length; i++) {
+        data = this.dht.get(new Id(testHashs[i]));
+        forceAssert(data != null, "Data should not be null");
+        forceAssert(data.equals(testData[i]), "Data should be equal to the one that was put");
+      }
+    });
 
-    // removing the data
-    for (int i = 0; i < testHashs.length; i++) {
-      dht.remove(new Id(testHashs[i]));
-    }
+    test("cleanup", () -> {
+      // removing the data
+      for (int i = 0; i < testHashs.length; i++) {
+        dht.remove(new Id(testHashs[i]));
+      }
+    });
 
     // --------------------
     // Random values
@@ -131,29 +165,37 @@ public class Tester {
       return;
     }
 
-    this.logFunction.log("Test 3");
     Personne[] randomData = new Personne[NB_RANDOM_VALUES];
-    for (int i = 0; i < NB_RANDOM_VALUES; i++) {
-      randomData[i] = Personne.getRandomPersonne();
-      this.dht.put(randomData[i].getNameId(), randomData[i]);
 
-      // testing if exists right after put
-      data = this.dht.get(randomData[i].getNameId());
-      assert data != null : "Data should not be null";
-      assert data.equals(randomData[i]) : "Data should be equal to the one that was put";
-    }
+    test("Test 3", () -> {
+      ContentDataI data;
+      for (int i = 0; i < NB_RANDOM_VALUES; i++) {
+        randomData[i] = Personne.getRandomPersonne();
+        this.dht.put(randomData[i].getNameId(), randomData[i]);
 
-    this.logFunction.log("Test 4");
-    for (Personne p : randomData) {
-      data = this.dht.get(p.getNameId());
-      assert data != null : "Data should not be null";
-      assert data.equals(p) : "Data should be equal to the one that was put";
-    }
+        // testing if exists right after put
+        data = this.dht.get(randomData[i].getNameId());
+        forceAssert(data != null, "Data should not be null");
+        forceAssert(data.equals(randomData[i]), "Data should be equal to the one that was put");
+      }
+    });
 
-    // removing the data
-    for (Personne p : randomData) {
-      dht.remove(p.getNameId());
-    }
+    test("Test 4", () -> {
+      ContentDataI data;
+
+      for (Personne p : randomData) {
+        data = this.dht.get(p.getNameId());
+        forceAssert(data != null, "Data should not be null");
+        forceAssert(data.equals(p), "Data should be equal to the one that was put");
+      }
+    });
+
+    test("cleanup", () -> {
+      // removing the data
+      for (Personne p : randomData) {
+        dht.remove(p.getNameId());
+      }
+    });
   }
 
   public void putShouldNeverFail() throws Exception {
@@ -162,36 +204,43 @@ public class Tester {
     }
 
     this.logFunction.log("Put should never fail");
-    this.logFunction.log("Test 1");
-    for (int i = 0; i < NB_RANDOM_VALUES; i++) {
-      Personne p = Personne.getRandomPersonne();
-      this.dht.put(p.getNameId(), p);
-      this.dht.remove(p.getNameId());
-    }
+    test("Test 1", () -> {
+      for (int i = 0; i < NB_RANDOM_VALUES; i++) {
+        Personne p = Personne.getRandomPersonne();
+        this.dht.put(p.getNameId(), p);
+        this.dht.remove(p.getNameId());
+      }
+    });
   }
 
   public void getShouldFailWhenNotFound() throws Exception {
     this.logFunction.log("Get should return null when data is not found");
-    ContentDataI data;
     Random random = new Random();
 
     int[] populatedHashs = { Integer.MIN_VALUE, 0, 6728163, 72819361, 1828391 };
     int[] testHashs = { -1, 1, Integer.MAX_VALUE, 39192849, 27181930, 91030481 };
 
-    for (int i : populatedHashs) {
-      this.dht.put(new Id(i), Personne.getRandomPersonne());
-    }
+    test("Populate DHT", () -> {
+      // populating the DHT
+      for (int i : populatedHashs) {
+        this.dht.put(new Id(i), Personne.getRandomPersonne());
+      }
+    });
 
-    this.logFunction.log("Test 1");
-    for (int i : testHashs) {
-      data = this.dht.get(new Id(i));
-      assert data == null : "Data should be null";
-    }
+    test("Test 1", () -> {
+      ContentDataI data;
+      for (int i : testHashs) {
+        data = this.dht.get(new Id(i));
+        forceAssert(data == null, "Data should be null");
+      }
+    });
 
     // remvoving the data
-    for (int i : populatedHashs) {
-      dht.remove(new Id(i));
-    }
+    test("cleanup", () -> {
+      for (int i : populatedHashs) {
+        dht.remove(new Id(i));
+      }
+    });
 
     // ----------------------
     // Random values
@@ -203,24 +252,30 @@ public class Tester {
     Integer[] randomHashs = new Integer[NB_RANDOM_VALUES];
 
     // populating the DHT with random values
-    for (int i = 0; i < NB_RANDOM_VALUES; i++) {
-      randomHashs[i] = random.nextInt();
-      data = this.dht.put(new Id(randomHashs[i]), Personne.getRandomPersonne());
-    }
-
-    this.logFunction.log("Test 2");
-    for (int i = 0; i < NB_RANDOM_VALUES; i++) {
-      int n = random.nextInt();
-      if (!Arrays.asList(randomHashs).contains(n)) {
-        data = this.dht.get(new Id(n));
-        assert data == null : "Data should be null";
+    test("Populate DHT", () -> {
+      for (int i = 0; i < NB_RANDOM_VALUES; i++) {
+        randomHashs[i] = random.nextInt();
+        this.dht.put(new Id(randomHashs[i]), Personne.getRandomPersonne());
       }
-    }
+    });
 
-    // removing the data
-    for (int i = 0; i < NB_RANDOM_VALUES; i++) {
-      dht.remove(new Id(randomHashs[i]));
-    }
+    test("Test 2", () -> {
+      ContentDataI data;
+      for (int i = 0; i < NB_RANDOM_VALUES; i++) {
+        int n = random.nextInt();
+        if (!Arrays.asList(randomHashs).contains(n)) {
+          data = this.dht.get(new Id(n));
+          forceAssert(data == null, "Data should be null");
+        }
+      }
+    });
+
+    test("cleanup", () -> {
+      // removing the data
+      for (int i = 0; i < NB_RANDOM_VALUES; i++) {
+        dht.remove(new Id(randomHashs[i]));
+      }
+    });
   }
 
   // ------------------------------------------------------------------------
@@ -236,30 +291,37 @@ public class Tester {
 
   public void removeShouldFailWhenNotFound() throws Exception {
     this.logFunction.log("Remove should fail when data is not found");
-    ContentDataI data;
     Random random = new Random();
 
     int[] testHashs = { -1, 1, Integer.MAX_VALUE, 39192849, 27181930, 91030481 };
     int[] populatedHashs = { Integer.MIN_VALUE, 0, 6728163, 72819361, 1828391 };
 
     // populating the DHT
-    for (int i : populatedHashs) {
-      this.dht.put(new Id(i), Personne.getRandomPersonne());
-    }
+    test("Populate DHT", () -> {
+      for (int i : populatedHashs) {
+        this.dht.put(new Id(i), Personne.getRandomPersonne());
+      }
+    });
 
-    this.logFunction.log("Test 1");
-    // testing if data is not found
-    for (int i : testHashs) {
-      data = this.dht.remove(new Id(i));
-      assert data == null : "Data should be null";
-    }
+    test("Test 1", () -> {
+      ContentDataI data;
 
-    this.logFunction.log("Test 2");
-    // removing the data
-    for (int i : populatedHashs) {
-      data = this.dht.remove(new Id(i));
-      assert data != null : "Data should not be null";
-    }
+      // testing if data is not found
+      for (int i : testHashs) {
+        data = this.dht.remove(new Id(i));
+        forceAssert(data == null, "Data should be null");
+      }
+    });
+
+    test("Test 2", () -> {
+      ContentDataI data;
+
+      // removing the data
+      for (int i : populatedHashs) {
+        data = this.dht.remove(new Id(i));
+        forceAssert(data != null, "Data should not be null");
+      }
+    });
 
     // ----------------------
     // Random values
@@ -270,55 +332,67 @@ public class Tester {
 
     Integer[] randomHashs = new Integer[NB_RANDOM_VALUES];
 
-    // populating the DHT with random values
-    for (int i = 0; i < NB_RANDOM_VALUES; i++) {
-      randomHashs[i] = random.nextInt();
-      data = this.dht.put(new Id(randomHashs[i]), Personne.getRandomPersonne());
-    }
-
-    this.logFunction.log("Test 3");
-    for (int i = 0; i < NB_RANDOM_VALUES; i++) {
-      int n = random.nextInt();
-      if (!Arrays.asList(randomHashs).contains(n)) {
-        data = this.dht.remove(new Id(n));
-        assert data == null : "Data should be null";
+    test("Populate DHT", () -> {
+      // populating the DHT with random values
+      for (int i = 0; i < NB_RANDOM_VALUES; i++) {
+        randomHashs[i] = random.nextInt();
+        this.dht.put(new Id(randomHashs[i]), Personne.getRandomPersonne());
       }
-    }
+    });
 
-    this.logFunction.log("Test 4");
-    // removing the data
-    for (int i = 0; i < NB_RANDOM_VALUES; i++) {
-      data = dht.remove(new Id(randomHashs[i]));
-      assert data != null : "Data should not be null";
-    }
+    test("Test 3", () -> {
+      ContentDataI data;
+      for (int i = 0; i < NB_RANDOM_VALUES; i++) {
+        int n = random.nextInt();
+        if (!Arrays.asList(randomHashs).contains(n)) {
+          data = this.dht.remove(new Id(n));
+          forceAssert(data == null, "Data should be null");
+        }
+      }
+    });
+
+    test("Test 4", () -> {
+      ContentDataI data;
+      // removing the data
+      for (int i = 0; i < NB_RANDOM_VALUES; i++) {
+        data = dht.remove(new Id(randomHashs[i]));
+        forceAssert(data != null, "Data should not be null");
+      }
+    });
   }
 
   public void removeFindsAndCorrectlyRemoves() throws Exception {
     this.logFunction.log("Remove should find and correctly remove the data");
-    ContentDataI data;
 
     int[] testHashs = { -1, 0, 1, Integer.MAX_VALUE, 39192849, 27181930, 91030481, Integer.MIN_VALUE };
     Personne[] testData = new Personne[testHashs.length];
 
-    for (int i = 0; i < testHashs.length; i++) {
-      testData[i] = Personne.getRandomPersonne();
-      this.dht.put(new Id(testHashs[i]), testData[i]);
-    }
+    test("Populate DHT", () -> {
+      for (int i = 0; i < testHashs.length; i++) {
+        testData[i] = Personne.getRandomPersonne();
+        this.dht.put(new Id(testHashs[i]), testData[i]);
+      }
+    });
 
-    this.logFunction.log("Test 1");
-    // testing if data is found and removed
-    for (int i = 0; i < testHashs.length; i++) {
-      data = this.dht.remove(new Id(testHashs[i]));
-      assert data != null : "Data should not be null";
-      assert data.equals(testData[i]) : "Data should be equal to the one that was put";
-    }
+    test("Test 1", () -> {
+      ContentDataI data;
 
-    this.logFunction.log("Test 2");
-    // testing if data is not found
-    for (int i = 0; i < testHashs.length; i++) {
-      data = this.dht.remove(new Id(testHashs[i]));
-      assert data == null : "Data should be null";
-    }
+      // testing if data is found and removed
+      for (int i = 0; i < testHashs.length; i++) {
+        data = this.dht.remove(new Id(testHashs[i]));
+        forceAssert(data != null, "Data should not be null");
+        forceAssert(data.equals(testData[i]), "Data should be equal to the one that was put");
+      }
+    });
+
+    test("Test 2", () -> {
+      ContentDataI data;
+      // testing if data is not found
+      for (int i = 0; i < testHashs.length; i++) {
+        data = this.dht.remove(new Id(testHashs[i]));
+        forceAssert(data == null, "Data should be null");
+      }
+    });
 
     // ----------------------
     // Random values
@@ -330,26 +404,34 @@ public class Tester {
 
     Personne[] randomData = new Personne[NB_RANDOM_VALUES];
 
-    // populating the DHT with random values
-    for (int i = 0; i < NB_RANDOM_VALUES; i++) {
-      randomData[i] = Personne.getRandomPersonne();
-      data = this.dht.put(randomData[i].getNameId(), randomData[i]);
-    }
+    test("Populate DHT", () -> {
+      // populating the DHT with random values
+      for (int i = 0; i < NB_RANDOM_VALUES; i++) {
+        randomData[i] = Personne.getRandomPersonne();
+        this.dht.put(randomData[i].getNameId(), randomData[i]);
+      }
+    });
 
-    this.logFunction.log("Test 3");
-    // testing if data is found and removed
-    for (int i = 0; i < NB_RANDOM_VALUES; i++) {
-      data = this.dht.remove(randomData[i].getNameId());
-      assert data != null : "Data should not be null";
-      assert data.equals(randomData[i]) : "Data should be equal to the one that was put";
-    }
+    test("Test 3", () -> {
+      ContentDataI data;
 
-    this.logFunction.log("Test 4");
-    // testing if data is not found
-    for (int i = 0; i < NB_RANDOM_VALUES; i++) {
-      data = this.dht.remove(randomData[i].getNameId());
-      assert data == null : "Data should be null";
-    }
+      // testing if data is found and removed
+      for (int i = 0; i < NB_RANDOM_VALUES; i++) {
+        data = this.dht.remove(randomData[i].getNameId());
+        forceAssert(data != null, "Data should not be null");
+        forceAssert(data.equals(randomData[i]), "Data should be equal to the one that was put");
+      }
+    });
+
+    test("Test 4", () -> {
+      ContentDataI data;
+
+      // testing if data is not found
+      for (int i = 0; i < NB_RANDOM_VALUES; i++) {
+        data = this.dht.remove(randomData[i].getNameId());
+        forceAssert(data == null, "Data should be null");
+      }
+    });
   }
 
   // ------------------------------------------------------------------------
@@ -366,8 +448,7 @@ public class Tester {
   public void mapReduceReturnsAccWhenEmpty() throws Exception {
     this.logFunction.log("Map reduce should return acc when data is empty");
 
-    this.logFunction.log("Test 1");
-    {
+    test("Test 1", () -> {
       int result = this.dht.mapReduce(
           (_i) -> true,
           x -> x.getValue(Personne.AGE_ATTRIBUTE),
@@ -376,22 +457,20 @@ public class Tester {
           412 // formatter hack
       );
       this.logFunction.log("There should be " + ((result / 412) - 1) + " empty nodes. Result was " + result);
-      assert (result % 412 == 0) : "Result should be equal to acc";
-    }
+      forceAssert((result % 412 == 0), "Result should be equal to acc");
+    });
 
-    this.logFunction.log("Test 2");
-    {
+    test("Test 2", () -> {
       String result = this.dht.mapReduce(
           (_i) -> true,
           x -> x.getValue("notfound"),
           (a, b) -> a + (String) b,
           (a, b) -> a,
           "ouais");
-      assert result.equals("ouais") : "Result should be equal to acc";
-    }
+      forceAssert(result.equals("ouais"), "Result should be equal to acc");
+    });
 
-    this.logFunction.log("Test 3");
-    {
+    test("Test 3", () -> {
       Personne expeted = new Personne("ouais", "ouais", 0);
       Personne result = this.dht.mapReduce(
           (_i) -> true,
@@ -399,8 +478,8 @@ public class Tester {
           (a, b) -> new Personne(a.getNom(), ((Personne) b).getPrenom(), a.getAge() + ((Personne) b).getAge()),
           (a, b) -> a,
           expeted);
-      assert result.equals(expeted) : "Result should be equal to acc";
-    }
+      forceAssert(result.equals(expeted), "Result should be equal to acc");
+    });
   }
 
   public void mapReduceReturnsCorrectValue() throws Exception {
@@ -414,14 +493,15 @@ public class Tester {
         new Personne("Charlie", "Brown", 45),
     };
 
-    // populating the DHT
-    for (Personne p : population) {
-      this.dht.put(p.getNameId(), p);
-    }
+    test("Populate DHT", () -> {
+      // populating the DHT
+      for (Personne p : population) {
+        this.dht.put(p.getNameId(), p);
+      }
+    });
 
-    this.logFunction.log("Test 1");
     // sum of ages
-    {
+    test("Test 1", () -> {
       int result = this.dht.mapReduce(
           (_i) -> true,
           x -> x.getValue(Personne.AGE_ATTRIBUTE),
@@ -429,37 +509,34 @@ public class Tester {
           (a, b) -> a + b,
           0);
       this.logFunction.log("Result was " + result);
-      assert result == 175 : "Result is not correct, expected 175 but got " + result;
-    }
+      forceAssert(result == 175, "Result is not correct, expected 175 but got " + result);
+    });
 
-    this.logFunction.log("Test 2");
     // sum of ages if age >= 40
-    {
+    test("Test 2", () -> {
       int result = this.dht.mapReduce(
           (p) -> ((Personne) p).getAge() >= 40,
           x -> x.getValue(Personne.AGE_ATTRIBUTE),
           (a, b) -> a + (int) b,
           (a, b) -> a + b,
           0);
-      assert result == 85 : "Result is not correct, expected 85 but got " + result;
-    }
+      forceAssert(result == 85, "Result is not correct, expected 85 but got " + result);
+    });
 
-    this.logFunction.log("Test 3");
     // Names of the members of the Doe family concatenated
-    {
+    test("Test 3", () -> {
       String result = this.dht.mapReduce(
           (p) -> ((Personne) p).getNom().equals("Doe"),
           x -> x.getValue(Personne.PRENOM_ATTRIBUTE),
           (a, b) -> a + (String) b,
           (a, b) -> a + b,
           "");
-      assert result.equals("JohnJane") || result.equals("JaneJohn")
-          : "Result is not correct, expected JohnJane or JaneJohn but got " + result;
-    }
+      forceAssert(result.equals("JohnJane") || result.equals("JaneJohn"),
+          "Result is not correct, expected JohnJane or JaneJohn but got " + result);
+    });
 
-    this.logFunction.log("Test 4");
     // Names of the members of the Doe family but as an array
-    {
+    test("Test 4", () -> {
       String[] result = this.dht.mapReduce(
           (p) -> ((Personne) p).getNom().equals("Doe"),
           x -> x.getValue(Personne.PRENOM_ATTRIBUTE),
@@ -476,21 +553,28 @@ public class Tester {
             return newArray;
           },
           new String[0]);
-      assert result.length == 2 : "Result is not correct, expected 2 elements but got " + result.length;
-      assert Arrays.asList(result).contains("John")
-          : "Result is not correct, expected a John but got " + Arrays.toString(result);
-      assert Arrays.asList(result).contains("Jane")
-          : "Result is not correct, expected a Jane but got " + Arrays.toString(result);
-    }
+      forceAssert(result.length == 2, "Result is not correct, expected 2 elements but got " + result.length);
+      forceAssert(Arrays.asList(result).contains("John"),
+          "Result is not correct, expected a John but got " + Arrays.toString(result));
+      forceAssert(Arrays.asList(result).contains("Jane"),
+          "Result is not correct, expected a Jane but got " + Arrays.toString(result));
+    });
 
-    // remove data
-    for (Personne p : population) {
-      this.dht.remove(p.getNameId());
-    }
+    test("cleanup", () -> {
+      // removing the data
+      for (Personne p : population) {
+        dht.remove(p.getNameId());
+      }
+    });
   }
 
   @FunctionalInterface
   public interface LogFunction {
     void log(String message);
+  }
+
+  @FunctionalInterface
+  public interface TestFunction {
+    void test() throws Exception;
   }
 }
