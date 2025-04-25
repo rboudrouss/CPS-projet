@@ -1,8 +1,6 @@
 package com.rboud.cps.components;
 
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
@@ -93,28 +91,42 @@ public class AsyncNode<CAI extends ContentAccessCI, MRI extends MapReduceCI> ext
   public <R extends Serializable> void map(String computationURI, SelectorI selector, ProcessorI<R> processor)
       throws Exception {
     this.logMessage("[NODE] Mapping with URI: " + computationURI);
-    if (this.mapSyncResults.containsKey(computationURI)) {
-      this.logMessage("INFO MAPSYNC loop detected With URI " + computationURI);
+    if (this.mapResults.containsKey(computationURI)) {
+      this.logMessage("INFO MAP loop detected With URI " + computationURI);
       return;
     }
-
-    this.logMessage("[NODE] sending to next node.");
-    this.getNextMapReduceReference().mapSync(computationURI, selector, processor);
-
-
-    this.logMessage("[NODE] executing map on local storage.");
-    Stream<R> results = this.localStorage.values().stream()
-        .filter(selector)
-        .map(processor);
-
-    this.mapResults.put(computationURI, results);
-    this.logMessage("[NODE] Map finished.");
+    mapResults.compute(computationURI, (uri, existingFuture) -> {
+      return CompletableFuture.supplyAsync(() -> this.localStorage.values().stream().parallel()
+          .filter(selector)
+          .map(processor));
+    });
   }
 
   @Override
   public <A extends Serializable, R, I extends MapReduceResultReceptionCI> void reduce(String computationURI,
       ReductorI<A, R> reductor, CombinatorI<A> combinator, A identityAcc, A currentAcc, EndPointI<I> caller)
       throws Exception {
+    this.logMessage("[NODE] Reducing with URI: " + computationURI);
+
+    CompletableFuture<Stream<?>> futureStream = mapResults.get(computationURI);
+
+    if (futureStream == null) {
+      this.logMessage("INFO REDUCE loop detected With URI " + computationURI);
+      this.sendResult(caller, computationURI, this.nodeURI, currentAcc);
+      return;
+    }
+
+    futureStream.thenAcceptAsync(stream -> {
+      Stream<R> typedStream = (Stream<R>) stream;
+      A result = typedStream.reduce(identityAcc, reductor, combinator);
+      try {
+        this.getNextMapReduceReference().reduce(computationURI, reductor, combinator, identityAcc,
+            combinator.apply(currentAcc, result), caller);
+      } catch (Exception e) {
+        this.logMessage("ERROR returning reduce result: " + e.getMessage());
+        e.printStackTrace();
+      }
+    });
 
   }
 
