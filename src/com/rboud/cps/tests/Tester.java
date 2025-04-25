@@ -48,7 +48,7 @@ public class Tester {
     try {
       test.test();
       this.logFunction.log("SUCCESS");
-    } catch (Exception e) {
+    } catch (Throwable e) {
       this.logFunction.log("FAILURE");
       this.logFunction.log(e.getMessage() + "\n");
       e.printStackTrace();
@@ -575,6 +575,6 @@ public class Tester {
 
   @FunctionalInterface
   public interface TestFunction {
-    void test() throws Exception;
+    void test() throws Throwable;
   }
 }
