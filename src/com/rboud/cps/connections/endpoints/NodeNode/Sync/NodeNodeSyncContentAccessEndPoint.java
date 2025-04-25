@@ -1,21 +1,21 @@
-package com.rboud.cps.connections.endpoints.NodeNode;
+package com.rboud.cps.connections.endpoints.NodeNode.Sync;
 
-import com.rboud.cps.connections.connectors.ContentAccessConnector;
-import com.rboud.cps.connections.ports.Node.NodeContentAccessSyncInboundPort;
-import com.rboud.cps.connections.ports.Node.NodeContentAccessOutboundPort;
+import com.rboud.cps.connections.connectors.ContentAccessSyncConnector;
+import com.rboud.cps.connections.ports.Node.Sync.NodeContentAccessSyncInboundPort;
+import com.rboud.cps.connections.ports.Node.Sync.NodeContentAccessSyncOutboundPort;
 
 import fr.sorbonne_u.components.AbstractComponent;
 import fr.sorbonne_u.components.endpoints.BCMEndPoint;
 import fr.sorbonne_u.components.ports.AbstractInboundPort;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentAccessSyncCI;
 
-public class NodeNodeContentAccessEndPoint extends BCMEndPoint<ContentAccessSyncCI> {
+public class NodeNodeSyncContentAccessEndPoint extends BCMEndPoint<ContentAccessSyncCI> {
 
-  public NodeNodeContentAccessEndPoint() {
+  public NodeNodeSyncContentAccessEndPoint() {
     super(ContentAccessSyncCI.class, ContentAccessSyncCI.class);
   }
 
-  public NodeNodeContentAccessEndPoint(String uri) {
+  public NodeNodeSyncContentAccessEndPoint(String uri) {
     super(ContentAccessSyncCI.class, ContentAccessSyncCI.class, uri);
   }
 
@@ -28,12 +28,12 @@ public class NodeNodeContentAccessEndPoint extends BCMEndPoint<ContentAccessSync
 
   @Override
   protected ContentAccessSyncCI makeOutboundPort(AbstractComponent c, String inboundPortURI) throws Exception {
-    NodeContentAccessOutboundPort port = new NodeContentAccessOutboundPort(c);
+    NodeContentAccessSyncOutboundPort port = new NodeContentAccessSyncOutboundPort(c);
     port.publishPort();
     c.doPortConnection(
         port.getPortURI(),
         inboundPortURI,
-        ContentAccessConnector.class.getCanonicalName());
+        ContentAccessSyncConnector.class.getCanonicalName());
     return port;
   }
 

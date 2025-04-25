@@ -1,4 +1,4 @@
-package com.rboud.cps.connections.ports.Node;
+package com.rboud.cps.connections.ports.Node.Sync;
 
 import java.io.Serializable;
 
@@ -20,6 +20,17 @@ public class NodeMapReduceSyncInboundPort extends AbstractInboundPort implements
   public NodeMapReduceSyncInboundPort(String URI, ComponentI owner) throws Exception {
     super(URI, MapReduceSyncCI.class, owner);
   }
+
+  public NodeMapReduceSyncInboundPort(Class<? extends MapReduceSyncCI> implementedInterface,
+      ComponentI owner) throws Exception {
+    super(implementedInterface, owner);
+  }
+
+  public NodeMapReduceSyncInboundPort(Class<? extends MapReduceSyncCI> implementedInterface, String URI,
+      ComponentI owner) throws Exception {
+    super(URI, implementedInterface, owner);
+  }
+
 
   @Override
   public <R extends Serializable> void mapSync(String computationURI, SelectorI selector, ProcessorI<R> processor)

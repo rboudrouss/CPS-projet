@@ -4,8 +4,8 @@ import java.io.Serializable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.rboud.cps.connections.endpoints.NodeFacade.NodeFacadeMapReduceResultReceptionEndpoint;
-import com.rboud.cps.connections.endpoints.NodeFacade.NodeFacadeResultReceptionEndpoint;
+import com.rboud.cps.connections.endpoints.NodeFacade.FacadeReception.NodeFacadeMapReduceResultReceptionEndpoint;
+import com.rboud.cps.connections.endpoints.NodeFacade.FacadeReception.NodeFacadeResultReceptionEndpoint;
 
 import fr.sorbonne_u.components.annotations.OfferedInterfaces;
 import fr.sorbonne_u.components.annotations.RequiredInterfaces;

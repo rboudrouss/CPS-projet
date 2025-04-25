@@ -1,18 +1,22 @@
-package com.rboud.cps.connections.endpoints.NodeNode;
+package com.rboud.cps.connections.endpoints.NodeFacade.NodeSync;
 
-import com.rboud.cps.connections.connectors.MapReduceConnector;
-import com.rboud.cps.connections.ports.Node.NodeMapReduceSyncInboundPort;
-import com.rboud.cps.connections.ports.Node.NodeMapReduceOutboundPort;
+import com.rboud.cps.connections.connectors.MapReduceSyncConnector;
+import com.rboud.cps.connections.ports.Facade.FacadeMapReduceSyncOutboundPort;
+import com.rboud.cps.connections.ports.Node.Sync.NodeMapReduceSyncInboundPort;
 
 import fr.sorbonne_u.components.AbstractComponent;
 import fr.sorbonne_u.components.endpoints.BCMEndPoint;
 import fr.sorbonne_u.components.ports.AbstractInboundPort;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.MapReduceSyncCI;
 
-public class NodeNodeMapReduceEndPoint extends BCMEndPoint<MapReduceSyncCI> {
+public class NodeFacadeSyncMapReduceEndpoint extends BCMEndPoint<MapReduceSyncCI> {
 
-  public NodeNodeMapReduceEndPoint() {
+  public NodeFacadeSyncMapReduceEndpoint() {
     super(MapReduceSyncCI.class, MapReduceSyncCI.class);
+  }
+
+  public NodeFacadeSyncMapReduceEndpoint(String inboundPortURI) {
+    super(MapReduceSyncCI.class, MapReduceSyncCI.class, inboundPortURI);
   }
 
   @Override
@@ -24,12 +28,13 @@ public class NodeNodeMapReduceEndPoint extends BCMEndPoint<MapReduceSyncCI> {
 
   @Override
   protected MapReduceSyncCI makeOutboundPort(AbstractComponent c, String inboundPortURI) throws Exception {
-    NodeMapReduceOutboundPort port = new NodeMapReduceOutboundPort(c);
+    FacadeMapReduceSyncOutboundPort port = new FacadeMapReduceSyncOutboundPort(c);
     port.publishPort();
     c.doPortConnection(
-        port.getPortURI(),
-        inboundPortURI,
-        MapReduceConnector.class.getCanonicalName());
+      port.getPortURI(),
+      inboundPortURI,
+      MapReduceSyncConnector.class.getCanonicalName()
+    );
     return port;
   }
 

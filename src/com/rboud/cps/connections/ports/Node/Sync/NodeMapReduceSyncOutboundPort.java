@@ -1,4 +1,4 @@
-package com.rboud.cps.connections.ports.Node;
+package com.rboud.cps.connections.ports.Node.Sync;
 
 import java.io.Serializable;
 
@@ -10,14 +10,24 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.ProcessorI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.ReductorI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.SelectorI;
 
-public class NodeMapReduceOutboundPort extends AbstractOutboundPort implements MapReduceSyncCI {
+public class NodeMapReduceSyncOutboundPort extends AbstractOutboundPort implements MapReduceSyncCI {
 
-  public NodeMapReduceOutboundPort(ComponentI owner) throws Exception {
+  public NodeMapReduceSyncOutboundPort(ComponentI owner) throws Exception {
     super(MapReduceSyncCI.class, owner);
   }
 
-  public NodeMapReduceOutboundPort(String uri, ComponentI owner) throws Exception {
+  public NodeMapReduceSyncOutboundPort(String uri, ComponentI owner) throws Exception {
     super(uri, MapReduceSyncCI.class, owner);
+  }
+
+  public NodeMapReduceSyncOutboundPort(Class<? extends MapReduceSyncCI> implementedInterface, ComponentI owner)
+      throws Exception {
+    super(implementedInterface, owner);
+  }
+
+  public NodeMapReduceSyncOutboundPort(Class<? extends MapReduceSyncCI> implementedInterface, String URI,
+      ComponentI owner) throws Exception {
+    super(URI, implementedInterface, owner);
   }
 
   @Override

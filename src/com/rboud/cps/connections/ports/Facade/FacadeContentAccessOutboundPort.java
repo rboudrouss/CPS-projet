@@ -1,40 +1,39 @@
 package com.rboud.cps.connections.ports.Facade;
 
 import fr.sorbonne_u.components.ComponentI;
-import fr.sorbonne_u.components.ports.AbstractOutboundPort;
-import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentAccessSyncCI;
-import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentAccessSyncI;
+import fr.sorbonne_u.components.endpoints.EndPointI;
+import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentAccessCI;
+import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentAccessI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentDataI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentKeyI;
+import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ResultReceptionCI;
 
-public class FacadeContentAccessOutboundPort extends AbstractOutboundPort implements ContentAccessSyncCI {
+public class FacadeContentAccessOutboundPort extends FacadeContentAccessSyncOutboundPort implements ContentAccessCI {
 
   public FacadeContentAccessOutboundPort(ComponentI owner) throws Exception {
-    super(ContentAccessSyncCI.class, owner);
+    super(ContentAccessCI.class, owner);
   }
 
   public FacadeContentAccessOutboundPort(String URI, ComponentI owner) throws Exception {
-    super(URI, ContentAccessSyncCI.class, owner);
+    super(ContentAccessCI.class, URI, owner);
   }
 
   @Override
-  public ContentDataI getSync(String computationURI, ContentKeyI key) throws Exception {
-    return ((ContentAccessSyncI) this.getConnector()).getSync(computationURI, key);
+  public <I extends ResultReceptionCI> void get(String computationURI, ContentKeyI key, EndPointI<I> caller)
+      throws Exception {
+    ((ContentAccessI) this.getConnector()).get(computationURI, key, caller);
   }
 
   @Override
-  public ContentDataI putSync(String computationURI, ContentKeyI key, ContentDataI value) throws Exception {
-    return ((ContentAccessSyncI) this.getConnector()).putSync(computationURI, key, value);
+  public <I extends ResultReceptionCI> void put(String computationURI, ContentKeyI key, ContentDataI value,
+      EndPointI<I> caller) throws Exception {
+    ((ContentAccessI) this.getConnector()).put(computationURI, key, value, caller);
   }
 
   @Override
-  public ContentDataI removeSync(String computationURI, ContentKeyI key) throws Exception {
-    return ((ContentAccessSyncI) this.getConnector()).removeSync(computationURI, key);
+  public <I extends ResultReceptionCI> void remove(String computationURI, ContentKeyI key, EndPointI<I> caller)
+      throws Exception {
+    ((ContentAccessI) this.getConnector()).remove(computationURI, key, caller);
   }
 
-  @Override
-  public void clearComputation(String computationURI) throws Exception {
-    ((ContentAccessSyncI) this.getConnector()).clearComputation(computationURI);
-  }
-  
 }

@@ -1,4 +1,4 @@
-package com.rboud.cps.connections.ports.Node;
+package com.rboud.cps.connections.ports.Node.ResultReception;
 
 import fr.sorbonne_u.components.ComponentI;
 import fr.sorbonne_u.components.ports.AbstractOutboundPort;

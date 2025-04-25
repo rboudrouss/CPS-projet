@@ -1,4 +1,4 @@
-package com.rboud.cps.connections.ports.Node;
+package com.rboud.cps.connections.ports.Node.Sync;
 
 import fr.sorbonne_u.components.ComponentI;
 import fr.sorbonne_u.components.ports.AbstractInboundPort;
@@ -15,6 +15,16 @@ public class NodeContentAccessSyncInboundPort extends AbstractInboundPort implem
 
   public NodeContentAccessSyncInboundPort(String URI, ComponentI owner) throws Exception {
     super(URI, ContentAccessSyncCI.class, owner);
+  }
+
+  public NodeContentAccessSyncInboundPort(Class<? extends ContentAccessSyncCI> implementedInterface, String URI,
+      ComponentI owner) throws Exception {
+    super(URI, implementedInterface, owner);
+  }
+
+  public NodeContentAccessSyncInboundPort(Class<? extends ContentAccessSyncCI> implementedInterface, ComponentI owner)
+      throws Exception {
+    super(implementedInterface, owner);
   }
 
   @Override

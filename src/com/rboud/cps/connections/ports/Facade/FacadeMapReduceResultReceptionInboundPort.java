@@ -7,7 +7,7 @@ import fr.sorbonne_u.components.ports.AbstractInboundPort;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.MapReduceResultReceptionCI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.MapReduceResultReceptionI;
 
-public class FacadeMapReduceResultReceptionInboundPort extends AbstractInboundPort implements MapReduceResultReceptionI {
+public class FacadeMapReduceResultReceptionInboundPort extends AbstractInboundPort implements MapReduceResultReceptionCI {
 
   public FacadeMapReduceResultReceptionInboundPort(ComponentI owner)
       throws Exception {

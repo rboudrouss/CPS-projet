@@ -1,4 +1,5 @@
-package com.rboud.cps.connections.ports.Node;
+package com.rboud.cps.connections.ports.Facade;
+
 
 import fr.sorbonne_u.components.ComponentI;
 import fr.sorbonne_u.components.ports.AbstractOutboundPort;
@@ -7,14 +8,24 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentAccessSyncI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentDataI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentKeyI;
 
-public class NodeContentAccessOutboundPort extends AbstractOutboundPort implements ContentAccessSyncCI {
+public class FacadeContentAccessSyncOutboundPort extends AbstractOutboundPort implements ContentAccessSyncCI {
 
-  public NodeContentAccessOutboundPort(String uri, ComponentI owner) throws Exception {
-    super(uri, ContentAccessSyncCI.class, owner);
+  public FacadeContentAccessSyncOutboundPort(ComponentI owner) throws Exception {
+    super(ContentAccessSyncCI.class, owner);
   }
 
-  public NodeContentAccessOutboundPort(ComponentI owner) throws Exception {
-    super(ContentAccessSyncCI.class, owner);
+  public FacadeContentAccessSyncOutboundPort(String URI, ComponentI owner) throws Exception {
+    super(URI, ContentAccessSyncCI.class, owner);
+  }
+
+  public FacadeContentAccessSyncOutboundPort(Class<? extends ContentAccessSyncCI> implementedInterface, String URI,
+      ComponentI owner) throws Exception {
+    super(URI, implementedInterface, owner);
+  }
+
+  public FacadeContentAccessSyncOutboundPort(Class<? extends ContentAccessSyncCI> implementedInterface, ComponentI owner)
+      throws Exception {
+    super(implementedInterface, owner);
   }
 
   @Override
@@ -36,5 +47,5 @@ public class NodeContentAccessOutboundPort extends AbstractOutboundPort implemen
   public void clearComputation(String computationURI) throws Exception {
     ((ContentAccessSyncI) this.getConnector()).clearComputation(computationURI);
   }
-
+  
 }

@@ -1,8 +1,8 @@
-package com.rboud.cps.connections.endpoints.NodeFacade;
+package com.rboud.cps.connections.endpoints.NodeFacade.FacadeReception;
 
 import com.rboud.cps.connections.connectors.MapReduceResultReceptionConnector;
 import com.rboud.cps.connections.ports.Facade.FacadeMapReduceResultReceptionInboundPort;
-import com.rboud.cps.connections.ports.Node.NodeMapReduceResultReceptionOutboundPort;
+import com.rboud.cps.connections.ports.Node.ResultReception.NodeMapReduceResultReceptionOutboundPort;
 
 import fr.sorbonne_u.components.AbstractComponent;
 import fr.sorbonne_u.components.endpoints.BCMEndPoint;

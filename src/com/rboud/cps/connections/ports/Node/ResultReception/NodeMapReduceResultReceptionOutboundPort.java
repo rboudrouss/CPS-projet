@@ -1,5 +1,5 @@
 
-package com.rboud.cps.connections.ports.Node;
+package com.rboud.cps.connections.ports.Node.ResultReception;
 
 import java.io.Serializable;
 

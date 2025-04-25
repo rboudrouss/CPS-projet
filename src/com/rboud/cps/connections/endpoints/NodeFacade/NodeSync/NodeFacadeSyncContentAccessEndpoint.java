@@ -1,21 +1,21 @@
-package com.rboud.cps.connections.endpoints.NodeFacade;
+package com.rboud.cps.connections.endpoints.NodeFacade.NodeSync;
 
-import com.rboud.cps.connections.connectors.ContentAccessConnector;
-import com.rboud.cps.connections.ports.Facade.FacadeContentAccessOutboundPort;
-import com.rboud.cps.connections.ports.Node.NodeContentAccessSyncInboundPort;
+import com.rboud.cps.connections.connectors.ContentAccessSyncConnector;
+import com.rboud.cps.connections.ports.Facade.FacadeContentAccessSyncOutboundPort;
+import com.rboud.cps.connections.ports.Node.Sync.NodeContentAccessSyncInboundPort;
 
 import fr.sorbonne_u.components.AbstractComponent;
 import fr.sorbonne_u.components.endpoints.BCMEndPoint;
 import fr.sorbonne_u.components.ports.AbstractInboundPort;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentAccessSyncCI;
 
-public class NodeFacadeContentAccessEndpoint extends BCMEndPoint<ContentAccessSyncCI> {
+public class NodeFacadeSyncContentAccessEndpoint extends BCMEndPoint<ContentAccessSyncCI> {
 
-  public NodeFacadeContentAccessEndpoint() {
+  public NodeFacadeSyncContentAccessEndpoint() {
     super(ContentAccessSyncCI.class, ContentAccessSyncCI.class);
   }
 
-  public NodeFacadeContentAccessEndpoint(String inboundPortURI) {
+  public NodeFacadeSyncContentAccessEndpoint(String inboundPortURI) {
     super(ContentAccessSyncCI.class, ContentAccessSyncCI.class, inboundPortURI);
   }
 
@@ -28,12 +28,12 @@ public class NodeFacadeContentAccessEndpoint extends BCMEndPoint<ContentAccessSy
 
   @Override
   protected ContentAccessSyncCI makeOutboundPort(AbstractComponent c, String inboundPortURI) throws Exception {
-    FacadeContentAccessOutboundPort port = new FacadeContentAccessOutboundPort(c);
+    FacadeContentAccessSyncOutboundPort port = new FacadeContentAccessSyncOutboundPort(c);
     port.publishPort();
     c.doPortConnection(
         port.getPortURI(),
         inboundPortURI,
-        ContentAccessConnector.class.getCanonicalName());
+        ContentAccessSyncConnector.class.getCanonicalName());
     return port;
   }
 

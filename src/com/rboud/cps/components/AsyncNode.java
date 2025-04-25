@@ -37,6 +37,17 @@ public class AsyncNode<CAI extends ContentAccessCI, MRI extends MapReduceCI> ext
     super(nodeFacadeCompositeEndpoint, selfNodeCompositeEndpoint, nextNodeCompositeEndpoint);
   }
 
+  @Override
+  protected void initialiseServerConnection() throws Exception {
+    this.selfNodeCompositeEndpoint.initialiseServerSide(this);
+    if (this.nodeFacadeCompositeEndpoint != null) {
+      this.nodeFacadeCompositeEndpoint.initialiseServerSide(this);
+    }
+
+    this.toggleLogging();
+    this.toggleTracing();
+  }
+
   protected AsyncNode(ContentNodeAsyncCompositeEndPointI<CAI, MRI> nodeFacadeCompositeEndpoint,
       ContentNodeAsyncCompositeEndPointI<CAI, MRI> selfNodeCompositeEndpoint,
       ContentNodeAsyncCompositeEndPointI<CAI, MRI> nextNodeCompositeEndpoint, int minValue, int maxValue)

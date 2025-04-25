@@ -76,7 +76,7 @@ public class SyncNode<CAI extends ContentAccessSyncI, MRI extends MapReduceSyncI
     this.selfNodeCompositeEndpoint = selfNodeCompositeEndpoint;
     this.nextNodeCompositeEndpoint = nextNodeCompositeEndpoint;
 
-    this.initialiseConnection();
+    this.initialiseServerConnection();
   }
 
   protected SyncNode(
@@ -88,7 +88,7 @@ public class SyncNode<CAI extends ContentAccessSyncI, MRI extends MapReduceSyncI
     this.interval = new MyInterval(minValue, maxValue);
   }
 
-  private void initialiseConnection() throws Exception {
+  protected void initialiseServerConnection() throws Exception {
     this.selfNodeCompositeEndpoint.initialiseServerSide(this);
     if (this.nodeFacadeCompositeEndpoint != null) {
       this.nodeFacadeCompositeEndpoint.initialiseServerSide(this);
