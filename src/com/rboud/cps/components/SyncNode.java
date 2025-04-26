@@ -31,6 +31,14 @@ import fr.sorbonne_u.components.exceptions.ComponentStartException;
 public class SyncNode<CAI extends ContentAccessSyncI, MRI extends MapReduceSyncI> extends AbstractComponent
     implements ContentAccessSyncI, MapReduceSyncI {
 
+  // 2 threads are necessary for answering the request where this node is blocked
+  // by the facade request and gets an new request from a node. This is because
+  // in the inbount ports we used handleRequest an not calling the method
+  // directly.
+  // so the first method call is not handled by the facade thread.
+  protected static final int MIN_THREADS = 2;
+  protected static final int MIN_SCHEDULABLE_THREADS = 0;
+
   // URIs prefix
   public static final String URI_PREFIX = "node-";
 
@@ -45,7 +53,7 @@ public class SyncNode<CAI extends ContentAccessSyncI, MRI extends MapReduceSyncI
   protected MyInterval interval;
 
   // Storage
-  protected final Map<ContentKeyI, ContentDataI> localStorage;
+  protected Map<ContentKeyI, ContentDataI> localStorage;
 
   // Composite endpoint for connecting to the Facade, may be null
   protected ContentNodeBaseCompositeEndPointI<CAI, MRI> nodeFacadeCompositeEndpoint;
@@ -55,38 +63,58 @@ public class SyncNode<CAI extends ContentAccessSyncI, MRI extends MapReduceSyncI
   protected ContentNodeBaseCompositeEndPointI<CAI, MRI> nextNodeCompositeEndpoint;
 
   protected SyncNode(
+      int nbthreads,
+      int nbschedulablethreads,
       ContentNodeBaseCompositeEndPointI<CAI, MRI> nodeFacadeCompositeEndpoint,
       ContentNodeBaseCompositeEndPointI<CAI, MRI> selfNodeCompositeEndpoint,
-      ContentNodeBaseCompositeEndPointI<CAI, MRI> nextNodeCompositeEndpoint)
-      throws Exception {
-    // 2 threads are necessary for answering the request where this node is blocked
-    // by the facade request and gets an new request from a node. This is because
-    // in the inbount ports we used handleRequest an not calling the method
-    // directly.
-    // so the first method call is not handled by the facade thread.
-    super(2, 0);
+      ContentNodeBaseCompositeEndPointI<CAI, MRI> nextNodeCompositeEndpoint,
+      int minValue, int maxValue) throws Exception {
+    
+    super(nbthreads, nbschedulablethreads);
+    assert nbthreads >= MIN_THREADS;
+    assert nbschedulablethreads >= MIN_SCHEDULABLE_THREADS;
 
     assert selfNodeCompositeEndpoint != null;
     assert nextNodeCompositeEndpoint != null;
 
     this.nodeURI = URIGenerator.generateURI(URI_PREFIX);
-    this.localStorage = this.initLocalStorage();
 
-    this.interval = new MyInterval(Integer.MIN_VALUE, Integer.MAX_VALUE);
-    this.nodeFacadeCompositeEndpoint = nodeFacadeCompositeEndpoint;
-    this.selfNodeCompositeEndpoint = selfNodeCompositeEndpoint;
-    this.nextNodeCompositeEndpoint = nextNodeCompositeEndpoint;
+    this.initialise(nodeFacadeCompositeEndpoint, selfNodeCompositeEndpoint, nextNodeCompositeEndpoint, minValue,
+        maxValue);
+  }
 
-    this.initialiseServerConnection();
+  protected SyncNode(
+      int nbthreads,
+      int nbschedulablethreads,
+      ContentNodeBaseCompositeEndPointI<CAI, MRI> nodeFacadeCompositeEndpoint,
+      ContentNodeBaseCompositeEndPointI<CAI, MRI> selfNodeCompositeEndpoint,
+      ContentNodeBaseCompositeEndPointI<CAI, MRI> nextNodeCompositeEndpoint)
+      throws Exception {
+    //
+    this(nbthreads, nbschedulablethreads, nodeFacadeCompositeEndpoint, selfNodeCompositeEndpoint,
+        nextNodeCompositeEndpoint, Integer.MIN_VALUE, Integer.MAX_VALUE);
+  }
+
+  protected SyncNode(
+      ContentNodeBaseCompositeEndPointI<CAI, MRI> nodeFacadeCompositeEndpoint,
+      ContentNodeBaseCompositeEndPointI<CAI, MRI> selfNodeCompositeEndpoint,
+      ContentNodeBaseCompositeEndPointI<CAI, MRI> nextNodeCompositeEndpoint)
+      throws Exception {
+    this(2, 0, nodeFacadeCompositeEndpoint, selfNodeCompositeEndpoint, nextNodeCompositeEndpoint);
   }
 
   protected SyncNode(
       ContentNodeBaseCompositeEndPointI<CAI, MRI> nodeFacadeCompositeEndpoint,
       ContentNodeBaseCompositeEndPointI<CAI, MRI> selfNodeCompositeEndpoint,
       ContentNodeBaseCompositeEndPointI<CAI, MRI> nextNodeCompositeEndpoint,
-      int minValue, int maxValue) throws Exception {
-    this(nodeFacadeCompositeEndpoint, selfNodeCompositeEndpoint, nextNodeCompositeEndpoint);
-    this.interval = new MyInterval(minValue, maxValue);
+      int minValue, int maxValue)
+      throws Exception {
+    // 2 threads are necessary for answering the request where this node is blocked
+    // by the facade request and gets an new request from a node. This is because
+    // in the inbount ports we used handleRequest an not calling the method
+    // directly.
+    // so the first method call is not handled by the facade thread.
+    this(2, 0, nodeFacadeCompositeEndpoint, selfNodeCompositeEndpoint, nextNodeCompositeEndpoint, minValue, maxValue);
   }
 
   protected void initialiseServerConnection() throws Exception {
@@ -94,14 +122,43 @@ public class SyncNode<CAI extends ContentAccessSyncI, MRI extends MapReduceSyncI
     if (this.nodeFacadeCompositeEndpoint != null) {
       this.nodeFacadeCompositeEndpoint.initialiseServerSide(this);
     }
+  }
+
+  /**
+   * 
+   * Initialise the node, the parameters are those passed by the constructor.
+   * <!> Do not forget to initialise this.localStorage !!
+   * 
+   * @param nodeFacadeCompositeEndpoint The endpoint for the facade
+   * @param selfNodeCompositeEndpoint   The endpoint for the next node were this
+   *                                    node is the server, initialise the inbound
+   *                                    ports
+   * @param nextNodeCompositeEndpoint   The endpoint for the next node were this
+   *                                    node is the client, initialise the
+   *                                    outbound ports
+   * @param minValue                    the minimum value of the range of hash
+   *                                    values that this node is responsible for
+   * @param maxValue                    the maximum value of the range of hash
+   *                                    values that this node is responsible for
+   * @throws Exception
+   */
+  protected void initialise(
+      ContentNodeBaseCompositeEndPointI<CAI, MRI> nodeFacadeCompositeEndpoint,
+      ContentNodeBaseCompositeEndPointI<CAI, MRI> selfNodeCompositeEndpoint,
+      ContentNodeBaseCompositeEndPointI<CAI, MRI> nextNodeCompositeEndpoint,
+      int minValue,
+      int maxValue) throws Exception {
+    this.nodeFacadeCompositeEndpoint = nodeFacadeCompositeEndpoint;
+    this.selfNodeCompositeEndpoint = selfNodeCompositeEndpoint;
+    this.nextNodeCompositeEndpoint = nextNodeCompositeEndpoint;
+    this.interval = new MyInterval(minValue, maxValue);
+    this.localStorage = new HashMap<>();
+
+    this.initialiseServerConnection();
 
     this.toggleLogging();
     this.toggleTracing();
     this.getTracer().setTitle("Node " + this.nodeURI);
-  }
-
-  protected Map<ContentKeyI, ContentDataI> initLocalStorage() {
-    return new HashMap<>();
   }
 
   // ------------------------------------------------------------------------

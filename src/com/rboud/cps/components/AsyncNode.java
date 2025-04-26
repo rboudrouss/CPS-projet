@@ -1,7 +1,6 @@
 package com.rboud.cps.components;
 
 import java.io.Serializable;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
@@ -14,7 +13,7 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentAccessI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentDataI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentKeyI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ResultReceptionCI;
-import fr.sorbonne_u.cps.dht_mapreduce.interfaces.endpoints.ContentNodeAsyncCompositeEndPointI;
+import fr.sorbonne_u.cps.dht_mapreduce.interfaces.endpoints.ContentNodeBaseCompositeEndPointI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.CombinatorI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.MapReduceCI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.MapReduceI;
@@ -26,44 +25,43 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.SelectorI;
 @OfferedInterfaces(offered = { MapReduceCI.class, ContentAccessCI.class })
 @RequiredInterfaces(required = { MapReduceCI.class, ContentAccessCI.class, ResultReceptionCI.class,
     MapReduceResultReceptionCI.class })
-public class AsyncNode<CAI extends ContentAccessCI, MRI extends MapReduceCI> extends SyncNode<CAI, MRI>
+public class AsyncNode extends SyncNode<ContentAccessI, MapReduceI>
     implements MapReduceI, ContentAccessI {
+
+  protected static int MIN_THREADS = 2;
+  protected static int MIN_SCHEDULABLE_THREADS = 0;
+
+  protected AsyncNode(ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> nodeFacadeCompositeEndpoint,
+      ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> selfNodeCompositeEndpoint,
+      ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> nextNodeCompositeEndpoint) throws Exception {
+    super(nodeFacadeCompositeEndpoint, selfNodeCompositeEndpoint,
+        nextNodeCompositeEndpoint);
+  }
+
+  protected AsyncNode(ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> nodeFacadeCompositeEndpoint,
+      ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> selfNodeCompositeEndpoint,
+      ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> nextNodeCompositeEndpoint,
+      int minValue, int maxValue) throws Exception {
+    super(nodeFacadeCompositeEndpoint, selfNodeCompositeEndpoint,
+        nextNodeCompositeEndpoint, minValue, maxValue);
+  }
 
   protected ConcurrentHashMap<String, CompletableFuture<Stream<?>>> mapResults = new ConcurrentHashMap<>();
 
-  protected AsyncNode(ContentNodeAsyncCompositeEndPointI<CAI, MRI> nodeFacadeCompositeEndpoint,
-      ContentNodeAsyncCompositeEndPointI<CAI, MRI> selfNodeCompositeEndpoint,
-      ContentNodeAsyncCompositeEndPointI<CAI, MRI> nextNodeCompositeEndpoint)
-      throws Exception {
-    super(nodeFacadeCompositeEndpoint, selfNodeCompositeEndpoint, nextNodeCompositeEndpoint);
-  }
-
-  protected AsyncNode(ContentNodeAsyncCompositeEndPointI<CAI, MRI> nodeFacadeCompositeEndpoint,
-      ContentNodeAsyncCompositeEndPointI<CAI, MRI> selfNodeCompositeEndpoint,
-      ContentNodeAsyncCompositeEndPointI<CAI, MRI> nextNodeCompositeEndpoint, int minValue, int maxValue)
-      throws Exception {
-    super(nodeFacadeCompositeEndpoint, selfNodeCompositeEndpoint, nextNodeCompositeEndpoint, minValue, maxValue);
-  }
-
   @Override
-  protected void initialiseServerConnection() throws Exception {
-    this.selfNodeCompositeEndpoint.initialiseServerSide(this);
-    if (this.nodeFacadeCompositeEndpoint != null) {
-      this.nodeFacadeCompositeEndpoint.initialiseServerSide(this);
-    }
-
-    this.toggleLogging();
-    this.toggleTracing();
-  }
-
-  @Override
-  protected Map<ContentKeyI, ContentDataI> initLocalStorage() {
-    return new ConcurrentHashMap<>();
+  protected void initialise(ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> nodeFacadeCompositeEndpoint,
+      ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> selfNodeCompositeEndpoint,
+      ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> nextNodeCompositeEndpoint, int minValue,
+      int maxValue) throws Exception {
+    super.initialise(nodeFacadeCompositeEndpoint, selfNodeCompositeEndpoint,
+        nextNodeCompositeEndpoint, minValue, maxValue);
+    this.localStorage = new ConcurrentHashMap<>();
   }
 
   // ------------------------------------------------------------------------
   // Content Access methods
   // ------------------------------------------------------------------------
+
 
   @Override
   public <I extends ResultReceptionCI> void get(String computationURI, ContentKeyI key, EndPointI<I> caller)
