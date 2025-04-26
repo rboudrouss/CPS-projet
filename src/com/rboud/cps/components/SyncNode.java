@@ -71,8 +71,6 @@ public class SyncNode<CAI extends ContentAccessSyncI, MRI extends MapReduceSyncI
       int minValue, int maxValue) throws Exception {
     
     super(nbthreads, nbschedulablethreads);
-    assert nbthreads >= MIN_THREADS;
-    assert nbschedulablethreads >= MIN_SCHEDULABLE_THREADS;
 
     assert selfNodeCompositeEndpoint != null;
     assert nextNodeCompositeEndpoint != null;
@@ -81,6 +79,7 @@ public class SyncNode<CAI extends ContentAccessSyncI, MRI extends MapReduceSyncI
 
     this.initialise(nodeFacadeCompositeEndpoint, selfNodeCompositeEndpoint, nextNodeCompositeEndpoint, minValue,
         maxValue);
+    assert this.localStorage != null : "localStorage is null";
   }
 
   protected SyncNode(
