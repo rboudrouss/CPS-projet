@@ -81,13 +81,10 @@ public class AsyncNode<CAI extends ContentAccessCI, MRI extends MapReduceCI> ext
   public <I extends ResultReceptionCI> void put(String computationURI, ContentKeyI key, ContentDataI value,
       EndPointI<I> caller) throws Exception {
     this.logMessage("[NODE] Putting content with key: " + key + " and URI: " + computationURI);
-    this.logMessage("\n[NODE] hashmap content: " + this.localStorage);
     if (!this.interval.in(key.hashCode())) {
-      this.logMessage("[NODE] Key " + key + " is not in the range of this node.");
       this.getNextContentAccessReference().put(computationURI, key, value, caller);
       return;
     }
-    this.logMessage("[NODE] Key " + key + " is in the range of this node.");
     this.sendResult(caller, computationURI, this.localStorage.put(key, value));
     this.logMessage("\n[NODE] New hashmap content: " + this.localStorage);
   }
@@ -96,13 +93,13 @@ public class AsyncNode<CAI extends ContentAccessCI, MRI extends MapReduceCI> ext
   public <I extends ResultReceptionCI> void remove(String computationURI, ContentKeyI key, EndPointI<I> caller)
       throws Exception {
     this.logMessage("[NODE] Removing content with key: " + key + " and URI: " + computationURI);
-    this.logMessage("\n[NODE] hashmap content: " + this.localStorage);
     if (!this.interval.in(key.hashCode())) {
       this.getNextContentAccessReference().remove(computationURI, key, caller);
       return;
     }
 
     this.sendResult(caller, computationURI, this.localStorage.remove(key));
+    this.logMessage("\n[NODE] New hashmap content: " + this.localStorage);
   }
 
   // ------------------------------------------------------------------------
@@ -112,49 +109,59 @@ public class AsyncNode<CAI extends ContentAccessCI, MRI extends MapReduceCI> ext
   @Override
   public <R extends Serializable> void map(String computationURI, SelectorI selector, ProcessorI<R> processor)
       throws Exception {
-    this.logMessage("[NODE] Mapping with URI: " + computationURI);
-    if (this.mapResults.containsKey(computationURI)) {
-      this.logMessage("INFO MAP loop detected With URI " + computationURI);
-      return;
-    }
     mapResults.compute(computationURI, (uri, existingFuture) -> {
+      this.logMessage("[NODE] Mapping with URI: " + computationURI);
+      if (existingFuture != null) {
+        this.logMessage("INFO MAP loop detected With URI " + computationURI);
+        return existingFuture;
+      }
+
+      try {
+        this.getNextMapReduceReference().map(computationURI, selector, processor);
+      } catch (Exception e) {
+        this.logMessage("ERROR sending map to next node: " + e.getMessage());
+        e.printStackTrace();
+      }
+
       return CompletableFuture.supplyAsync(() -> this.localStorage.values().stream()
           .filter(selector)
           .map(processor));
     });
-
-    this.getNextMapReduceReference().map(computationURI, selector, processor);
   }
 
   @Override
   public <A extends Serializable, R, I extends MapReduceResultReceptionCI> void reduce(String computationURI,
       ReductorI<A, R> reductor, CombinatorI<A> combinator, A identityAcc, A currentAcc, EndPointI<I> caller)
       throws Exception {
-    this.logMessage("[NODE] Reducing with URI: " + computationURI + " and accumulator: " + currentAcc);
+    mapResults.compute(computationURI, (uri, existingFuture) -> {
+      this.logMessage("[NODE] Reducing with URI: " + computationURI + " and accumulator: " + currentAcc);
 
-    CompletableFuture<Stream<?>> futureStream = mapResults.get(computationURI);
-
-    if (futureStream == null) {
-      this.logMessage("INFO REDUCE loop detected With URI " + computationURI);
-      this.sendResult(caller, computationURI, this.nodeURI, currentAcc);
-      return;
-    }
-
-    this.logMessage("\n awaiting for map result \n");
-    futureStream.thenAcceptAsync(stream -> {
-      this.logMessage("\n Future Resolved \n");
-      Stream<R> typedStream = (Stream<R>) stream;
-      A result = typedStream.reduce(identityAcc, reductor, combinator);
-      A newAcc = combinator.apply(identityAcc, result);
-      this.logMessage("[NODE] Reduce result: " + result + " with new accumulator: " + newAcc);
-      try {
-        this.logMessage("[NODE] Sending reduce result with URI: " + computationURI + " and result: " + newAcc);
-        this.getNextMapReduceReference().reduce(computationURI, reductor, combinator, identityAcc,
-            newAcc, caller);
-      } catch (Exception e) {
-        this.logMessage("ERROR returning reduce result: " + e.getMessage());
-        e.printStackTrace();
+      if (existingFuture == null) {
+        this.logMessage("INFO REDUCE loop detected With URI " + computationURI + " and accumulator: "
+            + currentAcc);
+        try {
+          this.sendResult(caller, computationURI, this.nodeURI, currentAcc);
+        } catch (Exception e) {
+          this.logMessage("ERROR sending reduce result: " + e.getMessage());
+          e.printStackTrace();
+        }
+        return null;
       }
+
+      existingFuture.thenAcceptAsync(stream -> {
+        Stream<R> typedStream = (Stream<R>) stream;
+        A result = typedStream.reduce(identityAcc, reductor, combinator);
+        A newAcc = combinator.apply(currentAcc, result);
+        try {
+          this.logMessage("[NODE] Calling next node reduce with URI: " + computationURI + " and newAcc: " + newAcc);
+          this.getNextMapReduceReference().reduce(computationURI, reductor, combinator, identityAcc,
+              newAcc, caller);
+        } catch (Exception e) {
+          this.logMessage("ERROR sending reduce to next node : " + e.getMessage());
+          e.printStackTrace();
+        }
+      });
+      return null;
     });
 
   }

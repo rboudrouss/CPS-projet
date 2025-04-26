@@ -40,7 +40,7 @@ public class Tester {
    * logs Success if the test passes
    * 
    * @param label the label of the test
-   * @param test the test to run
+   * @param test  the test to run
    * 
    */
   public void test(String label, TestFunction test) {
@@ -54,7 +54,7 @@ public class Tester {
       this.logFunction.log(e.getMessage() + "\n");
       if (this.STOP_ON_FAILURE) {
         this.logFunction.log("STOP_ON_FAILURE enabled, Stopping tests");
-        throw new RuntimeException("Stopping tests");
+        throw new RuntimeException(e);
       }
       e.printStackTrace();
     }
@@ -66,7 +66,7 @@ public class Tester {
    * Works even if the assert statement is disabled
    * 
    * @param condition the condition to check
-   * @param message the message to display if the condition is false
+   * @param message   the message to display if the condition is false
    * @throws Error if the condition is false
    */
   public void forceAssert(boolean condition, String message) throws Error {
@@ -132,7 +132,6 @@ public class Tester {
     int[] testHashs = { -1, 0, 1, Integer.MIN_VALUE, Integer.MAX_VALUE, };
     Personne[] testData = new Personne[testHashs.length];
 
-    this.logFunction.log("Test 1");
     test("Test 1", () -> {
       ContentDataI data;
       for (int i = 0; i < testHashs.length; i++) {
