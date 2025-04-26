@@ -28,22 +28,27 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.SelectorI;
 public class AsyncNode extends SyncNode<ContentAccessI, MapReduceI>
     implements MapReduceI, ContentAccessI {
 
-  protected static int MIN_THREADS = 2;
+  protected static int MIN_THREADS = 1;
   protected static int MIN_SCHEDULABLE_THREADS = 0;
-
-  protected AsyncNode(ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> nodeFacadeCompositeEndpoint,
-      ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> selfNodeCompositeEndpoint,
-      ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> nextNodeCompositeEndpoint) throws Exception {
-    super(nodeFacadeCompositeEndpoint, selfNodeCompositeEndpoint,
-        nextNodeCompositeEndpoint);
-  }
 
   protected AsyncNode(ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> nodeFacadeCompositeEndpoint,
       ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> selfNodeCompositeEndpoint,
       ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> nextNodeCompositeEndpoint,
       int minValue, int maxValue) throws Exception {
-    super(nodeFacadeCompositeEndpoint, selfNodeCompositeEndpoint,
+    super(MIN_THREADS, MIN_SCHEDULABLE_THREADS, nodeFacadeCompositeEndpoint, selfNodeCompositeEndpoint,
         nextNodeCompositeEndpoint, minValue, maxValue);
+    assert this.localStorage instanceof ConcurrentHashMap : "Local storage should be a ConcurrentHashMap";
+  }
+
+  protected AsyncNode(ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> nodeFacadeCompositeEndpoint,
+      ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> selfNodeCompositeEndpoint,
+      ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> nextNodeCompositeEndpoint) throws Exception {
+    this(
+        nodeFacadeCompositeEndpoint,
+        selfNodeCompositeEndpoint,
+        nextNodeCompositeEndpoint,
+        Integer.MIN_VALUE,
+        Integer.MAX_VALUE);
   }
 
   protected ConcurrentHashMap<String, CompletableFuture<Stream<?>>> mapResults = new ConcurrentHashMap<>();
@@ -61,7 +66,6 @@ public class AsyncNode extends SyncNode<ContentAccessI, MapReduceI>
   // ------------------------------------------------------------------------
   // Content Access methods
   // ------------------------------------------------------------------------
-
 
   @Override
   public <I extends ResultReceptionCI> void get(String computationURI, ContentKeyI key, EndPointI<I> caller)
