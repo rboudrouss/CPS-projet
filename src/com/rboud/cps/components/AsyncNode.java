@@ -31,6 +31,8 @@ public class AsyncNode extends SyncNode<ContentAccessI, MapReduceI>
   protected static int MIN_THREADS = 1;
   protected static int MIN_SCHEDULABLE_THREADS = 0;
 
+  protected ConcurrentHashMap<String, CompletableFuture<Stream<?>>> mapResults = new ConcurrentHashMap<>();
+
   protected AsyncNode(ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> nodeFacadeCompositeEndpoint,
       ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> selfNodeCompositeEndpoint,
       ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> nextNodeCompositeEndpoint,
@@ -51,8 +53,6 @@ public class AsyncNode extends SyncNode<ContentAccessI, MapReduceI>
         Integer.MAX_VALUE);
   }
 
-  protected ConcurrentHashMap<String, CompletableFuture<Stream<?>>> mapResults = new ConcurrentHashMap<>();
-
   @Override
   protected void initialise(ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> nodeFacadeCompositeEndpoint,
       ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> selfNodeCompositeEndpoint,
@@ -70,38 +70,38 @@ public class AsyncNode extends SyncNode<ContentAccessI, MapReduceI>
   @Override
   public <I extends ResultReceptionCI> void get(String computationURI, ContentKeyI key, EndPointI<I> caller)
       throws Exception {
-    this.logMessage("[NODE] Getting content with key: " + key + " and URI: " + computationURI);
+    this.logMessage("[NODE-GET] Getting content with key: " + key + " and URI: " + computationURI);
     if (!this.interval.in(key.hashCode())) {
       this.getNextContentAccessReference().get(computationURI, key, caller);
       return;
     }
 
-    this.sendResult(caller, computationURI, this.localStorage.get(key));
+    this.sendResult("GET", caller, computationURI, this.localStorage.get(key));
   }
 
   @Override
   public <I extends ResultReceptionCI> void put(String computationURI, ContentKeyI key, ContentDataI value,
       EndPointI<I> caller) throws Exception {
-    this.logMessage("[NODE] Putting content with key: " + key + " and URI: " + computationURI);
+    this.logMessage("[NODE-PUT] Putting content with key: " + key + " and URI: " + computationURI);
     if (!this.interval.in(key.hashCode())) {
       this.getNextContentAccessReference().put(computationURI, key, value, caller);
       return;
     }
-    this.sendResult(caller, computationURI, this.localStorage.put(key, value));
-    this.logMessage("\n[NODE] New hashmap content: " + this.localStorage);
+    this.sendResult("PUT", caller, computationURI, this.localStorage.put(key, value));
+    this.logMessage("\n[NODE-PUT] New hashmap content: " + this.localStorage);
   }
 
   @Override
   public <I extends ResultReceptionCI> void remove(String computationURI, ContentKeyI key, EndPointI<I> caller)
       throws Exception {
-    this.logMessage("[NODE] Removing content with key: " + key + " and URI: " + computationURI);
+    this.logMessage("[NODE-REMOVE] Removing content with key: " + key + " and URI: " + computationURI);
     if (!this.interval.in(key.hashCode())) {
       this.getNextContentAccessReference().remove(computationURI, key, caller);
       return;
     }
 
-    this.sendResult(caller, computationURI, this.localStorage.remove(key));
-    this.logMessage("\n[NODE] New hashmap content: " + this.localStorage);
+    this.sendResult("REMOVE", caller, computationURI, this.localStorage.remove(key));
+    this.logMessage("\n[NODE-REMOVE] New hashmap content: " + this.localStorage);
   }
 
   // ------------------------------------------------------------------------
@@ -112,16 +112,26 @@ public class AsyncNode extends SyncNode<ContentAccessI, MapReduceI>
   public <R extends Serializable> void map(String computationURI, SelectorI selector, ProcessorI<R> processor)
       throws Exception {
     mapResults.compute(computationURI, (uri, existingFuture) -> {
-      this.logMessage("[NODE] Mapping with URI: " + computationURI);
-      if (existingFuture != null) {
-        this.logMessage("INFO MAP loop detected With URI " + computationURI);
+      this.logMessage("[NODE-MAP] Calling map with uri " + computationURI);
+      this.logMessage(
+          "[NODE-MAP] origin uri " + getOriginNodeFromUri(computationURI) + " this node uri " + this.nodeURI);
+
+      if (this.nodeURI.equals(getOriginNodeFromUri(computationURI))) {
+        this.logMessage("[NODE-MAP] Looped map !");
         return existingFuture;
       }
 
+      if (existingFuture != null) {
+        this.logMessage("[NODE-MAP] MAP WARNING : smh got called but value already existing.");
+        return existingFuture;
+      }
+
+      String newUri = isComputationUriStamped(computationURI) ? computationURI : stampOriginNodeToUri(computationURI);
+
       try {
-        this.getNextMapReduceReference().map(computationURI, selector, processor);
+        this.getNextMapReduceReference().map(newUri, selector, processor);
       } catch (Exception e) {
-        this.logMessage("ERROR sending map to next node: " + e.getMessage());
+        this.logMessage("[NODE-MAP] MAP ERROR sending to next node");
         e.printStackTrace();
       }
 
@@ -136,34 +146,53 @@ public class AsyncNode extends SyncNode<ContentAccessI, MapReduceI>
       ReductorI<A, R> reductor, CombinatorI<A> combinator, A identityAcc, A currentAcc, EndPointI<I> caller)
       throws Exception {
     mapResults.compute(computationURI, (uri, existingFuture) -> {
-      this.logMessage("[NODE] Reducing with URI: " + computationURI + " and accumulator: " + currentAcc);
+      this.logMessage("[NODE-REDUCE] Reducing with URI: " + computationURI + " and accumulator: " + currentAcc);
 
-      if (existingFuture == null) {
-        this.logMessage("INFO REDUCE loop detected With URI " + computationURI + " and accumulator: "
-            + currentAcc);
+      if (this.nodeURI.equals(getOriginNodeFromUri(computationURI))) {
+        this.logMessage("[NODE-REDUCE] looped Reduce ! Returing acc " + currentAcc);
         try {
-          this.sendResult(caller, computationURI, this.nodeURI, currentAcc);
+          this.sendResult("REDUCE", caller, getOriginalComputationUriFromUri(computationURI), this.nodeURI, currentAcc);
         } catch (Exception e) {
-          this.logMessage("ERROR sending reduce result: " + e.getMessage());
+          this.logMessage("[NODE-REDUCE] ERROR sending reduce result: " + e.getMessage());
           e.printStackTrace();
         }
-        return null;
+        return existingFuture;
       }
+
+      if (existingFuture == null && !isComputationUriStamped(computationURI)) {
+        this.logMessage("[NODE-REDUCE] WARNING nothing in the mapResult, maybe received reduce before map ?");
+        this.logMessage("[NODE-REDUCE] not stamping the uri and sending to next node after a short delay");
+        try {
+          Thread.sleep(20);
+          this.getNextMapReduceReference().reduce(computationURI, reductor, combinator, identityAcc, currentAcc,
+              caller);
+        } catch (Exception e) {
+          this.logMessage("[NODE-REDUCE] ERROR sending result to next node");
+          e.printStackTrace();
+        }
+      }
+
+      if (existingFuture == null) {
+        this.logMessage("[NODE-REDUCE] WARNING smh nothing the mapresult and uri already stamped ? Something is wrong");
+        return existingFuture;
+      }
+
+      String newUri = isComputationUriStamped(computationURI) ? computationURI : stampOriginNodeToUri(computationURI);
 
       existingFuture.thenAcceptAsync(stream -> {
         Stream<R> typedStream = (Stream<R>) stream;
         A result = typedStream.reduce(identityAcc, reductor, combinator);
         A newAcc = combinator.apply(currentAcc, result);
         try {
-          this.logMessage("[NODE] Calling next node reduce with URI: " + computationURI + " and newAcc: " + newAcc);
-          this.getNextMapReduceReference().reduce(computationURI, reductor, combinator, identityAcc,
+          this.logMessage("[NODE-REDUCE] Calling next node reduce with URI: " + newUri + " and newAcc: " + newAcc);
+          this.getNextMapReduceReference().reduce(newUri, reductor, combinator, identityAcc,
               newAcc, caller);
         } catch (Exception e) {
-          this.logMessage("ERROR sending reduce to next node : " + e.getMessage());
+          this.logMessage("[NODE-REDUCE] ERROR sending reduce to next node : " + e.getMessage());
           e.printStackTrace();
         }
       });
-      return null;
+      return existingFuture;
     });
 
   }
@@ -172,21 +201,41 @@ public class AsyncNode extends SyncNode<ContentAccessI, MapReduceI>
   // Helper methods
   // ------------------------------------------------------------------------
 
-  protected <I extends ResultReceptionCI> void sendResult(EndPointI<I> caller, String computationURI,
+  protected <I extends ResultReceptionCI> void sendResult(String method, EndPointI<I> caller, String computationURI,
       Serializable result) throws Exception {
-    this.logMessage("[NODE] Sending result with computation URI: " + computationURI + " and result: "
+    this.logMessage("[NODE-" + method + "] Sending result with computation URI: " + computationURI + " and result: "
         + result);
     caller.initialiseClientSide(this);
     caller.getClientSideReference().acceptResult(computationURI, result);
     caller.cleanUpClientSide();
   }
 
-  protected <I extends MapReduceResultReceptionCI> void sendResult(EndPointI<I> caller, String computationURI,
+  protected <I extends MapReduceResultReceptionCI> void sendResult(String method, EndPointI<I> caller,
+      String computationURI,
       String emitterId, Serializable acc) throws Exception {
-    this.logMessage("[NODE] Sending result with computation URI: " + computationURI + " and result: "
+    this.logMessage("[NODE-" + method + "] Sending result with computation URI: " + computationURI + " and result: "
         + acc);
     caller.initialiseClientSide(this);
     caller.getClientSideReference().acceptResult(computationURI, emitterId, acc);
     caller.cleanUpClientSide();
   }
+
+  private String stampOriginNodeToUri(String uri) {
+    return uri + "#" + this.nodeURI;
+  }
+
+  private String getOriginNodeFromUri(String uri) {
+    if (!isComputationUriStamped(uri))
+      return null;
+    return uri.split("#")[1];
+  }
+
+  private String getOriginalComputationUriFromUri(String uri) {
+    return uri.split("#")[0];
+  }
+
+  private boolean isComputationUriStamped(String uri) {
+    return uri.contains("#");
+  }
+
 }

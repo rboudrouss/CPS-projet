@@ -13,7 +13,7 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.frontend.DHTServicesI;
 public class Tester {
   private final int NB_RANDOM_VALUES = 10;
   private boolean ALLOW_RANDOM = true;
-  private boolean STOP_ON_FAILURE = true;
+  private boolean STOP_ON_FAILURE = false;
 
   private LogFunction logFunction = message -> System.out.println(message);
 
