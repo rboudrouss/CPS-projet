@@ -26,42 +26,101 @@ import fr.sorbonne_u.components.annotations.RequiredInterfaces;
 import fr.sorbonne_u.components.exceptions.ComponentShutdownException;
 import fr.sorbonne_u.components.exceptions.ComponentStartException;
 
+/**
+ * Represents a synchronous node in a distributed content management and
+ * MapReduce system.
+ * This class implements both MapReduceSync and ContentAccessSync interfaces to
+ * provide
+ * synchronous operations for distributed computing.
+ * 
+ * The node maintains a map for storing content data and map operation results,
+ * supporting synchronous execution of map-reduce operations across a ring of
+ * nodes.
+ * 
+ * 
+ * Key features:
+ * - Synchronous content management (get, put, remove)
+ * - Distributed map-reduce operations
+ * - Ring-based node organization
+ * - Hash-based content distribution
+ * - Node-to-node communication
+ * 
+ * The node uses an interval mechanism to determine which content
+ * it is responsible
+ * for storing based on hash values. Content operations are
+ * forwarded to the appropriate
+ * node in the ring if the current node is not responsible for the
+ * given key.
+ * 
+ * Implementation notes:
+ * - Uses HashMap for content storage
+ * - Implements synchronous request handling
+ * - Maintains node interval boundaries for content distribution
+ * - Supports distributed map-reduce operations with result
+ * aggregation
+ * 
+ * @param <CAI> The interface type for content access operations
+ * @param <MRI> The interface type for map-reduce operations
+ * 
+ * @see ContentAccessSyncI
+ * @see MapReduceSyncI
+ * @see HashMap
+ * @see MyInterval
+ */
 @OfferedInterfaces(offered = { ContentAccessSyncCI.class, MapReduceSyncCI.class })
 @RequiredInterfaces(required = { MapReduceSyncCI.class, ContentAccessSyncCI.class })
 public class SyncNode<CAI extends ContentAccessSyncI, MRI extends MapReduceSyncI> extends AbstractComponent
     implements ContentAccessSyncI, MapReduceSyncI {
 
-  // 2 threads are necessary for answering the request where this node is blocked
-  // by the facade request and gets an new request from a node. This is because
-  // in the inbount ports we used handleRequest an not calling the method
-  // directly.
-  // so the first method call is not handled by the facade thread.
+  /** Minimum number of threads required for handling concurrent requests */
   protected static final int MIN_THREADS = 2;
+  /** Minimum number of schedulable threads */
   protected static final int MIN_SCHEDULABLE_THREADS = 0;
 
-  // URIs prefix
+  /** URI prefix for node identification */
   public static final String URI_PREFIX = "node-";
 
-  // String id
+  /** Unique identifier for this node */
   protected String nodeURI;
 
-  // key: computationURI, value: results extended from Array.
-  // Used to store the results of a map computation for a given URI
+  /** Storage for map computation results keyed by computation URI */
   protected Map<String, Stream<?>> mapSyncResults = new HashMap<>();
 
-  // Describe the range of hash values that this node is responsible for
+  /** Range of hash values this node is responsible for */
   protected MyInterval interval;
 
-  // Storage
+  /** Local storage for content data */
   protected Map<ContentKeyI, ContentDataI> localStorage;
 
-  // Composite endpoint for connecting to the Facade, may be null
+  /** Composite endpoint for facade connection, can be null */
   protected ContentNodeBaseCompositeEndPointI<CAI, MRI> nodeFacadeCompositeEndpoint;
 
-  // Composite endpoint for connecting to next node in chain, both CANNOT BE NULL
+  /**
+   * Composite endpoint for next node in chain of which this node is the server,
+   * cannot be null
+   */
   protected ContentNodeBaseCompositeEndPointI<CAI, MRI> selfNodeCompositeEndpoint;
+
+  /**
+   * Composite endpoint for next node in chain of which this node is the client,
+   * cannot be null
+   */
   protected ContentNodeBaseCompositeEndPointI<CAI, MRI> nextNodeCompositeEndpoint;
 
+  /**
+   * Creates a new SyncNode with specified parameters.
+   *
+   * @param nbthreads                   Number of threads
+   * @param nbschedulablethreads        Number of schedulable threads
+   * @param nodeFacadeCompositeEndpoint Endpoint for facade connection
+   * @param selfNodeCompositeEndpoint   Endpoint for this node
+   * @param nextNodeCompositeEndpoint   Endpoint for next node
+   * @param minValue                    Minimum hash value this node handles
+   * @param maxValue                    Maximum hash value this node handles
+   *
+   * @throws Exception if BCM initialization fails or server initialization in
+   *                   endpoints fails
+   */
   protected SyncNode(
       int nbthreads,
       int nbschedulablethreads,
@@ -69,7 +128,7 @@ public class SyncNode<CAI extends ContentAccessSyncI, MRI extends MapReduceSyncI
       ContentNodeBaseCompositeEndPointI<CAI, MRI> selfNodeCompositeEndpoint,
       ContentNodeBaseCompositeEndPointI<CAI, MRI> nextNodeCompositeEndpoint,
       int minValue, int maxValue) throws Exception {
-    
+
     super(nbthreads, nbschedulablethreads);
 
     assert selfNodeCompositeEndpoint != null;
@@ -82,6 +141,18 @@ public class SyncNode<CAI extends ContentAccessSyncI, MRI extends MapReduceSyncI
     assert this.localStorage != null : "localStorage is null";
   }
 
+  /**
+   * Creates a new SyncNode with specified parameters.
+   *
+   * @param nbthreads                   Number of threads
+   * @param nbschedulablethreads        Number of schedulable threads
+   * @param nodeFacadeCompositeEndpoint Endpoint for facade connection
+   * @param selfNodeCompositeEndpoint   Endpoint for this node
+   * @param nextNodeCompositeEndpoint   Endpoint for next node
+   * 
+   * @throws Exception if BCM initialization fails or server initialization in
+   *                   endpoints fails
+   */
   protected SyncNode(
       int nbthreads,
       int nbschedulablethreads,
@@ -94,6 +165,15 @@ public class SyncNode<CAI extends ContentAccessSyncI, MRI extends MapReduceSyncI
         nextNodeCompositeEndpoint, Integer.MIN_VALUE, Integer.MAX_VALUE);
   }
 
+  /**
+   * Creates a new SyncNode with specified parameters.
+   *
+   * @param nodeFacadeCompositeEndpoint Endpoint for facade connection
+   * @param selfNodeCompositeEndpoint   Endpoint for this node
+   * @param nextNodeCompositeEndpoint   Endpoint for next node
+   * @throws Exception if BCM initialization fails or server initialization in
+   *                   endpoints fails
+   */
   protected SyncNode(
       ContentNodeBaseCompositeEndPointI<CAI, MRI> nodeFacadeCompositeEndpoint,
       ContentNodeBaseCompositeEndPointI<CAI, MRI> selfNodeCompositeEndpoint,
@@ -102,6 +182,17 @@ public class SyncNode<CAI extends ContentAccessSyncI, MRI extends MapReduceSyncI
     this(2, 0, nodeFacadeCompositeEndpoint, selfNodeCompositeEndpoint, nextNodeCompositeEndpoint);
   }
 
+  /**
+   * Creates a new SyncNode with specified parameters.
+   *
+   * @param nodeFacadeCompositeEndpoint Endpoint for facade connection
+   * @param selfNodeCompositeEndpoint   Endpoint for this node
+   * @param nextNodeCompositeEndpoint   Endpoint for next node
+   * @param minValue                    Minimum hash value this node handles
+   * @param maxValue                    Maximum hash value this node handles
+   * @throws Exception if BCM initialization fails or server initialization in
+   *                   endpoints fails
+   */
   protected SyncNode(
       ContentNodeBaseCompositeEndPointI<CAI, MRI> nodeFacadeCompositeEndpoint,
       ContentNodeBaseCompositeEndPointI<CAI, MRI> selfNodeCompositeEndpoint,
@@ -116,6 +207,16 @@ public class SyncNode<CAI extends ContentAccessSyncI, MRI extends MapReduceSyncI
     this(2, 0, nodeFacadeCompositeEndpoint, selfNodeCompositeEndpoint, nextNodeCompositeEndpoint, minValue, maxValue);
   }
 
+  // ------------------------------------------------------------------------
+  // Initialisation methods
+  // ------------------------------------------------------------------------
+
+  /**
+   * Initializes server-side connections for this node.
+   * 
+   *
+   * @throws Exception if server initialization fails
+   */
   protected void initialiseServerConnection() throws Exception {
     this.selfNodeCompositeEndpoint.initialiseServerSide(this);
     if (this.nodeFacadeCompositeEndpoint != null) {
@@ -139,7 +240,8 @@ public class SyncNode<CAI extends ContentAccessSyncI, MRI extends MapReduceSyncI
    *                                    values that this node is responsible for
    * @param maxValue                    the maximum value of the range of hash
    *                                    values that this node is responsible for
-   * @throws Exception
+   * 
+   * @throws Exception if server initialization in endpoints fails
    */
   protected void initialise(
       ContentNodeBaseCompositeEndPointI<CAI, MRI> nodeFacadeCompositeEndpoint,
@@ -164,6 +266,13 @@ public class SyncNode<CAI extends ContentAccessSyncI, MRI extends MapReduceSyncI
   // Component lifecycle methods
   // ------------------------------------------------------------------------
 
+  /**
+   * 
+   * Starts the Node component and initializes the client-side connection to next
+   * node
+   * 
+   * @see AbstractComponent#start()
+   */
   @Override
   public synchronized void start() throws ComponentStartException {
     this.logMessage("[NODE] Starting DHT Node component : " + this);
@@ -175,6 +284,13 @@ public class SyncNode<CAI extends ContentAccessSyncI, MRI extends MapReduceSyncI
     super.start();
   }
 
+  /**
+   * 
+   * Shuts down the Node component and cleans up connections
+   * also prints the execution log to a file.
+   * 
+   * @see AbstractComponent#shutdown()
+   */
   @Override
   public synchronized void shutdown() throws ComponentShutdownException {
     this.logMessage("[NODE] Finalising DHT Node component.");
@@ -197,6 +313,13 @@ public class SyncNode<CAI extends ContentAccessSyncI, MRI extends MapReduceSyncI
   // ------------------------------------------------------------------------
 
   // ContentAccessSyncI ----------------------
+
+  /**
+   * @throws Exception may throw an exception if smth external happens, like
+   *                   interruption
+   * 
+   * @see ContentAccessSyncI#getSync(String, ContentKeyI)
+   */
   @Override
   public ContentDataI getSync(String URI, ContentKeyI key) throws Exception {
     this.logMessage("[NODE] Getting content with key: " + key + " and URI: " + URI);
@@ -206,6 +329,13 @@ public class SyncNode<CAI extends ContentAccessSyncI, MRI extends MapReduceSyncI
     return this.localStorage.get(key);
   }
 
+  /**
+   * 
+   * @throws Exception may throw an exception if smth external happens, like
+   *                   interruption
+   * 
+   * @see ContentAccessSyncI#putSync(String, ContentKeyI, ContentDataI)
+   */
   @Override
   public ContentDataI putSync(String URI, ContentKeyI key, ContentDataI value) throws Exception {
     this.logMessage("[NODE] Putting content with key: " + key + " and value: " + value + " and URI: " + URI);
@@ -216,6 +346,12 @@ public class SyncNode<CAI extends ContentAccessSyncI, MRI extends MapReduceSyncI
     return out;
   }
 
+  /**
+   * @throws Exception may throw an exception if smth external happens, like
+   *                   interruption
+   * 
+   * @see ContentAccessSyncI#removeSync(String, ContentKeyI)
+   */
   @Override
   public ContentDataI removeSync(String URI, ContentKeyI key) throws Exception {
     this.logMessage("[NODE] Removing content with key: " + key + " and URI: " + URI);
@@ -232,6 +368,12 @@ public class SyncNode<CAI extends ContentAccessSyncI, MRI extends MapReduceSyncI
 
   // MapReduceSyncI ----------------------
 
+  /**
+   * @throws Exception may throw an exception if smth external happens, like
+   *                   interruption
+   * 
+   * @see MapReduceSyncI#mapSync(String, SelectorI, ProcessorI)
+   */
   @Override
   public <R extends Serializable> void mapSync(String URI, SelectorI selector, ProcessorI<R> processor)
       throws Exception {
@@ -254,6 +396,12 @@ public class SyncNode<CAI extends ContentAccessSyncI, MRI extends MapReduceSyncI
     this.logMessage("[NODE] Map finished.");
   }
 
+  /**
+   * @throws Exception may throw an exception if smth external happens, like
+   *                   interruption
+   * 
+   * @see MapReduceSyncI#reduceSync(String, ReductorI, CombinatorI, A)
+   */
   @Override
   public <A extends Serializable, R> A reduceSync(String URI, ReductorI<A, R> reductor, CombinatorI<A> combinator,
       A acc)
@@ -277,6 +425,12 @@ public class SyncNode<CAI extends ContentAccessSyncI, MRI extends MapReduceSyncI
     return currentResult;
   }
 
+  /**
+   * @throws Exception may throw an exception if smth external happens, like
+   *                   interruption
+   * 
+   * @see MapReduceSyncI#clearMapReduceComputation(String)
+   */
   @Override
   public void clearMapReduceComputation(String URI) throws Exception {
     if (!this.mapSyncResults.containsKey(URI))
@@ -290,16 +444,32 @@ public class SyncNode<CAI extends ContentAccessSyncI, MRI extends MapReduceSyncI
   // Helper methods
   // ------------------------------------------------------------------------
 
+  /**
+   * Returns a string representation of this node.
+   *
+   * @return String containing node information
+   */
+  @Override
   public String toString() {
     return "DHTNode [minHash=" + this.interval.first() + ", maxHash=" + this.interval.last() + ", nbElements="
         + this.localStorage.size()
         + "]";
   }
 
+  /**
+   * Gets the content access reference to the next node.
+   *
+   * @return Reference to next node's content access interface
+   */
   protected CAI getNextContentAccessReference() {
     return this.nextNodeCompositeEndpoint.getContentAccessEndpoint().getClientSideReference();
   }
 
+  /**
+   * Gets the map-reduce reference to the next node.
+   *
+   * @return Reference to next node's map-reduce interface
+   */
   protected MRI getNextMapReduceReference() {
     return this.nextNodeCompositeEndpoint.getMapReduceEndpoint().getClientSideReference();
   }

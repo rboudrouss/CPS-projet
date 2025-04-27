@@ -22,26 +22,96 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.ProcessorI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.ReductorI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.SelectorI;
 
+/**
+ * Represents an asynchronous node in a distributed content management and
+ * MapReduce system.
+ * This class extends SyncNode and implements both MapReduce and ContentAccess
+ * interfaces
+ * to provide asynchronous operations for distributed computing.
+ * 
+ * The node maintains a concurrent hash map for storing map operation results
+ * and supports
+ * asynchronous execution of map-reduce operations across a ring of nodes.
+ * 
+ * 
+ * Key features:
+ * - Asynchronous content management (get, put, remove)
+ * - Distributed map-reduce operations
+ * - Concurrent operation handling
+ * - Node-to-node communication
+ * - Result forwarding capabilities
+ * 
+ * The node uses a URI stamping mechanism to track the
+ * origin of computations
+ * and prevent infinite loops in the distributed network
+ * in map-reduce operations.
+ * 
+ * Implementation notes:
+ * - Uses ConcurrentHashMap for thread-safe storage
+ * - Implements CompletableFuture for asynchronous
+ * operations
+ * - Maintains node interval boundaries for content
+ * distribution
+ * - Supports distributed map-reduce operations with
+ * result aggregation
+ * 
+ * @param <ContentAccessI> The interface type for content access operations
+ * @param <MapReduceI>     The interface type for map-reduce operations
+ * 
+ * @see SyncNode
+ * @see MapReduceI
+ * @see ContentAccessI
+ * @see ConcurrentHashMap
+ * @see CompletableFuture
+ */
 @OfferedInterfaces(offered = { MapReduceCI.class, ContentAccessCI.class })
 @RequiredInterfaces(required = { MapReduceCI.class, ContentAccessCI.class, ResultReceptionCI.class,
     MapReduceResultReceptionCI.class })
 public class AsyncNode extends SyncNode<ContentAccessI, MapReduceI>
     implements MapReduceI, ContentAccessI {
 
-  protected static int MIN_THREADS = 1;
-  protected static int MIN_SCHEDULABLE_THREADS = 0;
+  /** the number of threads used to run the async node */
+  protected static int NB_THREADS = 1;
 
-  protected ConcurrentHashMap<String, CompletableFuture<Stream<?>>> mapResults = new ConcurrentHashMap<>();
+  /** the number of threads that can be scheduled */
+  protected static int NB_SCHEDULABLE_THREADS = 0;
 
+  protected ConcurrentHashMap<String, CompletableFuture<Stream<?>>> mapResults;
+
+  /**
+   * Creates an AsyncNode with specified range values.
+   *
+   * @param nodeFacadeCompositeEndpoint The composite endpoint representing the
+   *                                    node facade
+   * @param selfNodeCompositeEndpoint   The composite endpoint representing the
+   *                                    current node
+   * @param nextNodeCompositeEndpoint   The composite endpoint representing the
+   *                                    next node in the chain
+   * @param minValue                    The minimum value handled by this node
+   * @param maxValue                    The maximum value handled by this node
+   * @throws Exception If there's an error during node initialization
+   * 
+   * @see ContentNodeBaseCompositeEndPointI
+   * @see ContentAccessI
+   * @see MapReduceI
+   */
   protected AsyncNode(ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> nodeFacadeCompositeEndpoint,
       ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> selfNodeCompositeEndpoint,
       ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> nextNodeCompositeEndpoint,
       int minValue, int maxValue) throws Exception {
-    super(MIN_THREADS, MIN_SCHEDULABLE_THREADS, nodeFacadeCompositeEndpoint, selfNodeCompositeEndpoint,
+    super(NB_THREADS, NB_SCHEDULABLE_THREADS, nodeFacadeCompositeEndpoint, selfNodeCompositeEndpoint,
         nextNodeCompositeEndpoint, minValue, maxValue);
     assert this.localStorage instanceof ConcurrentHashMap : "Local storage should be a ConcurrentHashMap";
   }
 
+  /**
+   * Creates an AsyncNode with default range values.
+   * 
+   * @param nodeFacadeCompositeEndpoint The composite endpoint representing the node facade
+   * @param selfNodeCompositeEndpoint The composite endpoint representing the current node
+   * @param nextNodeCompositeEndpoint The composite endpoint representing the next node in the chain
+   * @throws Exception If there is an error during node creation
+   */
   protected AsyncNode(ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> nodeFacadeCompositeEndpoint,
       ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> selfNodeCompositeEndpoint,
       ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> nextNodeCompositeEndpoint) throws Exception {
@@ -61,6 +131,7 @@ public class AsyncNode extends SyncNode<ContentAccessI, MapReduceI>
     super.initialise(nodeFacadeCompositeEndpoint, selfNodeCompositeEndpoint,
         nextNodeCompositeEndpoint, minValue, maxValue);
     this.localStorage = new ConcurrentHashMap<>();
+    this.mapResults = new ConcurrentHashMap<>();
   }
 
   // ------------------------------------------------------------------------

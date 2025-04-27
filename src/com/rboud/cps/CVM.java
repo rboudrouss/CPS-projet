@@ -5,7 +5,6 @@ import com.rboud.cps.components.AsyncNode;
 import com.rboud.cps.components.ExampleClientTester;
 import com.rboud.cps.connections.endpoints.FacadeClient.FacadeClientDHTServicesEndpoint;
 import com.rboud.cps.connections.endpoints.NodeFacade.NodeAsync.NodeFacadeCompositeEndpoint;
-import com.rboud.cps.connections.endpoints.NodeFacade.NodeSync.NodeFacadeSyncCompositeEndpoint;
 import com.rboud.cps.connections.endpoints.NodeNode.Async.NodeNodeCompositeEndpoint;
 
 import fr.sorbonne_u.components.AbstractComponent;
