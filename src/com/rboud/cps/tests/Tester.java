@@ -10,15 +10,30 @@ import com.rboud.cps.utils.keyDataExample.Personne;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentDataI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.frontend.DHTServicesI;
 
+/**
+ * Test suite for DHT services implementation.
+ * Provides comprehensive testing for get, put, remove and mapReduce operations.
+ */
 public class Tester {
+  /** Number of random values to use in tests */
   private final int NB_RANDOM_VALUES = 10;
+  /** Flag to enable/disable random value tests */
   private boolean ALLOW_RANDOM = true;
+  /** Flag to stop testing on first failure */
   private boolean STOP_ON_FAILURE = false;
 
+  /** Function for logging test messages */
   private LogFunction logFunction = message -> System.out.println(message);
 
+  /** DHT service instance to test */
   private DHTServicesI dht;
 
+  /**
+   * Creates a new tester for DHT services.
+   * 
+   * @param dht         DHT service to test
+   * @param logFunction Logging function
+   */
   public Tester(DHTServicesI dht, LogFunction logFunction) throws Exception {
     this.logFunction = message -> logFunction.log("[TESTER] " + message);
     this.dht = dht;
@@ -30,6 +45,9 @@ public class Tester {
     }
   }
 
+  /**
+   * Disables the random value testing features
+   */
   public void disableRandomTests() {
     this.ALLOW_RANDOM = false;
   }
@@ -79,6 +97,9 @@ public class Tester {
   // General
   // ------------------------------------------------------------------------
 
+  /**
+   * Runs all test suites sequentially
+   */
   public void allTesting() throws Exception {
     this.logFunction.log("Testing all methods");
     this.getAndPutTesting();
@@ -91,6 +112,9 @@ public class Tester {
   // PUT & GET
   // ------------------------------------------------------------------------
 
+  /**
+   * Runs all get and put operation tests
+   */
   public void getAndPutTesting() throws Exception {
     this.logFunction.log("");
     this.logFunction.log("Testing get & put methods");
@@ -101,6 +125,9 @@ public class Tester {
     this.putShouldNeverFail();
   }
 
+  /**
+   * Tests get operations on empty DHT
+   */
   public void getShouldFailWhenEmpty() throws Exception {
     this.logFunction.log("Get should return null when data is empty");
 
@@ -126,6 +153,9 @@ public class Tester {
     });
   }
 
+  /**
+   * Tests if get operations can retrieve previously put data
+   */
   public void getFindsPut() throws Exception {
     this.logFunction.log("Get should return the data that was put");
 
@@ -202,6 +232,9 @@ public class Tester {
     });
   }
 
+  /**
+   * Tests that put operations never throw exceptions
+   */
   public void putShouldNeverFail() throws Exception {
     if (!this.ALLOW_RANDOM) {
       return;
@@ -217,6 +250,9 @@ public class Tester {
     });
   }
 
+  /**
+   * Tests get operations with non-existent keys
+   */
   public void getShouldFailWhenNotFound() throws Exception {
     this.logFunction.log("Get should return null when data is not found");
     Random random = new Random();
@@ -286,6 +322,9 @@ public class Tester {
   // Remove
   // ------------------------------------------------------------------------
 
+  /**
+   * Runs all remove operation tests
+   */
   public void removeTesting() throws Exception {
     this.logFunction.log("");
     this.logFunction.log("Testing remove method");
@@ -293,6 +332,9 @@ public class Tester {
     this.removeFindsAndCorrectlyRemoves();
   }
 
+  /**
+   * Tests remove operations with non-existent keys
+   */
   public void removeShouldFailWhenNotFound() throws Exception {
     this.logFunction.log("Remove should fail when data is not found");
     Random random = new Random();
@@ -365,6 +407,9 @@ public class Tester {
     });
   }
 
+  /**
+   * Tests if remove operations correctly delete data
+   */
   public void removeFindsAndCorrectlyRemoves() throws Exception {
     this.logFunction.log("Remove should find and correctly remove the data");
 
@@ -442,6 +487,9 @@ public class Tester {
   // MAP REDUCE
   // ------------------------------------------------------------------------
 
+  /**
+   * Runs all mapReduce operation tests
+   */
   public void mapReduceTesting() throws Exception {
     this.logFunction.log("");
     this.logFunction.log("Testing map reduce methods");
@@ -449,6 +497,9 @@ public class Tester {
     this.mapReduceReturnsCorrectValue();
   }
 
+  /**
+   * Tests mapReduce operations on empty DHT
+   */
   public void mapReduceReturnsAccWhenEmpty() throws Exception {
     this.logFunction.log("Map reduce should return acc when data is empty");
 
@@ -486,6 +537,9 @@ public class Tester {
     });
   }
 
+  /**
+   * Tests mapReduce operations with populated DHT
+   */
   public void mapReduceReturnsCorrectValue() throws Exception {
     this.logFunction.log("Map reduce should return the correct value");
 
@@ -572,11 +626,17 @@ public class Tester {
     });
   }
 
+  /**
+   * Interface for logging functions.
+   */
   @FunctionalInterface
   public interface LogFunction {
     void log(String message);
   }
 
+  /**
+   * Interface for test functions.
+   */
   @FunctionalInterface
   public interface TestFunction {
     void test() throws Throwable;

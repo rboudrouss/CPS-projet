@@ -11,18 +11,36 @@ import fr.sorbonne_u.components.AbstractComponent;
 import fr.sorbonne_u.components.cvm.AbstractCVM;
 import fr.sorbonne_u.components.helpers.CVMDebugModes;
 
+/**
+ * Component Virtual Machine (CVM) implementation for the DHT system.
+ * This class handles the deployment and lifecycle management of all components:
+ * - Multiple DHT nodes arranged in a ring topology
+ * - A facade component that provides access to the DHT
+ * - A client component for testing the DHT functionality
+ *
+ * The CVM creates and connects components using endpoints to establish
+ * the communication channels between them.
+ */
 public class CVM extends AbstractCVM {
 
+  /** Number of DHT nodes to create in the ring topology */
   private final int NODES = 2;
 
+  /**
+   * Creates a new CVM instance.
+   * 
+   * @throws Exception if initialization fails
+   */
   public CVM() throws Exception {
     super();
   }
 
-  // ------------------------------------------------------------------------
-  // Main method
-  // ------------------------------------------------------------------------
-
+  /**
+   * Entry point of the application.
+   * Creates and starts the CVM with a standard component lifecycle.
+   *
+   * @param args command line arguments (not used)
+   */
   public static void main(String[] args) {
     try {
       CVM c = new CVM();
@@ -34,10 +52,15 @@ public class CVM extends AbstractCVM {
     }
   }
 
-  // ------------------------------------------------------------------------
-  // life cycle methods
-  // ------------------------------------------------------------------------
-
+  /**
+   * Deploys all components of the DHT system.
+   * Creates and connects:
+   * - DHT nodes in a ring topology
+   * - A facade component for DHT access
+   * - A client component for testing
+   *
+   * @throws Exception if component deployment fails
+   */
   @Override
   public void deploy() throws Exception {
     // AbstractCVM.DEBUG_MODE.add(CVMDebugModes.LIFE_CYCLE);
@@ -63,10 +86,16 @@ public class CVM extends AbstractCVM {
     super.deploy();
   }
 
-  // ------------------------------------------------------------------------
-  // Helper methods
-  // ------------------------------------------------------------------------
-
+  /**
+   * Creates and connects multiple DHT nodes in a ring topology.
+   * Each node is assigned a range of hash values and is connected to its
+   * neighbors in the ring.
+   *
+   * @param n              number of nodes to create
+   * @param facadeEndpoint endpoint for connecting nodes to the facade
+   * @return array of created node URIs
+   * @throws Exception if node creation or connection fails
+   */
   private String[] createAndConnectNodes(int n, NodeFacadeCompositeEndpoint facadeEndpoint) throws Exception {
     if (n <= 1) {
       NodeNodeCompositeEndpoint endpoint = new NodeNodeCompositeEndpoint();
