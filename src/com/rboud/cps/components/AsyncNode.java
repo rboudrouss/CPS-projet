@@ -98,6 +98,7 @@ public class AsyncNode extends SyncNode<ContentAccessI, MapReduceI>
     super(NB_THREADS, NB_SCHEDULABLE_THREADS, nodeFacadeCompositeEndpoint, selfNodeCompositeEndpoint,
         nextNodeCompositeEndpoint, minValue, maxValue);
     assert this.localStorage instanceof ConcurrentHashMap : "Local storage should be a ConcurrentHashMap";
+    assert this.mapResults instanceof ConcurrentHashMap : "Map results should be a ConcurrentHashMap";
   }
 
   /**
