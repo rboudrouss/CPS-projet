@@ -52,7 +52,7 @@ public class SyncFacade<CAI extends ContentAccessSyncI, MRI extends MapReduceSyn
 
   @Override
   public synchronized void start() throws ComponentStartException {
-    this.logMessage("[DHT-FACADE] Starting DHT Facade component.");
+    this.logMessage("[FACADE] Starting DHT Facade component.");
     try {
       this.nodeFacadeCompositeEndpoint.initialiseClientSide(this);
     } catch (Exception e) {
@@ -63,7 +63,7 @@ public class SyncFacade<CAI extends ContentAccessSyncI, MRI extends MapReduceSyn
 
   @Override
   public synchronized void finalise() throws Exception {
-    this.logMessage("[DHT-FACADE] Finalising DHT Facade component.");
+    this.logMessage("[FACADE] Finalising DHT Facade component.");
     this.printExecutionLogOnFile("logs/dht-facade");
 
     this.facadeClientDHTServicesEndpoint.cleanUpServerSide();
@@ -78,7 +78,7 @@ public class SyncFacade<CAI extends ContentAccessSyncI, MRI extends MapReduceSyn
 
   @Override
   public ContentDataI get(ContentKeyI key) throws Exception {
-    this.logMessage("[DHT-FACADE] Getting content with key: " + key);
+    this.logMessage("[FACADE] Getting content with key: " + key);
     return this.contentComputeAndClear(
         this.getContentAccessClientReference()::getSync,
         key // formatter hack
@@ -87,7 +87,7 @@ public class SyncFacade<CAI extends ContentAccessSyncI, MRI extends MapReduceSyn
 
   @Override
   public ContentDataI put(ContentKeyI key, ContentDataI value) throws Exception {
-    this.logMessage("[DHT-FACADE] Putting content with key: " + key + " and value: " + value);
+    this.logMessage("[FACADE] Putting content with key: " + key + " and value: " + value);
     return this.contentComputeAndClear(
         this.getContentAccessClientReference()::putSync,
         key,
@@ -97,7 +97,7 @@ public class SyncFacade<CAI extends ContentAccessSyncI, MRI extends MapReduceSyn
 
   @Override
   public ContentDataI remove(ContentKeyI key) throws Exception {
-    this.logMessage("[DHT-FACADE] Removing content with key: " + key);
+    this.logMessage("[FACADE] Removing content with key: " + key);
     return this.contentComputeAndClear(
         this.getContentAccessClientReference()::removeSync,
         key // formatter hack
@@ -111,7 +111,7 @@ public class SyncFacade<CAI extends ContentAccessSyncI, MRI extends MapReduceSyn
       ReductorI<A, R> reductor,
       CombinatorI<A> combinator,
       A initialAcc) throws Exception {
-    this.logMessage("[DHT-FACADE] Starting mapReduce computation.");
+    this.logMessage("[FACADE] Starting mapReduce computation.");
     String computeURI = URIGenerator.generateURI(URI_PREFIX);
 
     this.getMapReduceClientReference().mapSync(computeURI, selector, processor);

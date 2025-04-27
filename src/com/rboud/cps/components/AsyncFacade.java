@@ -57,7 +57,7 @@ public class AsyncFacade<CAI extends ContentAccessI, MRI extends MapReduceI> ext
   @Override
   public ContentDataI get(ContentKeyI key) throws Exception {
     String computationURI = URIGenerator.generateURI(URI_PREFIX);
-    this.logMessage("[DHT-FACADE] Getting content with key: " + key + " and URI: " + computationURI);
+    this.logMessage("[FACADE] Getting content with key: " + key + " and URI: " + computationURI);
 
     CompletableFuture<Serializable> result = new CompletableFuture<>();
     this.computationResults.put(computationURI, result);
@@ -76,16 +76,16 @@ public class AsyncFacade<CAI extends ContentAccessI, MRI extends MapReduceI> ext
   @Override
   public ContentDataI put(ContentKeyI key, ContentDataI value) throws Exception {
     String computationURI = URIGenerator.generateURI(URI_PREFIX);
-    this.logMessage("[DHT-FACADE] Putting content with key: " + key + " and URI: " + computationURI);
+    this.logMessage("[FACADE] Putting content with key: " + key + " and URI: " + computationURI);
 
     CompletableFuture<Serializable> result = new CompletableFuture<>();
     this.computationResults.put(computationURI, result);
 
     this.getContentAccessClientReference().put(computationURI, key, value,
         this.facadeResultReceptionEndpoint.copyWithSharable());
-    this.logMessage("[DHT-FACADE] Waiting for reception.");
+    this.logMessage("[FACADE] Waiting for reception.");
     ContentDataI out = (ContentDataI) result.get();
-    this.logMessage("[DHT-FACADE] Result reception endpoint finished.");
+    this.logMessage("[FACADE] Result reception endpoint finished.");
 
     assert this.facadeResultReceptionEndpoint.clientSideClean();
 
@@ -96,7 +96,7 @@ public class AsyncFacade<CAI extends ContentAccessI, MRI extends MapReduceI> ext
   @Override
   public ContentDataI remove(ContentKeyI key) throws Exception {
     String computationURI = URIGenerator.generateURI(URI_PREFIX);
-    this.logMessage("[DHT-FACADE] Removing content with key: " + key + " and URI: " + computationURI);
+    this.logMessage("[FACADE] Removing content with key: " + key + " and URI: " + computationURI);
 
     CompletableFuture<Serializable> result = new CompletableFuture<>();
     this.computationResults.put(computationURI, result);
@@ -115,7 +115,7 @@ public class AsyncFacade<CAI extends ContentAccessI, MRI extends MapReduceI> ext
   public <R extends Serializable, A extends Serializable> A mapReduce(SelectorI selector, ProcessorI<R> processor,
       ReductorI<A, R> reductor, CombinatorI<A> combinator, A initialAcc) throws Exception {
     String computationURI = URIGenerator.generateURI(URI_PREFIX);
-    this.logMessage("[DHT-FACADE] Starting mapReduce computation with URI: " + computationURI);
+    this.logMessage("[FACADE] Starting mapReduce computation with URI: " + computationURI);
 
     CompletableFuture<Serializable> result = new CompletableFuture<>();
     this.computationResults.put(computationURI, result);
@@ -133,7 +133,7 @@ public class AsyncFacade<CAI extends ContentAccessI, MRI extends MapReduceI> ext
 
   @Override
   public void acceptResult(String computationURI, String emitterId, Serializable acc) throws Exception {
-    this.logMessage("[DHT-FACADE] Accepting Map Reduce result with URI: " + computationURI + " and emitterId: " + emitterId);
+    this.logMessage("[FACADE] Accepting Map Reduce result with URI: " + computationURI + " and emitterId: " + emitterId);
 
     CompletableFuture<Serializable> future = this.computationResults.remove(computationURI);
     if (future != null) {
@@ -145,7 +145,7 @@ public class AsyncFacade<CAI extends ContentAccessI, MRI extends MapReduceI> ext
 
   @Override
   public void acceptResult(String computationURI, Serializable result) throws Exception {
-    this.logMessage("[NODE] Accepting Content Access result with URI: " + computationURI);
+    this.logMessage("[FACADE] Accepting Content Access result with URI: " + computationURI);
 
     CompletableFuture<Serializable> future = this.computationResults.remove(computationURI);
     if (future != null) {
