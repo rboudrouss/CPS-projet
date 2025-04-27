@@ -5,6 +5,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
+import com.rboud.cps.utils.URIStamper;
+
 import fr.sorbonne_u.components.annotations.OfferedInterfaces;
 import fr.sorbonne_u.components.annotations.RequiredInterfaces;
 import fr.sorbonne_u.components.endpoints.EndPointI;
@@ -24,15 +26,11 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.SelectorI;
 
 /**
  * Represents an asynchronous node in a distributed content management and
- * MapReduce system.
- * This class extends SyncNode and implements both MapReduce and ContentAccess
- * interfaces
- * to provide asynchronous operations for distributed computing.
- * 
- * The node maintains a concurrent hash map for storing map operation results
- * and supports
- * asynchronous execution of map-reduce operations across a ring of nodes.
- * 
+ * MapReduce system. This class extends SyncNode and implements both MapReduce
+ * and ContentAccess interfaces to provide asynchronous operations for
+ * distributed computing. The node maintains a concurrent hash map for storing
+ * map operation results and supports asynchronous execution of map-reduce
+ * operations across a ring of nodes.
  * 
  * Key features:
  * - Asynchronous content management (get, put, remove)
@@ -41,19 +39,15 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.SelectorI;
  * - Node-to-node communication
  * - Result forwarding capabilities
  * 
- * The node uses a URI stamping mechanism to track the
- * origin of computations
- * and prevent infinite loops in the distributed network
- * in map-reduce operations.
+ * The node uses a URI stamping mechanism to track the origin of computations
+ * and prevent infinite loops in the distributed network in map-reduce
+ * operations.
  * 
  * Implementation notes:
  * - Uses ConcurrentHashMap for thread-safe storage
- * - Implements CompletableFuture for asynchronous
- * operations
- * - Maintains node interval boundaries for content
- * distribution
- * - Supports distributed map-reduce operations with
- * result aggregation
+ * - Implements CompletableFuture for asynchronous operations
+ * - Maintains node interval boundaries for content distribution
+ * - Supports distributed map-reduce operations with result aggregation
  * 
  * @param <ContentAccessI> The interface type for content access operations
  * @param <MapReduceI>     The interface type for map-reduce operations
@@ -89,7 +83,9 @@ public class AsyncNode extends SyncNode<ContentAccessI, MapReduceI>
    *                                    next node in the chain
    * @param minValue                    The minimum value handled by this node
    * @param maxValue                    The maximum value handled by this node
-   * @throws Exception If there's an error during node initialization
+   * 
+   * @throws Exception If there is an error during BCM component creation or
+   *                   server initialization in endpoints
    * 
    * @see ContentNodeBaseCompositeEndPointI
    * @see ContentAccessI
@@ -107,10 +103,14 @@ public class AsyncNode extends SyncNode<ContentAccessI, MapReduceI>
   /**
    * Creates an AsyncNode with default range values.
    * 
-   * @param nodeFacadeCompositeEndpoint The composite endpoint representing the node facade
-   * @param selfNodeCompositeEndpoint The composite endpoint representing the current node
-   * @param nextNodeCompositeEndpoint The composite endpoint representing the next node in the chain
-   * @throws Exception If there is an error during node creation
+   * @param nodeFacadeCompositeEndpoint The composite endpoint representing the
+   *                                    node facade
+   * @param selfNodeCompositeEndpoint   The composite endpoint representing the
+   *                                    current node
+   * @param nextNodeCompositeEndpoint   The composite endpoint representing the
+   *                                    next node in the chain
+   * @throws Exception If there is an error during BCM component creation or
+   *                   server initialization in endpoints
    */
   protected AsyncNode(ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> nodeFacadeCompositeEndpoint,
       ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> selfNodeCompositeEndpoint,
@@ -123,6 +123,18 @@ public class AsyncNode extends SyncNode<ContentAccessI, MapReduceI>
         Integer.MAX_VALUE);
   }
 
+  /**
+   * Initializes the AsyncNode with the specified parameters.
+   * Overrides the initialise method from SyncNode to set up the local storage
+   * and map results as ConcurrentHashMaps for thread-safe operations.
+   * 
+   * @throws Exception If there's an error during server initialization in
+   *                   endpoints
+   * 
+   * @see SyncNode#initialise(ContentNodeBaseCompositeEndPointI,
+   *      ContentNodeBaseCompositeEndPointI, ContentNodeBaseCompositeEndPointI,
+   *      int, int)
+   */
   @Override
   protected void initialise(ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> nodeFacadeCompositeEndpoint,
       ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> selfNodeCompositeEndpoint,
@@ -138,6 +150,14 @@ public class AsyncNode extends SyncNode<ContentAccessI, MapReduceI>
   // Content Access methods
   // ------------------------------------------------------------------------
 
+  /**
+   * {@inheritDoc}
+   * 
+   * @throws Exception if there is an error during port connection or if smth
+   *                   external happens, for example interrupted
+   * 
+   * @see {@link #sendResult(String, EndPointI, String, Serializable)}
+   */
   @Override
   public <I extends ResultReceptionCI> void get(String computationURI, ContentKeyI key, EndPointI<I> caller)
       throws Exception {
@@ -150,6 +170,14 @@ public class AsyncNode extends SyncNode<ContentAccessI, MapReduceI>
     this.sendResult("GET", caller, computationURI, this.localStorage.get(key));
   }
 
+  /**
+   * {@inheritDoc}
+   * 
+   * @throws Exception if there is an error during port connection or if smth
+   *                   external happens, for example interrupted
+   * 
+   * @see {@link #sendResult(String, EndPointI, String, Serializable)}
+   */
   @Override
   public <I extends ResultReceptionCI> void put(String computationURI, ContentKeyI key, ContentDataI value,
       EndPointI<I> caller) throws Exception {
@@ -162,6 +190,14 @@ public class AsyncNode extends SyncNode<ContentAccessI, MapReduceI>
     this.logMessage("\n[NODE-PUT] New hashmap content: " + this.localStorage);
   }
 
+  /**
+   * {@inheritDoc}
+   * 
+   * @throws Exception if there is an error during port connection or if smth
+   *                   external happens, for example interrupted
+   * 
+   * @see {@link #sendResult(String, EndPointI, String, Serializable)}
+   */
   @Override
   public <I extends ResultReceptionCI> void remove(String computationURI, ContentKeyI key, EndPointI<I> caller)
       throws Exception {
@@ -179,15 +215,29 @@ public class AsyncNode extends SyncNode<ContentAccessI, MapReduceI>
   // MapReduce methods
   // ------------------------------------------------------------------------
 
+  /**
+   * {@inheritDoc}
+   * 
+   * @throws Exception if there is an error during port connection or if smth
+   *                   external happens, for example interrupted
+   * 
+   * 
+   * @see {@link #sendResult(String, EndPointI, String, String, Serializable)}
+   * @see URIStamper
+   */
   @Override
   public <R extends Serializable> void map(String computationURI, SelectorI selector, ProcessorI<R> processor)
       throws Exception {
+    // Using computationURI as the key as URIStamper's method is not thread safe. so
+    // the first node will store the data in a different uri than the others but it
+    // doesn't matter
     mapResults.compute(computationURI, (uri, existingFuture) -> {
       this.logMessage("[NODE-MAP] Calling map with uri " + computationURI);
       this.logMessage(
-          "[NODE-MAP] origin uri " + getOriginNodeFromUri(computationURI) + " this node uri " + this.nodeURI);
+          "[NODE-MAP] origin uri " + URIStamper.getOriginNodeFromUri(computationURI) + " this node uri "
+              + this.nodeURI);
 
-      if (this.nodeURI.equals(getOriginNodeFromUri(computationURI))) {
+      if (this.nodeURI.equals(URIStamper.getOriginNodeFromUri(computationURI))) {
         this.logMessage("[NODE-MAP] Looped map !");
         return existingFuture;
       }
@@ -197,7 +247,8 @@ public class AsyncNode extends SyncNode<ContentAccessI, MapReduceI>
         return existingFuture;
       }
 
-      String newUri = isComputationUriStamped(computationURI) ? computationURI : stampOriginNodeToUri(computationURI);
+      String newUri = URIStamper.isComputationUriStamped(computationURI) ? computationURI
+          : URIStamper.stampOriginNodeToUri(computationURI, this.nodeURI);
 
       try {
         this.getNextMapReduceReference().map(newUri, selector, processor);
@@ -206,23 +257,36 @@ public class AsyncNode extends SyncNode<ContentAccessI, MapReduceI>
         e.printStackTrace();
       }
 
-      return CompletableFuture.supplyAsync(() -> this.localStorage.values().stream()
+      return CompletableFuture.supplyAsync(() -> this.localStorage.values().stream().parallel()
           .filter(selector)
           .map(processor));
     });
   }
 
+  /**
+   * {@inheritDoc}
+   * 
+   * @throws Exception if there is an error during port connection or if smth
+   *                   external happens, for example interrupted
+   * 
+   * @see #sendResult(String, EndPointI, String, String, Serializable)
+   * @see URIStamper
+   */
   @Override
   public <A extends Serializable, R, I extends MapReduceResultReceptionCI> void reduce(String computationURI,
       ReductorI<A, R> reductor, CombinatorI<A> combinator, A identityAcc, A currentAcc, EndPointI<I> caller)
       throws Exception {
+    // Using computationURI as the key as URIStamper's method is not thread safe. so
+    // the first node will store the data in a different uri than the others but it
+    // doesn't matter
     mapResults.compute(computationURI, (uri, existingFuture) -> {
       this.logMessage("[NODE-REDUCE] Reducing with URI: " + computationURI + " and accumulator: " + currentAcc);
 
-      if (this.nodeURI.equals(getOriginNodeFromUri(computationURI))) {
+      if (this.nodeURI.equals(URIStamper.getOriginNodeFromUri(computationURI))) {
         this.logMessage("[NODE-REDUCE] looped Reduce ! Returing acc " + currentAcc);
         try {
-          this.sendResult("REDUCE", caller, getOriginalComputationUriFromUri(computationURI), this.nodeURI, currentAcc);
+          this.sendResult("REDUCE", caller, URIStamper.getOriginalComputationUriFromUri(computationURI), this.nodeURI,
+              currentAcc);
         } catch (Exception e) {
           this.logMessage("[NODE-REDUCE] ERROR sending reduce result: " + e.getMessage());
           e.printStackTrace();
@@ -230,7 +294,7 @@ public class AsyncNode extends SyncNode<ContentAccessI, MapReduceI>
         return existingFuture;
       }
 
-      if (existingFuture == null && !isComputationUriStamped(computationURI)) {
+      if (existingFuture == null && !URIStamper.isComputationUriStamped(computationURI)) {
         this.logMessage("[NODE-REDUCE] WARNING nothing in the mapResult, maybe received reduce before map ?");
         this.logMessage("[NODE-REDUCE] not stamping the uri and sending to next node after a short delay");
         try {
@@ -248,7 +312,8 @@ public class AsyncNode extends SyncNode<ContentAccessI, MapReduceI>
         return existingFuture;
       }
 
-      String newUri = isComputationUriStamped(computationURI) ? computationURI : stampOriginNodeToUri(computationURI);
+      String newUri = URIStamper.isComputationUriStamped(computationURI) ? computationURI
+          : URIStamper.stampOriginNodeToUri(computationURI, this.nodeURI);
 
       existingFuture.thenAcceptAsync(stream -> {
         Stream<R> typedStream = (Stream<R>) stream;
@@ -272,6 +337,17 @@ public class AsyncNode extends SyncNode<ContentAccessI, MapReduceI>
   // Helper methods
   // ------------------------------------------------------------------------
 
+  /**
+   * Sends a computation result to a caller through a specified endpoint.
+   * 
+   * @param <I>            The interface type extending ResultReceptionCI
+   * @param method         The method name for logging purposes
+   * @param caller         The endpoint to which the result will be sent
+   * @param computationURI The URI identifying the computation
+   * @param result         The result of the computation to be sent
+   * 
+   * @throws Exception If an error occurs during the connection or smth external
+   */
   protected <I extends ResultReceptionCI> void sendResult(String method, EndPointI<I> caller, String computationURI,
       Serializable result) throws Exception {
     this.logMessage("[NODE-" + method + "] Sending result with computation URI: " + computationURI + " and result: "
@@ -281,6 +357,19 @@ public class AsyncNode extends SyncNode<ContentAccessI, MapReduceI>
     caller.cleanUpClientSide();
   }
 
+  /**
+   * Sends a result from a map-reduce computation to a specified caller.
+   * 
+   * @param <I>            The interface type extending MapReduceResultReceptionCI
+   * @param method         The method name for logging purposes
+   * @param caller         The endpoint that will receive the result
+   * @param computationURI The URI identifying the computation
+   * @param emitterId      The ID of the emitter sending the result
+   * @param acc            The accumulated result to be sent (must be
+   *                       Serializable)
+   * 
+   * @throws Exception If an error occurs during the connection or smth external
+   */
   protected <I extends MapReduceResultReceptionCI> void sendResult(String method, EndPointI<I> caller,
       String computationURI,
       String emitterId, Serializable acc) throws Exception {
@@ -289,24 +378,6 @@ public class AsyncNode extends SyncNode<ContentAccessI, MapReduceI>
     caller.initialiseClientSide(this);
     caller.getClientSideReference().acceptResult(computationURI, emitterId, acc);
     caller.cleanUpClientSide();
-  }
-
-  private String stampOriginNodeToUri(String uri) {
-    return uri + "#" + this.nodeURI;
-  }
-
-  private String getOriginNodeFromUri(String uri) {
-    if (!isComputationUriStamped(uri))
-      return null;
-    return uri.split("#")[1];
-  }
-
-  private String getOriginalComputationUriFromUri(String uri) {
-    return uri.split("#")[0];
-  }
-
-  private boolean isComputationUriStamped(String uri) {
-    return uri.contains("#");
   }
 
 }
