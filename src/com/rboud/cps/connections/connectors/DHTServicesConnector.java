@@ -11,23 +11,39 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.ProcessorI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.ReductorI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.SelectorI;
 
+/**
+ * Connector implementing DHT service operations between components.
+ * Provides methods for content management and MapReduce operations.
+ */
 public class DHTServicesConnector extends AbstractConnector implements DHTServicesCI {
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public ContentDataI get(ContentKeyI key) throws Exception {
     return ((DHTServicesCI) this.offering).get(key);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public ContentDataI put(ContentKeyI key, ContentDataI value) throws Exception {
     return ((DHTServicesCI) this.offering).put(key, value);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public ContentDataI remove(ContentKeyI key) throws Exception {
     return ((DHTServicesCI) this.offering).remove(key);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public <R extends Serializable, A extends Serializable> A mapReduce(
       SelectorI selector,

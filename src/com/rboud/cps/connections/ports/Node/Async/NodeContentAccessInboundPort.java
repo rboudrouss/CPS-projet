@@ -10,18 +10,39 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentDataI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentKeyI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ResultReceptionCI;
 
+/**
+ * Inbound port handling asynchronous content access for DHT nodes.
+ * Extends the synchronous port to handle asynchronous content operations with
+ * callbacks.
+ */
 public class NodeContentAccessInboundPort extends NodeContentAccessSyncInboundPort implements ContentAccessCI {
 
+  /**
+   * Creates a new content access inbound port.
+   *
+   * @param owner The component owner of this port
+   * @throws Exception If port creation fails
+   */
   public NodeContentAccessInboundPort(ComponentI owner)
       throws Exception {
     super(ContentAccessCI.class, owner);
   }
 
+  /**
+   * Creates a new content access inbound port with the specified URI.
+   *
+   * @param URI   The unique URI for this port
+   * @param owner The component owner of this port
+   * @throws Exception If port creation fails
+   */
   public NodeContentAccessInboundPort(String URI, ComponentI owner)
       throws Exception {
     super(ContentAccessCI.class, URI, owner);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public <I extends ResultReceptionCI> void get(String computationURI, ContentKeyI key, EndPointI<I> caller)
       throws Exception {
@@ -35,6 +56,9 @@ public class NodeContentAccessInboundPort extends NodeContentAccessSyncInboundPo
         });
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public <I extends ResultReceptionCI> void put(String computationURI, ContentKeyI key, ContentDataI value,
       EndPointI<I> caller) throws Exception {
@@ -48,6 +72,9 @@ public class NodeContentAccessInboundPort extends NodeContentAccessSyncInboundPo
         });
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public <I extends ResultReceptionCI> void remove(String computationURI, ContentKeyI key, EndPointI<I> caller)
       throws Exception {

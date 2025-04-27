@@ -9,12 +9,24 @@ import fr.sorbonne_u.components.endpoints.BCMEndPoint;
 import fr.sorbonne_u.components.ports.AbstractInboundPort;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentAccessCI;
 
+/**
+ * Endpoint managing asynchronous content access between two DHT nodes.
+ * Creates and manages ports for asynchronous content operations between peer
+ * nodes.
+ */
 public class NodeNodeContentAccessEndPoint extends BCMEndPoint<ContentAccessCI> {
 
+  /**
+   * Creates a new endpoint for asynchronous content access with default
+   * configuration.
+   */
   public NodeNodeContentAccessEndPoint() {
     super(ContentAccessCI.class, ContentAccessCI.class);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   protected AbstractInboundPort makeInboundPort(AbstractComponent c, String inboundPortURI) throws Exception {
     NodeContentAccessInboundPort port = new NodeContentAccessInboundPort(inboundPortURI, c);
@@ -22,6 +34,9 @@ public class NodeNodeContentAccessEndPoint extends BCMEndPoint<ContentAccessCI> 
     return port;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   protected ContentAccessCI makeOutboundPort(AbstractComponent c, String inboundPortURI) throws Exception {
     NodeContentAccessOutboundPort port = new NodeContentAccessOutboundPort(c);
@@ -32,5 +47,5 @@ public class NodeNodeContentAccessEndPoint extends BCMEndPoint<ContentAccessCI> 
         ContentAccessConnector.class.getCanonicalName());
     return port;
   }
-  
+
 }
