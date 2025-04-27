@@ -9,11 +9,25 @@ import fr.sorbonne_u.components.exceptions.ComponentStartException;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.frontend.DHTServicesCI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.frontend.DHTServicesI;
 
+/**
+ * A test client component for the DHT service that runs various tests to verify
+ * the functionality of the distributed hash table.
+ * 
+ * This component implements a test suite for the DHT services by connecting
+ * to a DHT endpoint and executing various test scenarios.
+ */
 @RequiredInterfaces(required = { DHTServicesCI.class })
 public class ExampleClientTester extends AbstractComponent {
 
+  /** The endpoint to access the facade */
   EndPointI<DHTServicesI> dhtServicesEndpoint;
 
+  /**
+   * Creates a new ExampleClientTester component.
+   * 
+   * @param dhtServicesEndpoint The endpoint providing access to DHT services
+   * @throws Exception if the component initialization fails
+   */
   protected ExampleClientTester(EndPointI<DHTServicesI> dhtServicesEndpoint) throws Exception {
     super(1, 0);
 
@@ -28,6 +42,12 @@ public class ExampleClientTester extends AbstractComponent {
   // Component lifecycle methods
   // ------------------------------------------------------------------------
 
+  /**
+   * Starts the client component by initializing the connection to the DHT
+   * service.
+   * 
+   * @throws ComponentStartException if the component fails to start properly
+   */
   @Override
   public synchronized void start() throws ComponentStartException {
     this.logMessage("[CLIENT] Starting client component.");
@@ -39,6 +59,13 @@ public class ExampleClientTester extends AbstractComponent {
     super.start();
   }
 
+  /**
+   * Executes the test suite on the DHT service.
+   * This method runs a series of tests to verify the DHT functionality,
+   * with random testing disabled.
+   * 
+   * @throws Exception if any test execution fails
+   */
   @Override
   public synchronized void execute() throws Exception {
     super.execute();
@@ -50,6 +77,12 @@ public class ExampleClientTester extends AbstractComponent {
     tester.allTesting();
   }
 
+  /**
+   * Finalizes the component by cleaning up resources and connections.
+   * Writes execution logs to a file before shutting down.
+   * 
+   * @throws Exception if cleanup operations fail
+   */
   @Override
   public synchronized void finalise() throws Exception {
     this.logMessage("[CLIENT] Finalising client component.");
@@ -64,6 +97,11 @@ public class ExampleClientTester extends AbstractComponent {
   // Helpers
   // ------------------------------------------------------------------------
 
+  /**
+   * Helper method to get the DHT services reference.
+   * 
+   * @return the client-side reference to the DHT services
+   */
   private DHTServicesI getDHTServices() {
     return this.dhtServicesEndpoint.getClientSideReference();
   }
