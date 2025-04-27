@@ -6,9 +6,9 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentAccessCI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.endpoints.ContentNodeAsyncCompositeEndPointI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.MapReduceCI;
 
-public class NodeNodeCompositeEndpoint<CAI extends ContentAccessCI, MRI extends MapReduceCI>
+public class NodeNodeCompositeEndpoint
     extends BCMCompositeEndPoint
-    implements ContentNodeAsyncCompositeEndPointI<CAI, MRI> {
+    implements ContentNodeAsyncCompositeEndPointI<ContentAccessCI, MapReduceCI> {
 
   private static final int N_ENDPOINTS = 2;
 
@@ -19,12 +19,12 @@ public class NodeNodeCompositeEndpoint<CAI extends ContentAccessCI, MRI extends 
   }
 
   @Override
-  public EndPointI<CAI> getContentAccessEndpoint() {
+  public EndPointI<ContentAccessCI> getContentAccessEndpoint() {
     return this.getEndPoint(ContentAccessCI.class);
   }
 
   @Override
-  public EndPointI<MRI> getMapReduceEndpoint() {
+  public EndPointI<MapReduceCI> getMapReduceEndpoint() {
     return this.getEndPoint(MapReduceCI.class);
   }
 
