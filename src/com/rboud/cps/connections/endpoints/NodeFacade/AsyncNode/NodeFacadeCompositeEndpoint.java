@@ -1,4 +1,4 @@
-package com.rboud.cps.connections.endpoints.NodeFacade.NodeAsync;
+package com.rboud.cps.connections.endpoints.NodeFacade.AsyncNode;
 
 import fr.sorbonne_u.components.endpoints.BCMCompositeEndPoint;
 import fr.sorbonne_u.components.endpoints.EndPointI;

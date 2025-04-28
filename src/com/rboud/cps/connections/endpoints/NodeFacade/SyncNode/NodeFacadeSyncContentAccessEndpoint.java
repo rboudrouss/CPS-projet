@@ -1,4 +1,4 @@
-package com.rboud.cps.connections.endpoints.NodeFacade.NodeSync;
+package com.rboud.cps.connections.endpoints.NodeFacade.SyncNode;
 
 import com.rboud.cps.connections.connectors.ContentAccessSyncConnector;
 import com.rboud.cps.connections.ports.Facade.FacadeContentAccessSyncOutboundPort;
