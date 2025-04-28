@@ -23,6 +23,7 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.MapReduceResultRecep
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.ProcessorI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.ReductorI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.SelectorI;
+import fr.sorbonne_u.cps.mapreduce.utils.URIGenerator;
 
 /**
  * Represents an asynchronous node in a distributed content management and
@@ -64,23 +65,84 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.SelectorI;
 public class AsyncNode extends SyncNode<ContentAccessI, MapReduceI>
     implements MapReduceI, ContentAccessI {
 
-  /** the number of threads used to run the async node */
-  protected static int NB_THREADS = 1;
+  /** the default number of threads used to run the async node */
+  public final static int DEFAULT_NB_THREADS = 1;
 
-  /** the number of threads that can be scheduled */
-  protected static int NB_SCHEDULABLE_THREADS = 0;
+  /** the default number of threads that can be scheduled */
+  public final static int DEFAULT_NB_SCHEDULABLE_THREADS = 0;
 
+  /** the default number of threads in the Content Access pool */
+  public final static int DEFAULT_NB_CONTENT_ACCESS_THREADS = 1;
+
+  /** the default number of threads in the MapReduce pool */
+  public final static int DEFAULT_NB_MAP_REDUCE_THREADS = 2;
+
+  /** the prefix for executor services uris */
+  public static final String EXECUTOR_SERVICE_URI_PREFIX = "ASYNCNODE-EXS-";
+
+  /** the prefix for content access executor services uris */
+  private String contentAccessExecutorServiceURI;
+
+  /** the prefix for map reduce executor services uris */
+  private String mapReduceExecutorServiceURI;
+
+  /**
+   * ConcurrentHashMap for storing the results of map operations.
+   * Used primarily for putting/getting futures in the map-reduce
+   */
   protected ConcurrentHashMap<String, CompletableFuture<Stream<?>>> mapResults;
+
+  /**
+   * Creates an AsyncNode with specified range values and thread configurations.
+   *
+   * @param nbthreads                   The number of threads for the component
+   * @param nbSchedulableThreads        The number of schedulable threads
+   * @param nodeFacadeCompositeEndpoint The composite endpoint representing the
+   *                                    node facade
+   * @param selfNodeCompositeEndpoint   Composite endpoint for next node in chain
+   *                                    of which this node is the server,
+   * @param nextNodeCompositeEndpoint   Composite endpoint for next node in chain
+   *                                    of which this node is the client
+   * @param nbContentAccessThreads      The number of threads for content access
+   *                                    operations
+   * @param nbMapRedueThreads           The number of threads for map-reduce
+   *                                    operations
+   * @param minValue                    The minimum value handled by this node
+   * @param maxValue                    The maximum value handled by this node
+   * 
+   * @throws Exception If there is an error during BCM component creation or
+   *                   server initialization in endpoints
+   * 
+   * @see ContentNodeBaseCompositeEndPointI
+   * @see ContentAccessI
+   * @see MapReduceI
+   */
+  protected AsyncNode(int nbthreads, int nbSchedulableThreads,
+      ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> nodeFacadeCompositeEndpoint,
+      ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> selfNodeCompositeEndpoint,
+      ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> nextNodeCompositeEndpoint,
+      int nbContentAccessThreads, int nbMapRedueThreads, int minValue, int maxValue) throws Exception {
+    super(nbthreads, nbSchedulableThreads, nodeFacadeCompositeEndpoint, selfNodeCompositeEndpoint,
+        nextNodeCompositeEndpoint, minValue, maxValue);
+
+    assert this.localStorage instanceof ConcurrentHashMap : "Local storage should be a ConcurrentHashMap";
+    assert this.mapResults instanceof ConcurrentHashMap : "Map results should be a ConcurrentHashMap";
+    assert this.mapReduceExecutorServiceURI != null : "MapReduce executor service URI should not be null";
+    assert this.contentAccessExecutorServiceURI != null : "Content access executor service URI should not be null";
+
+    this.createNewExecutorService(contentAccessExecutorServiceURI, nbContentAccessThreads, false);
+    this.createNewExecutorService(mapReduceExecutorServiceURI, nbMapRedueThreads, false);
+  }
 
   /**
    * Creates an AsyncNode with specified range values.
    *
    * @param nodeFacadeCompositeEndpoint The composite endpoint representing the
    *                                    node facade
-   * @param selfNodeCompositeEndpoint   The composite endpoint representing the
-   *                                    current node
-   * @param nextNodeCompositeEndpoint   The composite endpoint representing the
-   *                                    next node in the chain
+   * @param selfNodeCompositeEndpoint   Composite endpoint for next node in chain
+   *                                    of which this node is the server,
+   * @param nextNodeCompositeEndpoint   Composite endpoint for next node in chain
+   *                                    of which this node is the client
    * @param minValue                    The minimum value handled by this node
    * @param maxValue                    The maximum value handled by this node
    * 
@@ -95,10 +157,10 @@ public class AsyncNode extends SyncNode<ContentAccessI, MapReduceI>
       ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> selfNodeCompositeEndpoint,
       ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> nextNodeCompositeEndpoint,
       int minValue, int maxValue) throws Exception {
-    super(NB_THREADS, NB_SCHEDULABLE_THREADS, nodeFacadeCompositeEndpoint, selfNodeCompositeEndpoint,
-        nextNodeCompositeEndpoint, minValue, maxValue);
-    assert this.localStorage instanceof ConcurrentHashMap : "Local storage should be a ConcurrentHashMap";
-    assert this.mapResults instanceof ConcurrentHashMap : "Map results should be a ConcurrentHashMap";
+    this(
+        DEFAULT_NB_THREADS, DEFAULT_NB_SCHEDULABLE_THREADS, nodeFacadeCompositeEndpoint, selfNodeCompositeEndpoint,
+        nextNodeCompositeEndpoint, DEFAULT_NB_CONTENT_ACCESS_THREADS, DEFAULT_NB_MAP_REDUCE_THREADS, minValue,
+        maxValue);
   }
 
   /**
@@ -106,10 +168,10 @@ public class AsyncNode extends SyncNode<ContentAccessI, MapReduceI>
    * 
    * @param nodeFacadeCompositeEndpoint The composite endpoint representing the
    *                                    node facade
-   * @param selfNodeCompositeEndpoint   The composite endpoint representing the
-   *                                    current node
-   * @param nextNodeCompositeEndpoint   The composite endpoint representing the
-   *                                    next node in the chain
+   * @param selfNodeCompositeEndpoint   Composite endpoint for next node in chain
+   *                                    of which this node is the server,
+   * @param nextNodeCompositeEndpoint   Composite endpoint for next node in chain
+   *                                    of which this node is the client
    * @throws Exception If there is an error during BCM component creation or
    *                   server initialization in endpoints
    */
@@ -145,6 +207,8 @@ public class AsyncNode extends SyncNode<ContentAccessI, MapReduceI>
         nextNodeCompositeEndpoint, minValue, maxValue);
     this.localStorage = new ConcurrentHashMap<>();
     this.mapResults = new ConcurrentHashMap<>();
+    this.contentAccessExecutorServiceURI = URIGenerator.generateURI(EXECUTOR_SERVICE_URI_PREFIX);
+    this.mapReduceExecutorServiceURI = URIGenerator.generateURI(EXECUTOR_SERVICE_URI_PREFIX);
   }
 
   // ------------------------------------------------------------------------
@@ -215,6 +279,23 @@ public class AsyncNode extends SyncNode<ContentAccessI, MapReduceI>
   // ------------------------------------------------------------------------
   // MapReduce methods
   // ------------------------------------------------------------------------
+
+  /**
+   * {@inheritDoc}
+   * 
+   * Just in case but normally there shouldn't be any residual data
+   */
+  @Override
+  public void clearMapReduceComputation(String URI) throws Exception {
+    mapResults.compute(URI, (uri, existingFuture) -> {
+      if (existingFuture != null) {
+        existingFuture.cancel(true);
+      }
+      return null;
+    });
+    super.clearMapReduceComputation(URI);
+    this.getNextMapReduceReference().clearMapReduceComputation(URI);
+  }
 
   /**
    * {@inheritDoc}
@@ -379,6 +460,24 @@ public class AsyncNode extends SyncNode<ContentAccessI, MapReduceI>
     caller.initialiseClientSide(this);
     caller.getClientSideReference().acceptResult(computationURI, emitterId, acc);
     caller.cleanUpClientSide();
+  }
+
+  /**
+   * Returns the URI of the executor service used for content access operations.
+   *
+   * @return the content access executor service URI
+   */
+  public String getContentAccessExecutorServiceURI() {
+    return this.contentAccessExecutorServiceURI;
+  }
+
+  /**
+   * Returns the URI of the MapReduce executor service.
+   * 
+   * @return the URI of the MapReduce executor service
+   */
+  public String getMapReduceExecutorServiceURI() {
+    return this.mapReduceExecutorServiceURI;
   }
 
 }

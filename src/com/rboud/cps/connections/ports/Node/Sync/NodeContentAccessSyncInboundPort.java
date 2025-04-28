@@ -62,6 +62,37 @@ public class NodeContentAccessSyncInboundPort extends AbstractInboundPort implem
   }
 
   /**
+   * Creates a new synchronous content access inbound port with specified
+   * interface, URI, and executor service URI.
+   *
+   * @param uri                  The unique URI for this port
+   * @param implementedInterface The interface implemented by this port
+   * @param owner                The component owner of this port
+   * @param pluginURI            The plugin URI for the executor service
+   * @param executorServiceUri   The executor service URI
+   * @throws Exception If port creation fails
+   */
+  public NodeContentAccessSyncInboundPort(String uri, Class<? extends ContentAccessSyncCI> implementedInterface,
+      ComponentI owner, String pluginURI, String executorServiceUri) throws Exception {
+    super(uri, implementedInterface, owner, pluginURI, executorServiceUri);
+  }
+
+  /**
+   * Creates a new synchronous content access inbound port with specified
+   * interface and executor service URI.
+   *
+   * @param implementedInterface The interface implemented by this port
+   * @param owner                The component owner of this port
+   * @param pluginURI            The plugin URI for the executor service
+   * @param executorServiceUri   The executor service URI
+   * @throws Exception If port creation fails
+   */
+  public NodeContentAccessSyncInboundPort(Class<? extends ContentAccessSyncCI> implementedInterface,
+      ComponentI owner, String pluginURI, String executorServiceUri) throws Exception {
+    super(implementedInterface, owner, pluginURI, executorServiceUri);
+  }
+
+  /**
    * {@inheritDoc}
    */
   @Override

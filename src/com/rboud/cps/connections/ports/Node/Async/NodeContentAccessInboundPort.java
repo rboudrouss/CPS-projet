@@ -41,12 +41,38 @@ public class NodeContentAccessInboundPort extends NodeContentAccessSyncInboundPo
   }
 
   /**
+   * Creates a new content access inbound port with specified interface.
+   *
+   * @param owner              The component owner of this port
+   * @param executorServiceURI The URI of the executor service for this port
+   * @throws Exception If port creation fails
+   */
+  public NodeContentAccessInboundPort(ComponentI owner, String executorServiceURI)
+      throws Exception {
+    super(ContentAccessCI.class, owner, null, executorServiceURI);
+  }
+
+  /**
+   * Creates a new content access inbound port with specified interface and URI.
+   *
+   * @param URI                The unique URI for this port
+   * @param owner              The component owner of this port
+   * @param executorServiceURI The URI of the executor service for this port
+   * @throws Exception If port creation fails
+   */
+  public NodeContentAccessInboundPort(String URI, ComponentI owner, String executorServiceURI)
+      throws Exception {
+    super(URI, ContentAccessCI.class, owner, null, executorServiceURI);
+  }
+
+  /**
    * {@inheritDoc}
    */
   @Override
   public <I extends ResultReceptionCI> void get(String computationURI, ContentKeyI key, EndPointI<I> caller)
       throws Exception {
     this.getOwner().runTask(
+        this.getExecutorServiceURI(),
         (c) -> {
           try {
             ((ContentAccessI) c).get(computationURI, key, caller);
@@ -63,6 +89,7 @@ public class NodeContentAccessInboundPort extends NodeContentAccessSyncInboundPo
   public <I extends ResultReceptionCI> void put(String computationURI, ContentKeyI key, ContentDataI value,
       EndPointI<I> caller) throws Exception {
     this.getOwner().runTask(
+        this.getExecutorServiceURI(),
         (c) -> {
           try {
             ((ContentAccessI) c).put(computationURI, key, value, caller);
@@ -79,6 +106,7 @@ public class NodeContentAccessInboundPort extends NodeContentAccessSyncInboundPo
   public <I extends ResultReceptionCI> void remove(String computationURI, ContentKeyI key, EndPointI<I> caller)
       throws Exception {
     this.getOwner().runTask(
+        this.getExecutorServiceURI(),
         (c) -> {
           try {
             ((ContentAccessI) c).remove(computationURI, key, caller);

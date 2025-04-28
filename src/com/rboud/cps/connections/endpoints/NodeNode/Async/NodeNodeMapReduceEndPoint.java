@@ -1,5 +1,6 @@
 package com.rboud.cps.connections.endpoints.NodeNode.Async;
 
+import com.rboud.cps.components.AsyncNode;
 import com.rboud.cps.connections.connectors.MapReduceConnector;
 import com.rboud.cps.connections.ports.Node.Async.NodeMapReduceInboundPort;
 import com.rboud.cps.connections.ports.Node.Async.NodeMapReduceOutboundPort;
@@ -16,7 +17,8 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.MapReduceCI;
 public class NodeNodeMapReduceEndPoint extends BCMEndPoint<MapReduceCI> {
 
   /**
-   * Creates a new endpoint for asynchronous MapReduce operations with default configuration.
+   * Creates a new endpoint for asynchronous MapReduce operations with default
+   * configuration.
    */
   public NodeNodeMapReduceEndPoint() {
     super(MapReduceCI.class, MapReduceCI.class);
@@ -27,7 +29,9 @@ public class NodeNodeMapReduceEndPoint extends BCMEndPoint<MapReduceCI> {
    */
   @Override
   protected AbstractInboundPort makeInboundPort(AbstractComponent c, String inboundPortURI) throws Exception {
-    NodeMapReduceInboundPort port = new NodeMapReduceInboundPort(inboundPortURI, c);
+    assert c instanceof AsyncNode;
+    NodeMapReduceInboundPort port = new NodeMapReduceInboundPort(inboundPortURI, c,
+        ((AsyncNode) c).getMapReduceExecutorServiceURI());
     port.publishPort();
     return port;
   }

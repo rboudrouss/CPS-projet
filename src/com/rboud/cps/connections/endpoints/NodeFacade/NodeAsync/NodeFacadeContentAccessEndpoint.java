@@ -1,5 +1,6 @@
 package com.rboud.cps.connections.endpoints.NodeFacade.NodeAsync;
 
+import com.rboud.cps.components.AsyncNode;
 import com.rboud.cps.connections.connectors.ContentAccessConnector;
 import com.rboud.cps.connections.ports.Facade.FacadeContentAccessOutboundPort;
 import com.rboud.cps.connections.ports.Node.Async.NodeContentAccessInboundPort;
@@ -37,7 +38,9 @@ public class NodeFacadeContentAccessEndpoint extends BCMEndPoint<ContentAccessCI
    */
   @Override
   protected AbstractInboundPort makeInboundPort(AbstractComponent c, String inboundPortURI) throws Exception {
-    NodeContentAccessInboundPort port = new NodeContentAccessInboundPort(inboundPortURI, c);
+    assert c instanceof AsyncNode;
+    NodeContentAccessInboundPort port = new NodeContentAccessInboundPort(inboundPortURI, c,
+        ((AsyncNode) c).getContentAccessExecutorServiceURI());
     port.publishPort();
     return port;
   }

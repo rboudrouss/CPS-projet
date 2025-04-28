@@ -66,6 +66,37 @@ public class NodeMapReduceSyncInboundPort extends AbstractInboundPort implements
   }
 
   /**
+   * Creates a new synchronous map reduce inbound port with specified
+   * interface, URI, and executor service URI.
+   *
+   * @param uri                  The unique URI for this port
+   * @param implementedInterface The interface implemented by this port
+   * @param owner                The component owner of this port
+   * @param pluginURI            The plugin URI for the executor service
+   * @param executorServiceUri   The executor service URI
+   * @throws Exception If port creation fails
+   */
+  public NodeMapReduceSyncInboundPort(String URI, Class<? extends MapReduceSyncCI> implementedInterface,
+      ComponentI owner, String pluginURI, String executorServiceURI) throws Exception {
+    super(URI, implementedInterface, owner, pluginURI, executorServiceURI);
+  }
+
+  /**
+   * Creates a new synchronous map reduce inbound port with specified
+   * interface and executor service URI.
+   *
+   * @param implementedInterface The interface implemented by this port
+   * @param owner                The component owner of this port
+   * @param pluginURI            The plugin URI for the executor service
+   * @param executorServiceUri   The executor service URI
+   * @throws Exception If port creation fails
+   */
+  public NodeMapReduceSyncInboundPort(Class<? extends MapReduceSyncCI> implementedInterface, ComponentI owner,
+      String pluginURI, String executorServiceURI) throws Exception {
+    super(implementedInterface, owner, pluginURI, executorServiceURI);
+  }
+
+  /**
    * {@inheritDoc}
    */
   @Override

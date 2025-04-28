@@ -45,6 +45,31 @@ public class NodeMapReduceInboundPort extends NodeMapReduceSyncInboundPort imple
   }
 
   /**
+   * Creates a new MapReduce inbound port with specified interface.
+   *
+   * @param URI                The URI of the port
+   * @param owner              The component owner of this port
+   * @param executorServiceURI The URI of the executor service for this port
+   * @throws Exception If port creation fails
+   */
+  public NodeMapReduceInboundPort(String URI, ComponentI owner, String executorServiceURI)
+      throws Exception {
+    super(URI, MapReduceCI.class, owner, null, executorServiceURI);
+  }
+
+  /**
+   * Creates a new MapReduce inbound port with specified interface and URI.
+   *
+   * @param owner              The component owner of this port
+   * @param executorServiceURI The URI of the executor service for this port
+   * @throws Exception If port creation fails
+   */
+  public NodeMapReduceInboundPort(ComponentI owner, String executorServiceURI)
+      throws Exception {
+    super(MapReduceCI.class, owner, null, executorServiceURI);
+  }
+
+  /**
    * {@inheritDoc}
    */
   @Override
