@@ -4,8 +4,8 @@ import com.rboud.cps.components.AsyncFacade;
 import com.rboud.cps.components.AsyncNode;
 import com.rboud.cps.components.ExampleClientTester;
 import com.rboud.cps.connections.endpoints.FacadeClient.FacadeClientDHTServicesEndpoint;
-import com.rboud.cps.connections.endpoints.NodeFacade.NodeAsync.NodeFacadeCompositeEndpoint;
-import com.rboud.cps.connections.endpoints.NodeNode.Async.NodeNodeCompositeEndpoint;
+import com.rboud.cps.connections.endpoints.NodeFacade.AsyncNode.NodeFacadeAsyncCompositeEndpoint;
+import com.rboud.cps.connections.endpoints.NodeNode.Async.NodeNodeAsyncCompositeEndpoint;
 
 import fr.sorbonne_u.components.AbstractComponent;
 import fr.sorbonne_u.components.cvm.AbstractCVM;
@@ -71,7 +71,7 @@ public class CVM extends AbstractCVM {
     // AbstractCVM.DEBUG_MODE.add(CVMDebugModes.EXECUTOR_SERVICES);
 
     FacadeClientDHTServicesEndpoint dhtServicesEndpoint = new FacadeClientDHTServicesEndpoint();
-    NodeFacadeCompositeEndpoint nodeFacadeCompositeEndpoint = new NodeFacadeCompositeEndpoint();
+    NodeFacadeAsyncCompositeEndpoint nodeFacadeCompositeEndpoint = new NodeFacadeAsyncCompositeEndpoint();
 
     String[] nodeURIs = createAndConnectNodes(NODES, nodeFacadeCompositeEndpoint);
 
@@ -96,9 +96,9 @@ public class CVM extends AbstractCVM {
    * @return array of created node URIs
    * @throws Exception if node creation or connection fails
    */
-  private String[] createAndConnectNodes(int n, NodeFacadeCompositeEndpoint facadeEndpoint) throws Exception {
+  private String[] createAndConnectNodes(int n, NodeFacadeAsyncCompositeEndpoint facadeEndpoint) throws Exception {
     if (n <= 1) {
-      NodeNodeCompositeEndpoint endpoint = new NodeNodeCompositeEndpoint();
+      NodeNodeAsyncCompositeEndpoint endpoint = new NodeNodeAsyncCompositeEndpoint();
       String nodeURI = AbstractComponent.createComponent(
           AsyncNode.class.getCanonicalName(),
           new Object[] { facadeEndpoint.copyWithSharable(), endpoint.copyWithSharable(), endpoint.copyWithSharable(),
@@ -108,11 +108,11 @@ public class CVM extends AbstractCVM {
 
     int step = (int) (((long) Integer.MAX_VALUE) * 2L / (long) n);
 
-    NodeFacadeCompositeEndpoint currentFacadeEndpoint = facadeEndpoint;
+    NodeFacadeAsyncCompositeEndpoint currentFacadeEndpoint = facadeEndpoint;
 
-    NodeNodeCompositeEndpoint firstEndpoint = new NodeNodeCompositeEndpoint();
+    NodeNodeAsyncCompositeEndpoint firstEndpoint = new NodeNodeAsyncCompositeEndpoint();
 
-    NodeNodeCompositeEndpoint oldEndpoint = firstEndpoint, newEndpoint = new NodeNodeCompositeEndpoint();
+    NodeNodeAsyncCompositeEndpoint oldEndpoint = firstEndpoint, newEndpoint = new NodeNodeAsyncCompositeEndpoint();
 
     String[] nodeURIs = new String[n];
 
@@ -124,10 +124,10 @@ public class CVM extends AbstractCVM {
               Integer.MIN_VALUE + step * (i + 1) });
 
       oldEndpoint = newEndpoint;
-      newEndpoint = new NodeNodeCompositeEndpoint();
+      newEndpoint = new NodeNodeAsyncCompositeEndpoint();
 
       // Creating fake empty endpoint since we cannot pass null
-      currentFacadeEndpoint = new NodeFacadeCompositeEndpoint();
+      currentFacadeEndpoint = new NodeFacadeAsyncCompositeEndpoint();
     }
 
     // last node must connect to the first node

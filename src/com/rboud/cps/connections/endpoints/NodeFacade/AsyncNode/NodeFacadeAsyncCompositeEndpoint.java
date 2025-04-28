@@ -21,7 +21,7 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.MapReduceCI;
  * </ul>
  * </p>
  */
-public class NodeFacadeCompositeEndpoint extends BCMCompositeEndPoint
+public class NodeFacadeAsyncCompositeEndpoint extends BCMCompositeEndPoint
     implements ContentNodeAsyncCompositeEndPointI<ContentAccessCI, MapReduceCI> {
 
   /** Number of endpoints managed by this composite endpoint */
@@ -32,7 +32,7 @@ public class NodeFacadeCompositeEndpoint extends BCMCompositeEndPoint
    * Initializes both content access and map-reduce endpoints that will handle
    * the communication between a node and the facade.
    */
-  public NodeFacadeCompositeEndpoint() {
+  public NodeFacadeAsyncCompositeEndpoint() {
     super(N_ENDPOINTS);
     this.addEndPoint(new NodeFacadeContentAccessEndpoint());
     this.addEndPoint(new NodeFacadeMapReduceEndpoint());

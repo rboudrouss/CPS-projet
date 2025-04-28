@@ -20,7 +20,7 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.MapReduceCI;
  * </ul>
  * </p>
  */
-public class NodeNodeCompositeEndpoint
+public class NodeNodeAsyncCompositeEndpoint
     extends BCMCompositeEndPoint
     implements ContentNodeAsyncCompositeEndPointI<ContentAccessCI, MapReduceCI> {
 
@@ -32,7 +32,7 @@ public class NodeNodeCompositeEndpoint
    * Initializes both content access and map-reduce endpoints that will handle
    * the communication between two DHT nodes.
    */
-  public NodeNodeCompositeEndpoint() {
+  public NodeNodeAsyncCompositeEndpoint() {
     super(N_ENDPOINTS);
     this.addEndPoint(new NodeNodeContentAccessEndPoint());
     this.addEndPoint(new NodeNodeMapReduceEndPoint());
