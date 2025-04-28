@@ -185,6 +185,7 @@ public class AsyncFacade<CAI extends ContentAccessI, MRI extends MapReduceI> ext
     assert this.facadeMapReduceResultReceptionEndpoint.clientSideClean();
     this.getMapReduceClientReference().clearMapReduceComputation(computationURI);
 
+    this.logMessage("[FACADE] MapReduce computation finished with URI: " + computationURI);
     return out;
   }
 

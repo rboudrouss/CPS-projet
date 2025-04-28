@@ -50,6 +50,7 @@ public class NodeContentAccessInboundPort extends NodeContentAccessSyncInboundPo
   public NodeContentAccessInboundPort(ComponentI owner, String executorServiceURI)
       throws Exception {
     super(ContentAccessCI.class, owner, null, executorServiceURI);
+    assert executorServiceURI != null : "executorServiceURI cannot be null";
   }
 
   /**
@@ -63,6 +64,7 @@ public class NodeContentAccessInboundPort extends NodeContentAccessSyncInboundPo
   public NodeContentAccessInboundPort(String URI, ComponentI owner, String executorServiceURI)
       throws Exception {
     super(URI, ContentAccessCI.class, owner, null, executorServiceURI);
+    assert executorServiceURI != null : "executorServiceURI cannot be null";
   }
 
   /**

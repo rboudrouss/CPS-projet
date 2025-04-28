@@ -121,7 +121,7 @@ public class AsyncNode extends SyncNode<ContentAccessI, MapReduceI>
       ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> nodeFacadeCompositeEndpoint,
       ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> selfNodeCompositeEndpoint,
       ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> nextNodeCompositeEndpoint,
-      int nbContentAccessThreads, int nbMapRedueThreads, int minValue, int maxValue) throws Exception {
+      int minValue, int maxValue) throws Exception {
     super(nbthreads, nbSchedulableThreads, nodeFacadeCompositeEndpoint, selfNodeCompositeEndpoint,
         nextNodeCompositeEndpoint, minValue, maxValue);
 
@@ -130,8 +130,6 @@ public class AsyncNode extends SyncNode<ContentAccessI, MapReduceI>
     assert this.mapReduceExecutorServiceURI != null : "MapReduce executor service URI should not be null";
     assert this.contentAccessExecutorServiceURI != null : "Content access executor service URI should not be null";
 
-    this.createNewExecutorService(contentAccessExecutorServiceURI, nbContentAccessThreads, false);
-    this.createNewExecutorService(mapReduceExecutorServiceURI, nbMapRedueThreads, false);
   }
 
   /**
@@ -159,7 +157,7 @@ public class AsyncNode extends SyncNode<ContentAccessI, MapReduceI>
       int minValue, int maxValue) throws Exception {
     this(
         DEFAULT_NB_THREADS, DEFAULT_NB_SCHEDULABLE_THREADS, nodeFacadeCompositeEndpoint, selfNodeCompositeEndpoint,
-        nextNodeCompositeEndpoint, DEFAULT_NB_CONTENT_ACCESS_THREADS, DEFAULT_NB_MAP_REDUCE_THREADS, minValue,
+        nextNodeCompositeEndpoint, minValue,
         maxValue);
   }
 
@@ -187,28 +185,24 @@ public class AsyncNode extends SyncNode<ContentAccessI, MapReduceI>
   }
 
   /**
-   * Initializes the AsyncNode with the specified parameters.
-   * Overrides the initialise method from SyncNode to set up the local storage
-   * and map results as ConcurrentHashMaps for thread-safe operations.
-   * 
-   * @throws Exception If there's an error during server initialization in
-   *                   endpoints
-   * 
-   * @see SyncNode#initialise(ContentNodeBaseCompositeEndPointI,
-   *      ContentNodeBaseCompositeEndPointI, ContentNodeBaseCompositeEndPointI,
-   *      int, int)
+   * {@inheritDoc}
    */
   @Override
   protected void initialise(ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> nodeFacadeCompositeEndpoint,
       ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> selfNodeCompositeEndpoint,
       ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> nextNodeCompositeEndpoint, int minValue,
       int maxValue) throws Exception {
-    super.initialise(nodeFacadeCompositeEndpoint, selfNodeCompositeEndpoint,
-        nextNodeCompositeEndpoint, minValue, maxValue);
-    this.localStorage = new ConcurrentHashMap<>();
-    this.mapResults = new ConcurrentHashMap<>();
     this.contentAccessExecutorServiceURI = URIGenerator.generateURI(EXECUTOR_SERVICE_URI_PREFIX);
     this.mapReduceExecutorServiceURI = URIGenerator.generateURI(EXECUTOR_SERVICE_URI_PREFIX);
+
+    this.createNewExecutorService(contentAccessExecutorServiceURI, DEFAULT_NB_CONTENT_ACCESS_THREADS, false);
+    this.createNewExecutorService(mapReduceExecutorServiceURI, DEFAULT_NB_MAP_REDUCE_THREADS, false);
+
+    super.initialise(nodeFacadeCompositeEndpoint, selfNodeCompositeEndpoint,
+        nextNodeCompositeEndpoint, minValue, maxValue);
+
+    this.localStorage = new ConcurrentHashMap<>();
+    this.mapResults = new ConcurrentHashMap<>();
   }
 
   // ------------------------------------------------------------------------
@@ -290,11 +284,15 @@ public class AsyncNode extends SyncNode<ContentAccessI, MapReduceI>
     mapResults.compute(URI, (uri, existingFuture) -> {
       if (existingFuture != null) {
         existingFuture.cancel(true);
+        try {
+          this.getNextMapReduceReference().clearMapReduceComputation(URI);
+        } catch (Exception e) {
+          e.printStackTrace();
+        }
       }
       return null;
     });
     super.clearMapReduceComputation(URI);
-    this.getNextMapReduceReference().clearMapReduceComputation(URI);
   }
 
   /**
@@ -315,9 +313,6 @@ public class AsyncNode extends SyncNode<ContentAccessI, MapReduceI>
     // doesn't matter
     mapResults.compute(computationURI, (uri, existingFuture) -> {
       this.logMessage("[NODE-MAP] Calling map with uri " + computationURI);
-      this.logMessage(
-          "[NODE-MAP] origin uri " + URIStamper.getOriginNodeFromUri(computationURI) + " this node uri "
-              + this.nodeURI);
 
       if (this.nodeURI.equals(URIStamper.getOriginNodeFromUri(computationURI))) {
         this.logMessage("[NODE-MAP] Looped map !");

@@ -227,6 +227,9 @@ public class SyncNode<CAI extends ContentAccessSyncI, MRI extends MapReduceSyncI
   /**
    * 
    * Initialise the node, the parameters are those passed by the constructor.
+   * Then initialise the server connection.
+   * finally, the logging and tracing are toggled.
+   * 
    * <!> Do not forget to initialise this.localStorage !!
    * 
    * @param nodeFacadeCompositeEndpoint The endpoint for the facade

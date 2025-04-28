@@ -35,6 +35,9 @@ public class Tester {
    * @param logFunction Logging function
    */
   public Tester(DHTServicesI dht, LogFunction logFunction) throws Exception {
+    assert dht != null : "DHT service cannot be null";
+    assert logFunction != null : "Log function cannot be null";
+
     this.logFunction = message -> logFunction.log("[TESTER] " + message);
     this.dht = dht;
     if (ALLOW_RANDOM) {

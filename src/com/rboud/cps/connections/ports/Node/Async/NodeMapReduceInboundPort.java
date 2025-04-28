@@ -55,6 +55,7 @@ public class NodeMapReduceInboundPort extends NodeMapReduceSyncInboundPort imple
   public NodeMapReduceInboundPort(String URI, ComponentI owner, String executorServiceURI)
       throws Exception {
     super(URI, MapReduceCI.class, owner, null, executorServiceURI);
+    assert executorServiceURI != null : "executorServiceURI cannot be null";
   }
 
   /**
@@ -67,6 +68,7 @@ public class NodeMapReduceInboundPort extends NodeMapReduceSyncInboundPort imple
   public NodeMapReduceInboundPort(ComponentI owner, String executorServiceURI)
       throws Exception {
     super(MapReduceCI.class, owner, null, executorServiceURI);
+    assert executorServiceURI != null : "executorServiceURI cannot be null";
   }
 
   /**
@@ -75,13 +77,15 @@ public class NodeMapReduceInboundPort extends NodeMapReduceSyncInboundPort imple
   @Override
   public <R extends Serializable> void map(String computationURI, SelectorI selector, ProcessorI<R> processor)
       throws Exception {
-    this.getOwner().runTask(c -> {
-      try {
-        ((MapReduceI) c).map(computationURI, selector, processor);
-      } catch (Exception e) {
-        e.printStackTrace();
-      }
-    });
+    this.getOwner().runTask(
+        this.getExecutorServiceURI(),
+        c -> {
+          try {
+            ((MapReduceI) c).map(computationURI, selector, processor);
+          } catch (Exception e) {
+            e.printStackTrace();
+          }
+        });
   }
 
   /**
@@ -91,12 +95,14 @@ public class NodeMapReduceInboundPort extends NodeMapReduceSyncInboundPort imple
   public <A extends Serializable, R, I extends MapReduceResultReceptionCI> void reduce(String computationURI,
       ReductorI<A, R> reductor, CombinatorI<A> combinator, A identityAcc, A currentAcc, EndPointI<I> caller)
       throws Exception {
-    this.getOwner().runTask(c -> {
-      try {
-        ((MapReduceI) c).reduce(computationURI, reductor, combinator, identityAcc, currentAcc, caller);
-      } catch (Exception e) {
-        e.printStackTrace();
-      }
-    });
+    this.getOwner().runTask(
+        this.getExecutorServiceURI(),
+        c -> {
+          try {
+            ((MapReduceI) c).reduce(computationURI, reductor, combinator, identityAcc, currentAcc, caller);
+          } catch (Exception e) {
+            e.printStackTrace();
+          }
+        });
   }
 }
