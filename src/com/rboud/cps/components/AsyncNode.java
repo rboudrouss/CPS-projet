@@ -36,19 +36,25 @@ import fr.sorbonne_u.cps.mapreduce.utils.URIGenerator;
  * Key features:
  * - Asynchronous content management (get, put, remove)
  * - Distributed map-reduce operations
- * - Concurrent operation handling
+ * - Concurrent operation handling with dedicated thread pools:
+ * - Content access pool (1 thread by default for fast operations)
+ * - MapReduce pool (2 threads by default for parallel processing)
  * - Node-to-node communication
  * - Result forwarding capabilities
+ * - Parallel stream processing for map operations
  * 
  * The node uses a URI stamping mechanism to track the origin of computations
  * and prevent infinite loops in the distributed network in map-reduce
  * operations.
  * 
  * Implementation notes:
- * - Uses ConcurrentHashMap for thread-safe storage
- * - Implements CompletableFuture for asynchronous operations
- * - Maintains node interval boundaries for content distribution
+ * - Heavily relies on ConcurrentHashMap for thread-safe storage
+ * - Uses CompletableFuture for asynchronous result handling (pausing reduce
+ * till map is done)
+ * - Utilizes a custom URI stamping mechanism to manage computation URIs (The
+ * origin node is stamped in the URI)
  * - Supports distributed map-reduce operations with result aggregation
+ * - Separate executor services for content access and map-reduce tasks
  * 
  * @param <ContentAccessI> The interface type for content access operations
  * @param <MapReduceI>     The interface type for map-reduce operations
