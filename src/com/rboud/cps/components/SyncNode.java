@@ -6,8 +6,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import com.rboud.cps.utils.MyInterval;
-
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentAccessSyncCI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentAccessSyncI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentDataI;
@@ -19,6 +17,7 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.MapReduceSyncI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.ProcessorI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.ReductorI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.SelectorI;
+import fr.sorbonne_u.cps.mapreduce.utils.IntInterval;
 import fr.sorbonne_u.cps.mapreduce.utils.URIGenerator;
 import fr.sorbonne_u.components.AbstractComponent;
 import fr.sorbonne_u.components.annotations.OfferedInterfaces;
@@ -87,7 +86,7 @@ public class SyncNode<CAI extends ContentAccessSyncI, MRI extends MapReduceSyncI
   protected Map<String, Stream<?>> mapSyncResults = new HashMap<>();
 
   /** Range of hash values this node is responsible for */
-  protected MyInterval interval;
+  protected IntInterval interval;
 
   /** Local storage for content data */
   protected Map<ContentKeyI, ContentDataI> localStorage;
@@ -255,7 +254,7 @@ public class SyncNode<CAI extends ContentAccessSyncI, MRI extends MapReduceSyncI
     this.nodeFacadeCompositeEndpoint = nodeFacadeCompositeEndpoint;
     this.selfNodeCompositeEndpoint = selfNodeCompositeEndpoint;
     this.nextNodeCompositeEndpoint = nextNodeCompositeEndpoint;
-    this.interval = new MyInterval(minValue, maxValue);
+    this.interval = new IntInterval(minValue, maxValue);
     this.localStorage = new HashMap<>();
 
     this.initialiseServerConnection();
