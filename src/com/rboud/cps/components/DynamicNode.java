@@ -161,69 +161,90 @@ public class DynamicNode<NodeCompositeEndpointT extends ContentNodeCompositeEndP
   @Override
   public <I extends ResultReceptionCI> void get(String computationURI, ContentKeyI key, EndPointI<I> caller)
       throws Exception {
+    if (this.interval.in(key.hashCode())) {
+      this.sendResult("GET", caller, computationURI, this.localStorage.get(key));
+      return;
+    }
     SerializablePair<ContentNodeCompositeEndPointI<ContentAccessCI, ParallelMapReduceCI, DHTManagementCI>, Integer> bestChord = this
         .findBestChord(key.hashCode());
     if (bestChord != null) {
       bestChord.first().getContentAccessEndpoint().getClientSideReference().get(computationURI, key, caller);
     } else {
-      super.get(computationURI, key, caller);
+      this.getNextContentAccessReference().get(computationURI, key, caller);
     }
   }
 
   @Override
   public <I extends ResultReceptionCI> void put(String computationURI, ContentKeyI key, ContentDataI value,
       EndPointI<I> caller) throws Exception {
+    if (this.interval.in(key.hashCode())) {
+      this.sendResult("PUT", caller, computationURI, this.localStorage.put(key, value));
+      return;
+    }
     SerializablePair<ContentNodeCompositeEndPointI<ContentAccessCI, ParallelMapReduceCI, DHTManagementCI>, Integer> bestChord = this
         .findBestChord(key.hashCode());
     if (bestChord != null) {
       bestChord.first().getContentAccessEndpoint().getClientSideReference().put(computationURI, key, value, caller);
     } else {
-      super.put(computationURI, key, value, caller);
+      this.getNextContentAccessReference().put(computationURI, key, value, caller);
     }
   }
 
   @Override
   public <I extends ResultReceptionCI> void remove(String computationURI, ContentKeyI key, EndPointI<I> caller)
       throws Exception {
+    if (this.interval.in(key.hashCode())) {
+      this.sendResult("REMOVE", caller, computationURI, this.localStorage.remove(key));
+      return;
+    }
     SerializablePair<ContentNodeCompositeEndPointI<ContentAccessCI, ParallelMapReduceCI, DHTManagementCI>, Integer> bestChord = this
         .findBestChord(key.hashCode());
     if (bestChord != null) {
       bestChord.first().getContentAccessEndpoint().getClientSideReference().remove(computationURI, key, caller);
     } else {
-      super.remove(computationURI, key, caller);
+      this.getNextContentAccessReference().remove(computationURI, key, caller);
     }
   }
 
   @Override
   public ContentDataI getSync(String URI, ContentKeyI key) throws Exception {
+    if (this.interval.in(key.hashCode())) {
+      return this.localStorage.get(key);
+    }
     SerializablePair<ContentNodeCompositeEndPointI<ContentAccessCI, ParallelMapReduceCI, DHTManagementCI>, Integer> bestChord = this
         .findBestChord(key.hashCode());
     if (bestChord != null) {
       return bestChord.first().getContentAccessEndpoint().getClientSideReference().getSync(URI, key);
     } else {
-      return super.getSync(URI, key);
+      return this.getNextContentAccessReference().getSync(URI, key);
     }
   }
 
   @Override
   public ContentDataI putSync(String URI, ContentKeyI key, ContentDataI value) throws Exception {
+    if (this.interval.in(key.hashCode())) {
+      return this.localStorage.put(key, value);
+    }
     SerializablePair<ContentNodeCompositeEndPointI<ContentAccessCI, ParallelMapReduceCI, DHTManagementCI>, Integer> bestChord = this
         .findBestChord(key.hashCode());
     if (bestChord != null) {
-      return bestChord.first().getContentAccessEndpoint().getClientSideReference().putSync(URI, key, value)
+      return bestChord.first().getContentAccessEndpoint().getClientSideReference().putSync(URI, key, value);
     } else {
-      return super.putSync(URI, key, value);
+      return this.getNextContentAccessReference().putSync(URI, key, value);
     }
   }
 
   @Override
   public ContentDataI removeSync(String URI, ContentKeyI key) throws Exception {
+    if (this.interval.in(key.hashCode())) {
+      return this.localStorage.remove(key);
+    }
     SerializablePair<ContentNodeCompositeEndPointI<ContentAccessCI, ParallelMapReduceCI, DHTManagementCI>, Integer> bestChord = this
         .findBestChord(key.hashCode());
     if (bestChord != null) {
       return bestChord.first().getContentAccessEndpoint().getClientSideReference().removeSync(URI, key);
     } else {
-      return super.removeSync(URI, key);
+      return this.getNextContentAccessReference().removeSync(URI, key);
     }
   }
 
