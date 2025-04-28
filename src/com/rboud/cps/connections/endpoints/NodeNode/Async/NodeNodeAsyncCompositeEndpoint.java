@@ -34,8 +34,8 @@ public class NodeNodeAsyncCompositeEndpoint
    */
   public NodeNodeAsyncCompositeEndpoint() {
     super(N_ENDPOINTS);
-    this.addEndPoint(new NodeNodeContentAccessEndPoint());
-    this.addEndPoint(new NodeNodeMapReduceEndPoint());
+    this.addEndPoint(new NodeNodeAsyncContentAccessEndPoint());
+    this.addEndPoint(new NodeNodeAsyncMapReduceEndPoint());
   }
 
   /**

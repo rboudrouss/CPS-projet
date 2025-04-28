@@ -15,6 +15,7 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentAccessI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentDataI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentKeyI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ResultReceptionCI;
+import fr.sorbonne_u.cps.dht_mapreduce.interfaces.endpoints.ContentNodeAsyncCompositeEndPointI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.endpoints.ContentNodeBaseCompositeEndPointI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.CombinatorI;
 import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.MapReduceCI;
@@ -68,7 +69,8 @@ import fr.sorbonne_u.cps.mapreduce.utils.URIGenerator;
 @OfferedInterfaces(offered = { MapReduceCI.class, ContentAccessCI.class })
 @RequiredInterfaces(required = { MapReduceCI.class, ContentAccessCI.class, ResultReceptionCI.class,
     MapReduceResultReceptionCI.class })
-public class AsyncNode extends SyncNode<ContentAccessI, MapReduceI>
+public class AsyncNode<NodeCompositeEndpointT extends ContentNodeAsyncCompositeEndPointI<CAI, MRI>, CAI extends ContentAccessCI, MRI extends MapReduceCI>
+    extends SyncNode<NodeCompositeEndpointT, CAI, MRI>
     implements MapReduceI, ContentAccessI {
 
   /** the default number of threads used to run the async node */
@@ -119,14 +121,13 @@ public class AsyncNode extends SyncNode<ContentAccessI, MapReduceI>
    * @throws Exception If there is an error during BCM component creation or
    *                   server initialization in endpoints
    * 
-   * @see ContentNodeBaseCompositeEndPointI
    * @see ContentAccessI
    * @see MapReduceI
    */
   protected AsyncNode(int nbthreads, int nbSchedulableThreads,
-      ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> nodeFacadeCompositeEndpoint,
-      ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> selfNodeCompositeEndpoint,
-      ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> nextNodeCompositeEndpoint,
+      NodeCompositeEndpointT nodeFacadeCompositeEndpoint,
+      NodeCompositeEndpointT selfNodeCompositeEndpoint,
+      NodeCompositeEndpointT nextNodeCompositeEndpoint,
       int minValue, int maxValue) throws Exception {
     super(nbthreads, nbSchedulableThreads, nodeFacadeCompositeEndpoint, selfNodeCompositeEndpoint,
         nextNodeCompositeEndpoint, minValue, maxValue);
@@ -157,9 +158,9 @@ public class AsyncNode extends SyncNode<ContentAccessI, MapReduceI>
    * @see ContentAccessI
    * @see MapReduceI
    */
-  protected AsyncNode(ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> nodeFacadeCompositeEndpoint,
-      ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> selfNodeCompositeEndpoint,
-      ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> nextNodeCompositeEndpoint,
+  protected AsyncNode(NodeCompositeEndpointT nodeFacadeCompositeEndpoint,
+      NodeCompositeEndpointT selfNodeCompositeEndpoint,
+      NodeCompositeEndpointT nextNodeCompositeEndpoint,
       int minValue, int maxValue) throws Exception {
     this(
         DEFAULT_NB_THREADS, DEFAULT_NB_SCHEDULABLE_THREADS, nodeFacadeCompositeEndpoint, selfNodeCompositeEndpoint,
@@ -179,9 +180,9 @@ public class AsyncNode extends SyncNode<ContentAccessI, MapReduceI>
    * @throws Exception If there is an error during BCM component creation or
    *                   server initialization in endpoints
    */
-  protected AsyncNode(ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> nodeFacadeCompositeEndpoint,
-      ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> selfNodeCompositeEndpoint,
-      ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> nextNodeCompositeEndpoint) throws Exception {
+  protected AsyncNode(NodeCompositeEndpointT nodeFacadeCompositeEndpoint,
+      NodeCompositeEndpointT selfNodeCompositeEndpoint,
+      NodeCompositeEndpointT nextNodeCompositeEndpoint) throws Exception {
     this(
         nodeFacadeCompositeEndpoint,
         selfNodeCompositeEndpoint,
@@ -194,9 +195,9 @@ public class AsyncNode extends SyncNode<ContentAccessI, MapReduceI>
    * {@inheritDoc}
    */
   @Override
-  protected void initialise(ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> nodeFacadeCompositeEndpoint,
-      ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> selfNodeCompositeEndpoint,
-      ContentNodeBaseCompositeEndPointI<ContentAccessI, MapReduceI> nextNodeCompositeEndpoint, int minValue,
+  protected void initialise(NodeCompositeEndpointT nodeFacadeCompositeEndpoint,
+      NodeCompositeEndpointT selfNodeCompositeEndpoint,
+      NodeCompositeEndpointT nextNodeCompositeEndpoint, int minValue,
       int maxValue) throws Exception {
     this.contentAccessExecutorServiceURI = URIGenerator.generateURI(EXECUTOR_SERVICE_URI_PREFIX);
     this.mapReduceExecutorServiceURI = URIGenerator.generateURI(EXECUTOR_SERVICE_URI_PREFIX);

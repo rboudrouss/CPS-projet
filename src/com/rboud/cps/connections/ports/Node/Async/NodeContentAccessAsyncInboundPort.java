@@ -15,7 +15,7 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ResultReceptionCI;
  * Extends the synchronous port to handle asynchronous content operations with
  * callbacks.
  */
-public class NodeContentAccessInboundPort extends NodeContentAccessSyncInboundPort implements ContentAccessCI {
+public class NodeContentAccessAsyncInboundPort extends NodeContentAccessSyncInboundPort implements ContentAccessCI {
 
   /**
    * Creates a new content access inbound port.
@@ -23,7 +23,7 @@ public class NodeContentAccessInboundPort extends NodeContentAccessSyncInboundPo
    * @param owner The component owner of this port
    * @throws Exception If port creation fails
    */
-  public NodeContentAccessInboundPort(ComponentI owner)
+  public NodeContentAccessAsyncInboundPort(ComponentI owner)
       throws Exception {
     super(ContentAccessCI.class, owner);
   }
@@ -35,7 +35,7 @@ public class NodeContentAccessInboundPort extends NodeContentAccessSyncInboundPo
    * @param owner The component owner of this port
    * @throws Exception If port creation fails
    */
-  public NodeContentAccessInboundPort(String URI, ComponentI owner)
+  public NodeContentAccessAsyncInboundPort(String URI, ComponentI owner)
       throws Exception {
     super(ContentAccessCI.class, URI, owner);
   }
@@ -47,7 +47,7 @@ public class NodeContentAccessInboundPort extends NodeContentAccessSyncInboundPo
    * @param executorServiceURI The URI of the executor service for this port
    * @throws Exception If port creation fails
    */
-  public NodeContentAccessInboundPort(ComponentI owner, String executorServiceURI)
+  public NodeContentAccessAsyncInboundPort(ComponentI owner, String executorServiceURI)
       throws Exception {
     super(ContentAccessCI.class, owner, null, executorServiceURI);
     assert executorServiceURI != null : "executorServiceURI cannot be null";
@@ -61,7 +61,7 @@ public class NodeContentAccessInboundPort extends NodeContentAccessSyncInboundPo
    * @param executorServiceURI The URI of the executor service for this port
    * @throws Exception If port creation fails
    */
-  public NodeContentAccessInboundPort(String URI, ComponentI owner, String executorServiceURI)
+  public NodeContentAccessAsyncInboundPort(String URI, ComponentI owner, String executorServiceURI)
       throws Exception {
     super(URI, ContentAccessCI.class, owner, null, executorServiceURI);
     assert executorServiceURI != null : "executorServiceURI cannot be null";

@@ -14,7 +14,7 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ResultReceptionCI;
  * Extends the synchronous port to handle asynchronous content operations with
  * callbacks.
  */
-public class NodeContentAccessOutboundPort extends NodeContentAccessSyncOutboundPort implements ContentAccessCI {
+public class NodeContentAccessAsyncOutboundPort extends NodeContentAccessSyncOutboundPort implements ContentAccessCI {
 
   /**
    * Creates a new content access outbound port.
@@ -22,7 +22,7 @@ public class NodeContentAccessOutboundPort extends NodeContentAccessSyncOutbound
    * @param owner The component owner of this port
    * @throws Exception If port creation fails
    */
-  public NodeContentAccessOutboundPort(ComponentI owner)
+  public NodeContentAccessAsyncOutboundPort(ComponentI owner)
       throws Exception {
     super(ContentAccessCI.class, owner);
   }
@@ -34,7 +34,7 @@ public class NodeContentAccessOutboundPort extends NodeContentAccessSyncOutbound
    * @param owner The component owner of this port
    * @throws Exception If port creation fails
    */
-  public NodeContentAccessOutboundPort(String URI, ComponentI owner)
+  public NodeContentAccessAsyncOutboundPort(String URI, ComponentI owner)
       throws Exception {
     super(ContentAccessCI.class, URI, owner);
   }

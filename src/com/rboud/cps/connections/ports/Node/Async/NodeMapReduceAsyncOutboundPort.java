@@ -18,7 +18,7 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.SelectorI;
  * Extends the synchronous port to handle asynchronous map and reduce
  * operations.
  */
-public class NodeMapReduceOutboundPort extends NodeMapReduceSyncOutboundPort implements MapReduceCI {
+public class NodeMapReduceAsyncOutboundPort extends NodeMapReduceSyncOutboundPort implements MapReduceCI {
 
   /**
    * Creates a new MapReduce outbound port.
@@ -26,7 +26,7 @@ public class NodeMapReduceOutboundPort extends NodeMapReduceSyncOutboundPort imp
    * @param owner The component owner of this port
    * @throws Exception If port creation fails
    */
-  public NodeMapReduceOutboundPort(ComponentI owner)
+  public NodeMapReduceAsyncOutboundPort(ComponentI owner)
       throws Exception {
     super(MapReduceCI.class, owner);
   }

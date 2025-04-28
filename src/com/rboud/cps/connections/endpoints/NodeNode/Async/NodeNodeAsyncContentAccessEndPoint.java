@@ -2,8 +2,8 @@ package com.rboud.cps.connections.endpoints.NodeNode.Async;
 
 import com.rboud.cps.components.AsyncNode;
 import com.rboud.cps.connections.connectors.ContentAccessConnector;
-import com.rboud.cps.connections.ports.Node.Async.NodeContentAccessInboundPort;
-import com.rboud.cps.connections.ports.Node.Async.NodeContentAccessOutboundPort;
+import com.rboud.cps.connections.ports.Node.Async.NodeContentAccessAsyncInboundPort;
+import com.rboud.cps.connections.ports.Node.Async.NodeContentAccessAsyncOutboundPort;
 
 import fr.sorbonne_u.components.AbstractComponent;
 import fr.sorbonne_u.components.endpoints.BCMEndPoint;
@@ -15,13 +15,13 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.content.ContentAccessCI;
  * Creates and manages ports for asynchronous content operations between peer
  * nodes.
  */
-public class NodeNodeContentAccessEndPoint extends BCMEndPoint<ContentAccessCI> {
+public class NodeNodeAsyncContentAccessEndPoint extends BCMEndPoint<ContentAccessCI> {
 
   /**
    * Creates a new endpoint for asynchronous content access with default
    * configuration.
    */
-  public NodeNodeContentAccessEndPoint() {
+  public NodeNodeAsyncContentAccessEndPoint() {
     super(ContentAccessCI.class, ContentAccessCI.class);
   }
 
@@ -31,7 +31,7 @@ public class NodeNodeContentAccessEndPoint extends BCMEndPoint<ContentAccessCI> 
   @Override
   protected AbstractInboundPort makeInboundPort(AbstractComponent c, String inboundPortURI) throws Exception {
     assert c instanceof AsyncNode;
-    NodeContentAccessInboundPort port = new NodeContentAccessInboundPort(inboundPortURI, c,
+    NodeContentAccessAsyncInboundPort port = new NodeContentAccessAsyncInboundPort(inboundPortURI, c,
         ((AsyncNode) c).getContentAccessExecutorServiceURI());
     port.publishPort();
     return port;
@@ -42,7 +42,7 @@ public class NodeNodeContentAccessEndPoint extends BCMEndPoint<ContentAccessCI> 
    */
   @Override
   protected ContentAccessCI makeOutboundPort(AbstractComponent c, String inboundPortURI) throws Exception {
-    NodeContentAccessOutboundPort port = new NodeContentAccessOutboundPort(c);
+    NodeContentAccessAsyncOutboundPort port = new NodeContentAccessAsyncOutboundPort(c);
     port.publishPort();
     c.doPortConnection(
         port.getPortURI(),

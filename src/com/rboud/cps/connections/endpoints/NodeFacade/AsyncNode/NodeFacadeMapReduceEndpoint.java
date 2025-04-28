@@ -1,9 +1,9 @@
 package com.rboud.cps.connections.endpoints.NodeFacade.AsyncNode;
 
 import com.rboud.cps.components.AsyncNode;
-import com.rboud.cps.connections.connectors.MapReduceConnector;
+import com.rboud.cps.connections.connectors.MapReduceAsyncConnector;
 import com.rboud.cps.connections.ports.Facade.FacadeMapReduceOutboundPort;
-import com.rboud.cps.connections.ports.Node.Async.NodeMapReduceInboundPort;
+import com.rboud.cps.connections.ports.Node.Async.NodeMapReduceAsyncInboundPort;
 
 import fr.sorbonne_u.components.AbstractComponent;
 import fr.sorbonne_u.components.endpoints.BCMEndPoint;
@@ -41,7 +41,7 @@ public class NodeFacadeMapReduceEndpoint extends BCMEndPoint<MapReduceCI> {
   @Override
   protected AbstractInboundPort makeInboundPort(AbstractComponent c, String inboundPortURI) throws Exception {
     assert c instanceof AsyncNode;
-    NodeMapReduceInboundPort port = new NodeMapReduceInboundPort(inboundPortURI, c, ((AsyncNode) c)
+    NodeMapReduceAsyncInboundPort port = new NodeMapReduceAsyncInboundPort(inboundPortURI, c, ((AsyncNode) c)
         .getMapReduceExecutorServiceURI());
     port.publishPort();
     return port;
@@ -57,7 +57,7 @@ public class NodeFacadeMapReduceEndpoint extends BCMEndPoint<MapReduceCI> {
     c.doPortConnection(
         port.getPortURI(),
         inboundPortURI,
-        MapReduceConnector.class.getCanonicalName());
+        MapReduceAsyncConnector.class.getCanonicalName());
     return port;
   }
 }

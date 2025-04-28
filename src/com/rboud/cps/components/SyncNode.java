@@ -68,7 +68,8 @@ import fr.sorbonne_u.components.exceptions.ComponentStartException;
  */
 @OfferedInterfaces(offered = { ContentAccessSyncCI.class, MapReduceSyncCI.class })
 @RequiredInterfaces(required = { MapReduceSyncCI.class, ContentAccessSyncCI.class })
-public class SyncNode<CAI extends ContentAccessSyncI, MRI extends MapReduceSyncI> extends AbstractComponent
+public class SyncNode<NodeCompositeEndpointT extends ContentNodeBaseCompositeEndPointI<CAI, MRI>, CAI extends ContentAccessSyncI, MRI extends MapReduceSyncI>
+    extends AbstractComponent
     implements ContentAccessSyncI, MapReduceSyncI {
 
   /** Minimum number of threads required for handling concurrent requests */
@@ -92,19 +93,19 @@ public class SyncNode<CAI extends ContentAccessSyncI, MRI extends MapReduceSyncI
   protected Map<ContentKeyI, ContentDataI> localStorage;
 
   /** Composite endpoint for facade connection, can be null */
-  protected ContentNodeBaseCompositeEndPointI<CAI, MRI> nodeFacadeCompositeEndpoint;
+  protected NodeCompositeEndpointT nodeFacadeCompositeEndpoint;
 
   /**
    * Composite endpoint for next node in chain of which this node is the server,
    * cannot be null
    */
-  protected ContentNodeBaseCompositeEndPointI<CAI, MRI> selfNodeCompositeEndpoint;
+  protected NodeCompositeEndpointT selfNodeCompositeEndpoint;
 
   /**
    * Composite endpoint for next node in chain of which this node is the client,
    * cannot be null
    */
-  protected ContentNodeBaseCompositeEndPointI<CAI, MRI> nextNodeCompositeEndpoint;
+  protected NodeCompositeEndpointT nextNodeCompositeEndpoint;
 
   /**
    * Creates a new SyncNode with specified parameters.
@@ -123,9 +124,9 @@ public class SyncNode<CAI extends ContentAccessSyncI, MRI extends MapReduceSyncI
   protected SyncNode(
       int nbthreads,
       int nbschedulablethreads,
-      ContentNodeBaseCompositeEndPointI<CAI, MRI> nodeFacadeCompositeEndpoint,
-      ContentNodeBaseCompositeEndPointI<CAI, MRI> selfNodeCompositeEndpoint,
-      ContentNodeBaseCompositeEndPointI<CAI, MRI> nextNodeCompositeEndpoint,
+      NodeCompositeEndpointT nodeFacadeCompositeEndpoint,
+      NodeCompositeEndpointT selfNodeCompositeEndpoint,
+      NodeCompositeEndpointT nextNodeCompositeEndpoint,
       int minValue, int maxValue) throws Exception {
 
     super(nbthreads, nbschedulablethreads);
@@ -155,9 +156,9 @@ public class SyncNode<CAI extends ContentAccessSyncI, MRI extends MapReduceSyncI
   protected SyncNode(
       int nbthreads,
       int nbschedulablethreads,
-      ContentNodeBaseCompositeEndPointI<CAI, MRI> nodeFacadeCompositeEndpoint,
-      ContentNodeBaseCompositeEndPointI<CAI, MRI> selfNodeCompositeEndpoint,
-      ContentNodeBaseCompositeEndPointI<CAI, MRI> nextNodeCompositeEndpoint)
+      NodeCompositeEndpointT nodeFacadeCompositeEndpoint,
+      NodeCompositeEndpointT selfNodeCompositeEndpoint,
+      NodeCompositeEndpointT nextNodeCompositeEndpoint)
       throws Exception {
     //
     this(nbthreads, nbschedulablethreads, nodeFacadeCompositeEndpoint, selfNodeCompositeEndpoint,
@@ -174,9 +175,9 @@ public class SyncNode<CAI extends ContentAccessSyncI, MRI extends MapReduceSyncI
    *                   endpoints fails
    */
   protected SyncNode(
-      ContentNodeBaseCompositeEndPointI<CAI, MRI> nodeFacadeCompositeEndpoint,
-      ContentNodeBaseCompositeEndPointI<CAI, MRI> selfNodeCompositeEndpoint,
-      ContentNodeBaseCompositeEndPointI<CAI, MRI> nextNodeCompositeEndpoint)
+      NodeCompositeEndpointT nodeFacadeCompositeEndpoint,
+      NodeCompositeEndpointT selfNodeCompositeEndpoint,
+      NodeCompositeEndpointT nextNodeCompositeEndpoint)
       throws Exception {
     this(2, 0, nodeFacadeCompositeEndpoint, selfNodeCompositeEndpoint, nextNodeCompositeEndpoint);
   }
@@ -193,9 +194,9 @@ public class SyncNode<CAI extends ContentAccessSyncI, MRI extends MapReduceSyncI
    *                   endpoints fails
    */
   protected SyncNode(
-      ContentNodeBaseCompositeEndPointI<CAI, MRI> nodeFacadeCompositeEndpoint,
-      ContentNodeBaseCompositeEndPointI<CAI, MRI> selfNodeCompositeEndpoint,
-      ContentNodeBaseCompositeEndPointI<CAI, MRI> nextNodeCompositeEndpoint,
+      NodeCompositeEndpointT nodeFacadeCompositeEndpoint,
+      NodeCompositeEndpointT selfNodeCompositeEndpoint,
+      NodeCompositeEndpointT nextNodeCompositeEndpoint,
       int minValue, int maxValue)
       throws Exception {
     // 2 threads are necessary for answering the request where this node is blocked
@@ -246,9 +247,9 @@ public class SyncNode<CAI extends ContentAccessSyncI, MRI extends MapReduceSyncI
    * @throws Exception if server initialization in endpoints fails
    */
   protected void initialise(
-      ContentNodeBaseCompositeEndPointI<CAI, MRI> nodeFacadeCompositeEndpoint,
-      ContentNodeBaseCompositeEndPointI<CAI, MRI> selfNodeCompositeEndpoint,
-      ContentNodeBaseCompositeEndPointI<CAI, MRI> nextNodeCompositeEndpoint,
+      NodeCompositeEndpointT nodeFacadeCompositeEndpoint,
+      NodeCompositeEndpointT selfNodeCompositeEndpoint,
+      NodeCompositeEndpointT nextNodeCompositeEndpoint,
       int minValue,
       int maxValue) throws Exception {
     this.nodeFacadeCompositeEndpoint = nodeFacadeCompositeEndpoint;
@@ -262,6 +263,14 @@ public class SyncNode<CAI extends ContentAccessSyncI, MRI extends MapReduceSyncI
     this.toggleLogging();
     this.toggleTracing();
     this.getTracer().setTitle("Node " + this.nodeURI);
+  }
+
+  protected void cleanUpConnections() throws Exception {
+    if (this.nodeFacadeCompositeEndpoint != null) {
+      this.nodeFacadeCompositeEndpoint.cleanUpServerSide();
+    }
+    this.selfNodeCompositeEndpoint.cleanUpServerSide();
+    this.nextNodeCompositeEndpoint.cleanUpClientSide();
   }
 
   // ------------------------------------------------------------------------
@@ -288,6 +297,19 @@ public class SyncNode<CAI extends ContentAccessSyncI, MRI extends MapReduceSyncI
 
   /**
    * 
+   * Finalises the Node component and cleans up connections
+   * 
+   * @see AbstractComponent#finalise()
+   */
+  @Override
+  public synchronized void finalise() throws Exception {
+    this.logMessage("[NODE] Finalising DHT Node component.");
+    this.cleanUpConnections();
+    super.finalise();
+  }
+
+  /**
+   * 
    * Shuts down the Node component and cleans up connections
    * also prints the execution log to a file.
    * 
@@ -295,18 +317,12 @@ public class SyncNode<CAI extends ContentAccessSyncI, MRI extends MapReduceSyncI
    */
   @Override
   public synchronized void shutdown() throws ComponentShutdownException {
-    this.logMessage("[NODE] Finalising DHT Node component.");
+    this.logMessage("[NODE] Shutting down DHT Node component.");
     try {
       this.printExecutionLogOnFile("logs/node-" + this.nodeURI);
     } catch (FileNotFoundException e) {
       throw new ComponentShutdownException(e);
     }
-
-    if (this.nodeFacadeCompositeEndpoint != null) {
-      this.nodeFacadeCompositeEndpoint.cleanUpServerSide();
-    }
-    this.selfNodeCompositeEndpoint.cleanUpServerSide();
-    this.nextNodeCompositeEndpoint.cleanUpClientSide();
     super.shutdown();
   }
 

@@ -14,7 +14,7 @@ import fr.sorbonne_u.cps.dht_mapreduce.interfaces.mapreduce.SelectorI;
  * Connector implementing asynchronous MapReduce operations between components.
  * Extends the synchronous connector to add asynchronous operations with result callbacks.
  */
-public class MapReduceConnector extends MapReduceSyncConnector implements MapReduceCI {
+public class MapReduceAsyncConnector extends MapReduceSyncConnector implements MapReduceCI {
 
   /**
    * {@inheritDoc}
